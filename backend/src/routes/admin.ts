@@ -14,7 +14,7 @@ router.use(protect, authorize('admin'));
 // @access  Private/Admin
 router.get(
   '/dashboard',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const stats = await adminService.getPlatformStats();
     sendSuccess(res, 200, stats, 'Dashboard stats retrieved');
   })
@@ -25,7 +25,7 @@ router.get(
 // @access  Private/Admin
 router.get(
   '/revenue-trends',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const days = req.query.days ? parseInt(req.query.days as string) : 30;
     const trends = await adminService.getRevenueTrends(days);
     sendSuccess(res, 200, trends, 'Revenue trends retrieved');
@@ -37,7 +37,7 @@ router.get(
 // @access  Private/Admin
 router.get(
   '/top-products',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
     const products = await adminService.getTopProducts(limit);
     sendSuccess(res, 200, products, 'Top products retrieved');
@@ -49,7 +49,7 @@ router.get(
 // @access  Private/Admin
 router.get(
   '/user-growth',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const days = req.query.days ? parseInt(req.query.days as string) : 30;
     const growth = await adminService.getUserGrowth(days);
     sendSuccess(res, 200, growth, 'User growth data retrieved');
@@ -61,7 +61,7 @@ router.get(
 // @access  Private/Admin
 router.get(
   '/categories',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const categories = await adminService.getCategoryPerformance();
     sendSuccess(res, 200, categories, 'Category performance retrieved');
   })
@@ -72,7 +72,7 @@ router.get(
 // @access  Private/Admin
 router.get(
   '/top-sellers',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
     const sellers = await adminService.getTopSellers(limit);
     sendSuccess(res, 200, sellers, 'Top sellers retrieved');
@@ -84,7 +84,7 @@ router.get(
 // @access  Private/Admin
 router.get(
   '/order-status',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const distribution = await adminService.getOrderStatusDistribution();
     sendSuccess(res, 200, distribution, 'Order status distribution retrieved');
   })
@@ -95,7 +95,7 @@ router.get(
 // @access  Private/Admin
 router.get(
   '/customers',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const insights = await adminService.getCustomerInsights();
     sendSuccess(res, 200, insights, 'Customer insights retrieved');
   })
@@ -106,7 +106,7 @@ router.get(
 // @access  Private/Admin
 router.get(
   '/verifications',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const pending = await adminService.getPendingVerifications();
     sendSuccess(res, 200, pending, 'Pending verifications retrieved');
   })
@@ -117,7 +117,7 @@ router.get(
 // @access  Private/Admin
 router.put(
   '/verify-store/:storeId',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const store = await adminService.verifyStore(req.params.storeId);
     sendSuccess(res, 200, store, 'Store verified successfully');
   })
@@ -128,7 +128,7 @@ router.put(
 // @access  Private/Admin
 router.get(
   '/payments',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: any, res: any) => {
     const metrics = await adminService.getPaymentMetrics();
     sendSuccess(res, 200, metrics, 'Payment metrics retrieved');
   })
