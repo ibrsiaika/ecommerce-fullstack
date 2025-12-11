@@ -146,22 +146,24 @@ const connectDB = async () => {
   }
 };
 
-// Start server
-const startServer = async () => {
-  try {
-    await connectDB();
-    
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-      console.log(`📖 API Documentation available at http://localhost:${PORT}/api-docs`);
-      console.log(`🏥 Health check available at http://localhost:${PORT}/health`);
-    });
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    process.exit(1);
-  }
-};
+// Start server only if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  const startServer = async () => {
+    try {
+      await connectDB();
+      
+      app.listen(PORT, () => {
+        console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+        console.log(`📖 API Documentation available at http://localhost:${PORT}/api-docs`);
+        console.log(`🏥 Health check available at http://localhost:${PORT}/health`);
+      });
+    } catch (error) {
+      console.error('❌ Failed to start server:', error);
+      process.exit(1);
+    }
+  };
 
-startServer();
+  startServer();
+}
 
 export default app;
