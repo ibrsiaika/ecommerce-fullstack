@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Users, ShoppingCart, DollarSign } from 'lucide-react';
-import api from '../../services/api';
+import api from '../services/api';
 
 const SellerDashboard: React.FC = () => {
   const [dashboard, setDashboard] = useState<any>(null);
