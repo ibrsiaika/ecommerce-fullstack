@@ -15,6 +15,8 @@ import userRoutes from './routes/users';
 import productRoutes from './routes/products';
 import orderRoutes from './routes/orders';
 import uploadRoutes from './routes/upload';
+import adminRoutes from './routes/admin';
+import sellerRoutes from './routes/seller';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -105,6 +107,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/seller', sellerRoutes);
 
 // Serve uploaded images
 app.use('/uploads', express.static('uploads'));
