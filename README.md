@@ -94,6 +94,48 @@ A fully-featured e-commerce platform demonstrating complete full-stack developme
 - ✅ Discount and coupon management
 - ✅ Revenue metrics and charts
 
+### 🏪 Multi-Vendor Marketplace (NEW!)
+- ✅ Seller store creation & management
+- ✅ Seller verification workflow
+- ✅ Public store profiles & storefronts
+- ✅ Store ratings and followers
+- ✅ Seller dashboard with metrics
+- ✅ Product management per seller
+- ✅ Seller-specific order tracking
+- ✅ Store analytics & performance
+
+### 💼 Seller Account System (NEW!)
+- ✅ Complete seller dashboard
+- ✅ Store profile management
+- ✅ Product inventory management
+- ✅ Order management & fulfillment
+- ✅ Real-time earnings tracking
+- ✅ Commission system (configurable)
+- ✅ Withdrawal requests & payments
+- ✅ Bank account management
+- ✅ Seller ratings & reviews
+- ✅ Customer insights for sellers
+
+### 👥 Enhanced Buyer Accounts (NEW!)
+- ✅ User profile management
+- ✅ Complete order history
+- ✅ Saved addresses
+- ✅ Wishlist management
+- ✅ Product reviews & ratings
+- ✅ Account preferences
+- ✅ Purchase history
+- ✅ Notification settings
+
+### 📈 Analytics & Reports (NEW!)
+- ✅ Revenue trends (daily/monthly)
+- ✅ Sales by category
+- ✅ Top selling products
+- ✅ User growth metrics
+- ✅ Conversion rates
+- ✅ Customer satisfaction scores
+- ✅ Seller performance rankings
+- ✅ Payment status analytics
+
 ### 🔐 Security
 - ✅ Password hashing with bcryptjs
 - ✅ JWT token authentication
@@ -226,6 +268,76 @@ Role: User
 Admin Email: admin@example.com
 Admin Password: Admin123!@#
 Role: Admin
+```
+
+---
+
+## 🔌 API Endpoints
+
+### Admin Dashboard Endpoints
+```
+GET    /api/admin/stats                    - Get dashboard statistics
+GET    /api/admin/stats/trends             - Get revenue trends (daily/monthly)
+GET    /api/admin/top-products             - Get top selling products
+GET    /api/admin/top-categories           - Get sales by category
+GET    /api/admin/user-growth              - Get user growth metrics
+GET    /api/admin/seller-rankings          - Get seller performance rankings
+GET    /api/admin/customer-insights        - Get customer insights
+GET    /api/admin/payment-metrics          - Get payment status analytics
+GET    /api/admin/sellers/pending          - Get pending seller verifications
+POST   /api/admin/sellers/:id/verify       - Verify seller account
+```
+
+### Seller Endpoints
+```
+GET    /api/seller/dashboard               - Get seller dashboard data
+GET    /api/seller/store                   - Get seller store profile
+PUT    /api/seller/store                   - Update seller store
+GET    /api/seller/products                - Get seller's products
+POST   /api/seller/products                - Create new product
+GET    /api/seller/orders                  - Get seller's orders
+GET    /api/seller/order/:id               - Get order details
+PUT    /api/seller/order/:id/status        - Update order status
+GET    /api/seller/earnings                - Get earnings summary
+GET    /api/seller/withdrawals             - Get withdrawal history
+POST   /api/seller/withdrawals             - Request withdrawal
+GET    /api/seller/analytics               - Get seller analytics
+GET    /api/seller/public/:storeId         - Get public store profile
+```
+
+### Product Endpoints
+```
+GET    /api/products                       - Get all products (with pagination)
+GET    /api/products/:id                   - Get single product
+POST   /api/products                       - Create product (seller/admin)
+PUT    /api/products/:id                   - Update product (seller/admin)
+DELETE /api/products/:id                   - Delete product (seller/admin)
+POST   /api/products/:id/reviews           - Add product review
+GET    /api/products/:id/reviews           - Get product reviews
+```
+
+### Order Endpoints
+```
+GET    /api/orders                         - Get user's orders
+GET    /api/orders/:id                     - Get order details
+POST   /api/orders                         - Create new order
+PUT    /api/orders/:id                     - Update order
+DELETE /api/orders/:id                     - Cancel order
+```
+
+### User Endpoints
+```
+POST   /api/auth/register                  - Register new user
+POST   /api/auth/login                     - Login user
+POST   /api/auth/logout                    - Logout user
+GET    /api/users/profile                  - Get user profile
+PUT    /api/users/profile                  - Update user profile
+GET    /api/users/addresses                - Get saved addresses
+POST   /api/users/addresses                - Add new address
+DELETE /api/users/addresses/:id            - Delete address
+GET    /api/users/wishlist                 - Get wishlist
+POST   /api/users/wishlist/:productId      - Add to wishlist
+DELETE /api/users/wishlist/:productId      - Remove from wishlist
 ```
 
 ---
@@ -644,6 +756,145 @@ VITE_STRIPE_PUBLIC_KEY=pk_live_...
 - ✅ Environment variables for sensitive data
 - ✅ HTTPS enforced in production
 - ✅ Secure cookie settings
+
+---
+
+## 🏗️ Architecture
+
+### Backend Architecture
+```
+backend/
+├── src/
+│   ├── models/              # MongoDB Schemas
+│   │   ├── User.ts          # User authentication & profiles
+│   │   ├── Product.ts       # Product catalog
+│   │   ├── Order.ts         # Order management
+│   │   ├── Store.ts         # Seller stores & profiles
+│   │   ├── Analytics.ts     # Platform metrics & aggregations
+│   │   └── Withdrawal.ts    # Payment withdrawals
+│   │
+│   ├── services/            # Business Logic
+│   │   ├── productService.ts
+│   │   ├── orderService.ts
+│   │   ├── adminService.ts
+│   │   └── sellerService.ts
+│   │
+│   ├── routes/              # API Endpoints
+│   │   ├── auth.ts
+│   │   ├── products.ts
+│   │   ├── orders.ts
+│   │   ├── users.ts
+│   │   ├── admin.ts         # Admin endpoints (10 routes)
+│   │   └── seller.ts        # Seller endpoints (11 routes)
+│   │
+│   ├── middleware/          # Express Middleware
+│   │   ├── auth.ts
+│   │   ├── errorHandler.ts
+│   │   └── validation.ts
+│   │
+│   ├── utils/               # Utilities
+│   │   ├── logger.ts
+│   │   ├── appError.ts
+│   │   └── responses.ts
+│   │
+│   └── server.ts            # Main server file
+
+```
+
+### Frontend Architecture
+```
+frontend/
+├── src/
+│   ├── components/          # React Components
+│   │   ├── AdminMetrics.tsx       # Admin dashboard
+│   │   ├── SellerDashboard.tsx    # Seller dashboard
+│   │   ├── Header.tsx
+│   │   ├── Sidebar.tsx
+│   │   └── ...
+│   │
+│   ├── pages/               # Page Components
+│   │   ├── AdminPage.tsx
+│   │   ├── SellerPage.tsx
+│   │   ├── ProductsPage.tsx
+│   │   └── ...
+│   │
+│   ├── services/            # API Services
+│   │   ├── api.ts           # Axios instance & endpoints
+│   │   └── authService.ts
+│   │
+│   ├── store/               # Redux Store
+│   │   ├── authSlice.ts
+│   │   ├── productSlice.ts
+│   │   └── ...
+│   │
+│   ├── types/               # TypeScript Types
+│   │   └── index.ts
+│   │
+│   ├── utils/               # Utilities
+│   │   ├── formatters.ts
+│   │   └── validators.ts
+│   │
+│   └── App.tsx              # Main app component
+```
+
+### Database Schema
+
+**User Model**
+```typescript
+{
+  _id: ObjectId
+  email: String (unique)
+  password: String (hashed)
+  firstName: String
+  lastName: String
+  profilePicture: String (URL)
+  role: Enum ['User', 'Seller', 'Admin']
+  phone: String
+  addresses: Array
+  preferences: Object
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+**Store Model (NEW)**
+```typescript
+{
+  _id: ObjectId
+  ownerId: ObjectId (ref: User)
+  storeName: String
+  description: String
+  logo: String (URL)
+  banner: String (URL)
+  verified: Boolean
+  verificationDate: Date
+  category: String
+  rating: Number
+  followers: Array (ref: User)
+  bankDetails: Object
+  commissionRate: Number
+  totalEarnings: Number
+  totalOrders: Number
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+**Analytics Model (NEW)**
+```typescript
+{
+  _id: ObjectId
+  date: Date
+  totalRevenue: Number
+  totalOrders: Number
+  totalUsers: Number
+  topProducts: Array
+  topCategories: Array
+  conversionRate: Number
+  customerRetention: Number
+  createdAt: Date
+}
+```
 
 ---
 
