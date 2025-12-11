@@ -6,7 +6,7 @@ import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
 
 const Cart: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { items, totalItems, totalPrice } = useAppSelector((state: any) => state.cart);
+  const { items, totalItems, totalPrice } = useAppSelector((state) => state.cart);
 
   const handleUpdateQuantity = (id: string, quantity: number) => {
     if (quantity <= 0) {

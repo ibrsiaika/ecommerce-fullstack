@@ -8,7 +8,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'seller' | 'admin';
   avatar?: string;
   isEmailVerified: boolean;
   createdAt: string;

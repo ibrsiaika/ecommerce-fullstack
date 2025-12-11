@@ -22,7 +22,7 @@ const PayPalButton: React.FC<PayPalButtonProps> = ({ amount, orderId, onSuccess,
     const addPayPalScript = async () => {
       const script = document.createElement('script');
       script.type = 'text/javascript';
-      script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.REACT_APP_PAYPAL_CLIENT_ID}&currency=USD`;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${import.meta.env.VITE_PAYPAL_CLIENT_ID}&currency=USD`;
       script.async = true;
       script.onload = () => {
         setSdkReady(true);
@@ -40,7 +40,7 @@ const PayPalButton: React.FC<PayPalButtonProps> = ({ amount, orderId, onSuccess,
   useEffect(() => {
     if (sdkReady && window.paypal) {
       window.paypal.Buttons({
-        createOrder: (data: any, actions: any) => {
+        createOrder: (_data: any, actions: any) => {
           return actions.order.create({
             purchase_units: [
               {
@@ -51,7 +51,7 @@ const PayPalButton: React.FC<PayPalButtonProps> = ({ amount, orderId, onSuccess,
             ]
           });
         },
-        onApprove: async (data: any, actions: any) => {
+        onApprove: async (_data: any, actions: any) => {
           try {
             const details = await actions.order.capture();
             
@@ -131,7 +131,7 @@ const StripeButton: React.FC<StripeButtonProps> = ({ amount, orderId, onSuccess,
       });
 
       if (response.ok) {
-        const { clientSecret } = await response.json();
+        await response.json();
         
         // In a real app, you would use Stripe Elements here
         // For demo purposes, we'll simulate a successful payment

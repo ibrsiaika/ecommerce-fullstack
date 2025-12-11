@@ -1,5 +1,6 @@
-import axios, { AxiosInstance, AxiosError, AxiosResponse } from 'axios';
-import { AuthResponse, Product, Order } from '../types';
+import axios from 'axios';
+import type { AxiosInstance, AxiosError } from 'axios';
+import type { AuthResponse, Product, Order } from '../types';
 
 class ApiClient {
   private client: AxiosInstance;
@@ -36,6 +37,23 @@ class ApiClient {
         return Promise.reject(error);
       }
     );
+  }
+
+  // Generic HTTP methods
+  get(url: string) {
+    return this.client.get(url);
+  }
+
+  post(url: string, data?: any) {
+    return this.client.post(url, data);
+  }
+
+  put(url: string, data?: any) {
+    return this.client.put(url, data);
+  }
+
+  delete(url: string) {
+    return this.client.delete(url);
   }
 
   // Auth endpoints

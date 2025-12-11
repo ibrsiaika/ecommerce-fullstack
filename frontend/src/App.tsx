@@ -9,6 +9,7 @@ import { getCurrentUser } from './store/slices/authSlice';
 import { Layout } from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
+import SellerRoute from './components/SellerRoute';
 import ProductList from './components/ProductList';
 import ProductDetail from './components/ProductDetail';
 import Cart from './components/Cart';
@@ -16,8 +17,10 @@ import Checkout from './components/Checkout';
 import OrderDetail from './components/OrderDetail';
 import OrderHistory from './components/OrderHistory';
 import AdminDashboard from './components/AdminDashboard';
+import AdminMetrics from './components/AdminMetrics';
 import AdminOrders from './components/AdminOrders';
 import AdminUsers from './components/AdminUsers';
+import SellerDashboard from './components/SellerDashboard';
 
 // Pages
 import { Home, Login, Register, Profile } from './pages';
@@ -104,6 +107,14 @@ function AppContent() {
             }
           />
           <Route
+            path="/admin/metrics"
+            element={
+              <AdminRoute>
+                <AdminMetrics />
+              </AdminRoute>
+            }
+          />
+          <Route
             path="/admin/orders"
             element={
               <AdminRoute>
@@ -117,6 +128,24 @@ function AppContent() {
               <AdminRoute>
                 <AdminUsers />
               </AdminRoute>
+            }
+          />
+
+          {/* Seller routes */}
+          <Route
+            path="/seller/dashboard"
+            element={
+              <SellerRoute>
+                <SellerDashboard />
+              </SellerRoute>
+            }
+          />
+          <Route
+            path="/seller/store"
+            element={
+              <SellerRoute>
+                <SellerDashboard />
+              </SellerRoute>
             }
           />
 

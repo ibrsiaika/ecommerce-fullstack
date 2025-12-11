@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, Users, ShoppingCart, DollarSign, Package } from 'lucide-react';
-import api from '../../services/api';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Users, ShoppingCart, DollarSign, Package } from 'lucide-react';
+import api from '../services/api';
 
 const AdminMetrics: React.FC = () => {
   const [stats, setStats] = useState<any>(null);

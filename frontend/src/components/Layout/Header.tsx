@@ -56,6 +56,14 @@ const Header: React.FC = () => {
                 Admin
               </Link>
             )}
+            {isAuthenticated && (user?.role === 'seller' || user?.role === 'admin') && (
+              <Link
+                to="/seller/dashboard"
+                className="text-green-600 hover:text-green-700 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Seller
+              </Link>
+            )}
           </nav>
 
           {/* Right side icons */}
@@ -76,13 +84,24 @@ const Header: React.FC = () => {
             {/* User Authentication */}
             {isAuthenticated ? (
               <div className="flex items-center space-x-2">
-                <Link
-                  to="/profile"
-                  className="flex items-center space-x-1 text-gray-700 hover:text-indigo-600 transition-colors"
-                >
-                  <FiUser size={20} />
-                  <span className="hidden sm:block text-sm">{user?.name}</span>
-                </Link>
+                <div className="flex items-center space-x-1">
+                  <Link
+                    to="/profile"
+                    className="flex items-center space-x-1 text-gray-700 hover:text-indigo-600 transition-colors"
+                  >
+                    <FiUser size={20} />
+                    <span className="hidden sm:block text-sm">{user?.name}</span>
+                  </Link>
+                  {user?.role && (
+                    <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                      user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                      user.role === 'seller' ? 'bg-green-100 text-green-800' :
+                      'bg-blue-100 text-blue-800'
+                    }`}>
+                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={handleLogout}
                   className="flex items-center space-x-1 text-gray-700 hover:text-red-600 transition-colors p-2"
@@ -142,6 +161,14 @@ const Header: React.FC = () => {
               className="text-red-600 hover:text-red-700 block px-3 py-2 rounded-md text-base font-medium"
             >
               Admin Dashboard
+            </Link>
+          )}
+          {isAuthenticated && (user?.role === 'seller' || user?.role === 'admin') && (
+            <Link
+              to="/seller/dashboard"
+              className="text-green-600 hover:text-green-700 block px-3 py-2 rounded-md text-base font-medium"
+            >
+              Seller Dashboard
             </Link>
           )}
         </div>
