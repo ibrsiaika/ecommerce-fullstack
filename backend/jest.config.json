@@ -12,5 +12,11 @@
     "!src/server.ts"
   ],
   "coverageDirectory": "coverage",
-  "setupFilesAfterEnv": ["<rootDir>/tests/setup.ts"]
+  "setupFilesAfterEnv": ["<rootDir>/tests/setup.ts"],
+  "testTimeout": 30000,
+  "forceExit": true,
+  "detectOpenHandles": true,
+  "maxWorkers": 1,
+  "bail": false,
+  "verbose": true
 }
