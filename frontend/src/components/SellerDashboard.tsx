@@ -197,65 +197,131 @@ const SellerDashboard: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">{stats.storeName}</h1>
-      <p className="text-gray-600 mb-8">{stats.storeDescription}</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="mb-10 animate-fade-in">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">Seller Dashboard</h1>
+          <p className="text-gray-600 text-lg">Manage your store, products, earnings, and analytics</p>
+        </div>
 
-      {/* Tab Navigation */}
-      <div className="flex border-b border-gray-200 mb-8 gap-4 overflow-x-auto">
-        {(['overview', 'products', 'earnings', 'withdrawals', 'analytics'] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 font-medium text-sm whitespace-nowrap transition-colors ${
-              activeTab === tab
-                ? 'border-b-2 border-blue-600 text-blue-600'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
-      </div>
-
-      {/* Overview Tab */}
-      {activeTab === 'overview' && (
-        <>
-          {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <p className="text-gray-600 text-sm mb-2">⭐ Store Rating</p>
-              <p className="text-3xl font-bold text-blue-600">{stats.rating.toFixed(1)}</p>
-              <p className="text-xs text-gray-500 mt-2">{stats.totalReviews} reviews</p>
-            </div>
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <p className="text-gray-600 text-sm mb-2">👥 Followers</p>
-              <p className="text-3xl font-bold text-green-600">{stats.followers}</p>
-            </div>
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <p className="text-gray-600 text-sm mb-2">📦 Total Products</p>
-              <p className="text-3xl font-bold text-purple-600">{stats.totalProducts}</p>
-            </div>
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <p className="text-gray-600 text-sm mb-2">📋 Total Orders</p>
-              <p className="text-3xl font-bold text-yellow-600">{stats.totalOrders}</p>
+        {/* Store Info Section */}
+        <div className="bg-white rounded-xl shadow-card border border-gray-100 p-6 mb-10 animate-slide-down">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">{stats.storeName}</h2>
+            <p className="text-gray-600 mt-1 mb-6">{stats.storeDescription}</p>
+            <div className="flex flex-wrap gap-8">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-emerald-600">{stats.rating.toFixed(1)}⭐</p>
+                <p className="text-sm text-gray-600 mt-1">Rating ({stats.totalReviews} reviews)</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-blue-600">{stats.followers}</p>
+                <p className="text-sm text-gray-600 mt-1">Followers</p>
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Revenue Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-md p-6">
-              <p className="text-gray-700 text-sm font-medium mb-2">Total Revenue</p>
-              <p className="text-2xl font-bold text-blue-600">{formatCurrency(stats.totalRevenue)}</p>
+        {/* Tab Navigation */}
+        <div className="flex gap-2 mb-10 bg-white rounded-xl p-2 shadow-card w-fit animate-slide-down border border-gray-100 overflow-x-auto">
+          {(['overview', 'products', 'earnings', 'withdrawals', 'analytics'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-6 py-2.5 font-semibold rounded-lg transition-all duration-200 capitalize whitespace-nowrap ${
+                activeTab === tab
+                  ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg'
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Key Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              {/* Store Rating */}
+              <div className="bg-white rounded-xl p-6 shadow-card hover:shadow-card-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 border border-gray-100 group animate-slide-up" style={{animationDelay: '0ms'}}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-amber-100 to-amber-50 group-hover:from-amber-200 group-hover:to-amber-100 transition-colors">
+                    <span className="text-2xl">⭐</span>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm font-semibold uppercase tracking-wide">Store Rating</p>
+                <p className="text-4xl font-bold text-amber-600 mt-2">{stats.rating.toFixed(1)}</p>
+                <p className="text-xs text-gray-500 mt-2">{stats.totalReviews} reviews</p>
+              </div>
+
+              {/* Followers */}
+              <div className="bg-white rounded-xl p-6 shadow-card hover:shadow-card-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 border border-gray-100 group animate-slide-up" style={{animationDelay: '100ms'}}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-blue-100 to-blue-50 group-hover:from-blue-200 group-hover:to-blue-100 transition-colors">
+                    <span className="text-2xl">👥</span>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm font-semibold uppercase tracking-wide">Followers</p>
+                <p className="text-4xl font-bold text-blue-600 mt-2">{stats.followers}</p>
+                <div className="mt-4 w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full w-2/3 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full"></div>
+                </div>
+              </div>
+
+              {/* Total Products */}
+              <div className="bg-white rounded-xl p-6 shadow-card hover:shadow-card-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 border border-gray-100 group animate-slide-up" style={{animationDelay: '200ms'}}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-purple-100 to-purple-50 group-hover:from-purple-200 group-hover:to-purple-100 transition-colors">
+                    <span className="text-2xl">📦</span>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm font-semibold uppercase tracking-wide">Total Products</p>
+                <p className="text-4xl font-bold text-purple-600 mt-2">{stats.totalProducts}</p>
+                <div className="mt-4 w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full w-4/5 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full"></div>
+                </div>
+              </div>
+
+              {/* Total Orders */}
+              <div className="bg-white rounded-xl p-6 shadow-card hover:shadow-card-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 border border-gray-100 group animate-slide-up" style={{animationDelay: '300ms'}}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-green-100 to-green-50 group-hover:from-green-200 group-hover:to-green-100 transition-colors">
+                    <span className="text-2xl">📋</span>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm font-semibold uppercase tracking-wide">Total Orders</p>
+                <p className="text-4xl font-bold text-green-600 mt-2">{stats.totalOrders}</p>
+                <div className="mt-4 w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full w-3/4 bg-gradient-to-r from-green-400 to-green-600 rounded-full"></div>
+                </div>
+              </div>
             </div>
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-md p-6">
-              <p className="text-gray-700 text-sm font-medium mb-2">Net Earnings</p>
-              <p className="text-2xl font-bold text-green-600">{formatCurrency(stats.netEarnings)}</p>
-            </div>
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg shadow-md p-6">
-              <p className="text-gray-700 text-sm font-medium mb-2">Platform Fee (15%)</p>
-              <p className="text-2xl font-bold text-orange-600">{formatCurrency(stats.totalRevenue * 0.15)}</p>
-            </div>
+
+            {/* Revenue Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+              {/* Total Revenue */}
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-card-lg p-6 text-white border border-blue-400 animate-slide-up" style={{animationDelay: '400ms'}}>
+                <p className="text-blue-100 text-sm font-semibold uppercase tracking-wide">Total Revenue</p>
+                <p className="text-3xl font-bold mt-2">{formatCurrency(stats.totalRevenue)}</p>
+                <div className="mt-4 text-blue-200 text-sm">All transactions this month</div>
+              </div>
+
+              {/* Net Earnings */}
+              <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-card-lg p-6 text-white border border-green-400 animate-slide-up" style={{animationDelay: '500ms'}}>
+                <p className="text-green-100 text-sm font-semibold uppercase tracking-wide">Net Earnings</p>
+                <p className="text-3xl font-bold mt-2">{formatCurrency(stats.netEarnings)}</p>
+                <div className="mt-4 text-green-200 text-sm">After 15% platform fee</div>
+              </div>
+
+              {/* Platform Fee */}
+              <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl shadow-card-lg p-6 text-white border border-orange-400 animate-slide-up" style={{animationDelay: '600ms'}}>
+                <p className="text-orange-100 text-sm font-semibold uppercase tracking-wide">Platform Fee (15%)</p>
+                <p className="text-3xl font-bold mt-2">{formatCurrency(stats.totalRevenue * 0.15)}</p>
+                <div className="mt-4 text-orange-200 text-sm">Marketplace commission</div>
+              </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -636,6 +702,7 @@ const SellerDashboard: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
