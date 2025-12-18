@@ -3,50 +3,46 @@ import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="border-t border-white/10 bg-gradient-to-b from-transparent to-black/40 text-white">
+    <footer className="border-t border-gray-200 bg-gray-50 text-gray-900">
       <div className="container py-12">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-4 lg:gap-14">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 shadow-lg shadow-amber-900/40 flex items-center justify-center text-slate-900 font-black">
-                E.
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-black flex items-center justify-center text-white font-bold">
+                E
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-white/60">Maison</p>
-                <p className="text-xl font-semibold text-white">E-Commerce</p>
-              </div>
+              <p className="text-lg font-semibold">E-Commerce</p>
             </div>
-            <p className="mt-4 text-white/70 leading-relaxed">
-              Curated essentials, intentional luxuries, and a concierge team that cares about every parcel. 
-              Every interaction is designed to feel private, personal, and beautifully considered.
+            <p className="mt-4 text-gray-600 leading-relaxed">
+              Quality essentials and thoughtful curation. We focus on simplicity, reliability, and care in every transaction.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3 text-xs uppercase tracking-[0.2em] text-white/50">
-              <span className="pill bg-white/10 text-white border-white/20">Same-week delivery</span>
-              <span className="pill bg-white/5 text-white border-white/10">Insured shipments</span>
-              <span className="pill bg-white/5 text-white border-white/10">Human concierge</span>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <span className="pill">Fast delivery</span>
+              <span className="pill">Secure</span>
+              <span className="pill">Support</span>
             </div>
           </div>
 
           <div>
-            <h4 className="text-sm uppercase tracking-[0.2em] text-white/60">Navigate</h4>
+            <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-700">Navigate</h4>
             <ul className="mt-4 space-y-3">
               <li>
-                <Link to="/" className="text-white/80 hover:text-white transition-colors">
+                <Link to="/" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Home
                 </Link>
               </li>
               <li>
-                <Link to="/products" className="text-white/80 hover:text-white transition-colors">
+                <Link to="/products" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Collections
                 </Link>
               </li>
               <li>
-                <Link to="/orders" className="text-white/80 hover:text-white transition-colors">
+                <Link to="/orders" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Orders
                 </Link>
               </li>
               <li>
-                <Link to="/cart" className="text-white/80 hover:text-white transition-colors">
+                <Link to="/cart" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Cart
                 </Link>
               </li>
@@ -54,27 +50,26 @@ const Footer: React.FC = () => {
           </div>
 
           <div>
-            <h4 className="text-sm uppercase tracking-[0.2em] text-white/60">Concierge</h4>
-            <ul className="mt-4 space-y-3 text-white/80">
-              <li className="flex items-center justify-between">
-                <span>Live chat</span>
-                <span className="pill bg-emerald-400/10 text-emerald-200 border-emerald-200/20">Online</span>
-              </li>
-              <li className="flex items-center justify-between">
-                <span>Call</span>
-                <span className="text-white font-semibold">+1 (555) 401-2024</span>
+            <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-700">Support</h4>
+            <ul className="mt-4 space-y-3 text-gray-600">
+              <li>
+                <span className="block">Email</span>
+                <span className="text-sm">hello@ecommerce.com</span>
               </li>
               <li>
-                <span className="block">White-glove support</span>
-                <span className="text-xs text-white/60">10am – 10pm, 7 days a week</span>
+                <span className="block">Phone</span>
+                <span className="text-sm font-medium text-gray-900">+1 (555) 401-2024</span>
+              </li>
+              <li>
+                <span className="block text-sm">Monday – Friday, 9am – 6pm</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-4 border-t border-white/10 pt-6 text-sm text-white/60 md:flex-row md:items-center md:justify-between">
-          <p>© 2024 E-Commerce. Crafted for people who expect more.</p>
-          <p className="text-white/50">Built with React, TypeScript, and a lot of care.</p>
+        <div className="mt-10 flex flex-col gap-4 border-t border-gray-200 pt-6 text-sm text-gray-600 md:flex-row md:items-center md:justify-between">
+          <p>© 2024 E-Commerce. All rights reserved.</p>
+          <p className="text-gray-500">Built with React, TypeScript, and Tailwind CSS</p>
         </div>
       </div>
     </footer>

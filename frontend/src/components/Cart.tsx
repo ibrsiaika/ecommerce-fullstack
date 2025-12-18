@@ -36,7 +36,7 @@ const Cart: React.FC = () => {
           <p className="text-gray-600 mb-6">Start shopping to add items to your cart.</p>
           <Link
             to="/products"
-            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors"
+            className="inline-block bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
           >
             Continue Shopping
           </Link>

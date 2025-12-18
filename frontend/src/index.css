@@ -4,12 +4,12 @@
 
 @layer base {
   :root {
-    --ink: #0f172a;
-    --midnight: #111827;
-    --slate: #1f2937;
-    --fog: #f7f7fb;
-    --accent: #c68f4f;
-    --accent-strong: #b17a3b;
+    --ink: #ffffff;
+    --midnight: #f9fafb;
+    --slate: #f3f4f6;
+    --fog: #e5e7eb;
+    --accent: #000000;
+    --accent-strong: #1f2937;
     --emerald: #10b981;
   }
 
@@ -18,12 +18,10 @@
   }
   
   body {
-    font-family: 'Manrope', 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', 'Manrope', system-ui, -apple-system, sans-serif;
     line-height: 1.5;
-    color: #0f172a;
-    background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.06), transparent 35%),
-      radial-gradient(circle at 80% 0%, rgba(255,255,255,0.08), transparent 25%),
-      linear-gradient(140deg, #0b1221 0%, #0f172a 40%, #0b1022 100%);
+    color: #1f2937;
+    background: #ffffff;
     margin: 0;
     padding: 0;
   }
@@ -35,19 +33,18 @@
 
 @layer components {
   .surface {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-    backdrop-filter: blur(12px);
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   }
 
   .pill {
-    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase;
-    letter-spacing: 0.08em;
-    background: rgba(255, 255, 255, 0.1);
-    color: #e5e7eb;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium;
+    letter-spacing: 0.03em;
+    background: #f3f4f6;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
   }
 
   .btn {
@@ -55,23 +52,23 @@
   }
   
   .btn-primary {
-    @apply bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-slate-900 hover:from-amber-500 hover:to-amber-700 focus:ring-amber-400 shadow-lg shadow-amber-900/30;
+    @apply bg-black text-white hover:bg-gray-800 focus:ring-gray-400 shadow-sm;
   }
   
   .btn-secondary {
-    @apply bg-white/10 text-white hover:bg-white/20 focus:ring-white/20 border border-white/20;
+    @apply bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-300 border border-gray-200;
   }
   
   .btn-outline {
-    @apply border border-white/30 bg-transparent hover:bg-white/10 text-white/90;
+    @apply border border-gray-300 bg-transparent hover:bg-gray-50 text-gray-900;
   }
   
   .card {
-    @apply rounded-2xl border border-white/10 bg-white/5 text-white shadow-2xl shadow-black/30 p-6 backdrop-blur-md;
+    @apply rounded-xl border border-gray-200 bg-white text-gray-900 shadow-sm p-6;
   }
   
   .input {
-    @apply flex h-11 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50;
   }
   
   .container {

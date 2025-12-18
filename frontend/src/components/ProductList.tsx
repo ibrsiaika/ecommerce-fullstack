@@ -22,12 +22,12 @@ interface Product {
 
 const PlaceholderCard = () => (
   <div className="surface h-full p-4 animate-pulse">
-    <div className="h-40 rounded-xl bg-white/10" />
-    <div className="mt-4 h-4 rounded bg-white/10 w-2/3" />
-    <div className="mt-2 h-3 rounded bg-white/10 w-1/2" />
+    <div className="h-40 rounded-lg bg-gray-200" />
+    <div className="mt-4 h-4 rounded bg-gray-200 w-2/3" />
+    <div className="mt-2 h-3 rounded bg-gray-200 w-1/2" />
     <div className="mt-4 flex gap-2">
-      <div className="h-10 flex-1 rounded bg-white/10" />
-      <div className="h-10 flex-1 rounded bg-white/10" />
+      <div className="h-10 flex-1 rounded bg-gray-200" />
+      <div className="h-10 flex-1 rounded bg-gray-200" />
     </div>
   </div>
 );
@@ -130,13 +130,13 @@ const ProductList: React.FC = () => {
     if (products.length === 0) {
       return (
         <div className="col-span-full surface p-10 text-center">
-          <p className="text-xl font-semibold mb-2">Nothing matched this mood.</p>
-          <p className="text-white/60 mb-6">
-            Reset your filters or ask concierge for a curated list. We keep the grid calm—no filler items.
+          <p className="text-xl font-semibold mb-2 text-gray-900">No products found.</p>
+          <p className="text-gray-600 mb-6">
+            Try adjusting your search or filters to find what you're looking for.
           </p>
           <div className="flex justify-center gap-3">
             <button
-              className="btn btn-primary rounded-full"
+              className="btn btn-primary rounded-lg"
               onClick={() => {
                 setFilters({ ...filters, search: '', category: '' });
                 setPage(1);
@@ -144,7 +144,7 @@ const ProductList: React.FC = () => {
             >
               Reset filters
             </button>
-            <Link to="/products" className="btn btn-outline rounded-full">
+            <Link to="/products" className="btn btn-outline rounded-lg">
               Browse all
             </Link>
           </div>
@@ -154,65 +154,62 @@ const ProductList: React.FC = () => {
 
     return products.map((product) => (
       <div key={product._id} className="surface group p-4 flex flex-col">
-        <div className="relative overflow-hidden rounded-2xl bg-white/5">
+        <div className="relative overflow-hidden rounded-lg bg-gray-200">
           <img
             src={product.images?.[0] || 'https://via.placeholder.com/400'}
             alt={product.name}
             className="h-52 w-full object-cover transition duration-500 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-70 group-hover:opacity-90 transition" />
           <div className="absolute left-3 bottom-3 flex items-center gap-2">
-            <span className="pill bg-white/15 text-white border-white/20">{product.category}</span>
-            <span className="pill bg-amber-400/20 text-amber-100 border-amber-200/20">
-              {product.countInStock > 0 ? `${product.countInStock} in studio` : 'Reserved'}
-            </span>
+            <span className="pill">{product.category}</span>
+            {product.countInStock > 0 && <span className="pill">{product.countInStock} in stock</span>}
           </div>
         </div>
 
         <div className="mt-4 flex flex-col gap-2 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="text-lg font-semibold leading-tight">{product.name}</h3>
-              <p className="text-sm text-white/60 line-clamp-2">{product.description}</p>
+              <h3 className="text-lg font-semibold text-gray-900 leading-tight">{product.name}</h3>
+              <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
             </div>
             <div className="text-right">
-              <p className="text-xl font-semibold text-amber-200">${product.price.toFixed(2)}</p>
+              <p className="text-xl font-bold text-gray-900">${product.price.toFixed(2)}</p>
               {product.comparePrice && (
-                <p className="text-xs text-white/50 line-through">${product.comparePrice.toFixed(2)}</p>
+                <p className="text-xs text-gray-400 line-through">${product.comparePrice.toFixed(2)}</p>
               )}
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-sm text-white/70">
+          <div className="flex items-center justify-between text-sm text-gray-600">
             <div className="flex items-center gap-1">
               {[...Array(5)].map((_, i) => (
-                <span key={i} className={i < Math.floor(product.rating) ? 'text-amber-300' : 'text-white/30'}>
+                <span key={i} className={i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-300'}>
                   ★
                 </span>
               ))}
               <span className="ml-2">({product.numReviews})</span>
             </div>
-            <span className="text-xs uppercase tracking-[0.2em] text-white/50">SKU {product.sku}</span>
+            <span className="text-xs text-gray-500">SKU {product.sku}</span>
           </div>
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-2">
           <Link
             to={`/products/${product._id}`}
-            className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-white/10"
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-center text-sm font-semibold text-gray-900 hover:bg-gray-50"
           >
             Details
           </Link>
           <button
             className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
               product.countInStock > 0
-                ? 'bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-slate-900 hover:from-amber-500 hover:to-amber-700'
-                : 'bg-white/10 text-white/60 cursor-not-allowed'
+                ? 'bg-black text-white hover:bg-gray-800'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`}
             disabled={product.countInStock === 0}
             onClick={() => handleAddToCart(product)}
           >
-            {product.countInStock > 0 ? 'Add to bag' : 'Reserved'}
+            {product.countInStock > 0 ? 'Add to bag' : 'Out of stock'}
           </button>
         </div>
       </div>
