@@ -45,8 +45,8 @@ const SellerProfile: React.FC<{ sellerId?: string }> = ({ sellerId }) => {
     email: 'seller@example.com',
     storeName: 'Premium Electronics Store',
     storeDescription: 'Your trusted source for quality electronics and gadgets',
-    logo: 'https://via.placeholder.com/100',
-    banner: 'https://via.placeholder.com/1200x400',
+    logo: 'https://picsum.photos/100',
+    banner: 'https://picsum.photos/1200x400',
     rating: 4.7,
     totalReviews: 324,
     followers: 1250,
@@ -70,7 +70,7 @@ const SellerProfile: React.FC<{ sellerId?: string }> = ({ sellerId }) => {
       price: 79.99,
       rating: 4.8,
       numReviews: 256,
-      image: 'https://via.placeholder.com/300x300',
+      image: 'https://picsum.photos/300x300',
       countInStock: 45,
     },
     {
@@ -79,7 +79,7 @@ const SellerProfile: React.FC<{ sellerId?: string }> = ({ sellerId }) => {
       price: 12.99,
       rating: 4.6,
       numReviews: 189,
-      image: 'https://via.placeholder.com/300x300',
+      image: 'https://picsum.photos/300x300',
       countInStock: 128,
     },
     {
@@ -88,7 +88,7 @@ const SellerProfile: React.FC<{ sellerId?: string }> = ({ sellerId }) => {
       price: 24.99,
       rating: 4.7,
       numReviews: 412,
-      image: 'https://via.placeholder.com/300x300',
+      image: 'https://picsum.photos/300x300',
       countInStock: 87,
     },
     {
@@ -97,7 +97,7 @@ const SellerProfile: React.FC<{ sellerId?: string }> = ({ sellerId }) => {
       price: 9.99,
       rating: 4.5,
       numReviews: 156,
-      image: 'https://via.placeholder.com/300x300',
+      image: 'https://picsum.photos/300x300',
       countInStock: 234,
     },
   ];

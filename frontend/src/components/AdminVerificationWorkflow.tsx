@@ -37,9 +37,9 @@ const AdminVerificationWorkflow: React.FC = () => {
       appliedDate: '2025-01-15',
       status: 'pending',
       documents: {
-        idDocument: 'https://via.placeholder.com/400x300',
-        businessLicense: 'https://via.placeholder.com/400x300',
-        taxCertificate: 'https://via.placeholder.com/400x300',
+        idDocument: 'https://picsum.photos/400x300',
+        businessLicense: 'https://picsum.photos/400x300',
+        taxCertificate: 'https://picsum.photos/400x300',
       },
     },
     {
@@ -54,9 +54,9 @@ const AdminVerificationWorkflow: React.FC = () => {
       appliedDate: '2025-01-10',
       status: 'reviewing',
       documents: {
-        idDocument: 'https://via.placeholder.com/400x300',
-        businessLicense: 'https://via.placeholder.com/400x300',
-        taxCertificate: 'https://via.placeholder.com/400x300',
+        idDocument: 'https://picsum.photos/400x300',
+        businessLicense: 'https://picsum.photos/400x300',
+        taxCertificate: 'https://picsum.photos/400x300',
       },
     },
     {
@@ -71,9 +71,9 @@ const AdminVerificationWorkflow: React.FC = () => {
       appliedDate: '2025-01-01',
       status: 'approved',
       documents: {
-        idDocument: 'https://via.placeholder.com/400x300',
-        businessLicense: 'https://via.placeholder.com/400x300',
-        taxCertificate: 'https://via.placeholder.com/400x300',
+        idDocument: 'https://picsum.photos/400x300',
+        businessLicense: 'https://picsum.photos/400x300',
+        taxCertificate: 'https://picsum.photos/400x300',
       },
       reviewedBy: 'Admin User',
       reviewedDate: '2025-01-05',

@@ -8,7 +8,7 @@ const sampleProducts = [
     price: 1299.99,
     category: 'Electronics',
     countInStock: 15,
-    images: ['https://via.placeholder.com/400x400/1f2937/ffffff?text=Premium+Laptop'],
+    images: ['https://picsum.photos/400x400/1f2937/ffffff?text=Premium+Laptop'],
     sku: 'LAPTOP001',
     slug: 'premium-laptop',
     isFeatured: true
@@ -19,7 +19,7 @@ const sampleProducts = [
     price: 199.99,
     category: 'Electronics',
     countInStock: 25,
-    images: ['https://via.placeholder.com/400x400/3b82f6/ffffff?text=Headphones'],
+    images: ['https://picsum.photos/400x400/3b82f6/ffffff?text=Headphones'],
     sku: 'HEAD001',
     slug: 'wireless-headphones',
     isFeatured: true
@@ -30,7 +30,7 @@ const sampleProducts = [
     price: 299.99,
     category: 'Electronics',
     countInStock: 20,
-    images: ['https://via.placeholder.com/400x400/10b981/ffffff?text=Smart+Watch'],
+    images: ['https://picsum.photos/400x400/10b981/ffffff?text=Smart+Watch'],
     sku: 'WATCH001',
     slug: 'smart-watch'
   },
@@ -40,7 +40,7 @@ const sampleProducts = [
     price: 79.99,
     category: 'Electronics',
     countInStock: 30,
-    images: ['https://via.placeholder.com/400x400/ef4444/ffffff?text=Gaming+Mouse'],
+    images: ['https://picsum.photos/400x400/ef4444/ffffff?text=Gaming+Mouse'],
     sku: 'MOUSE001',
     slug: 'gaming-mouse'
   },
@@ -50,7 +50,7 @@ const sampleProducts = [
     price: 159.99,
     category: 'Electronics',
     countInStock: 18,
-    images: ['https://via.placeholder.com/400x400/8b5cf6/ffffff?text=Keyboard'],
+    images: ['https://picsum.photos/400x400/8b5cf6/ffffff?text=Keyboard'],
     sku: 'KEYB001',
     slug: 'mechanical-keyboard'
   },
@@ -60,7 +60,7 @@ const sampleProducts = [
     price: 89.99,
     category: 'Home & Kitchen',
     countInStock: 12,
-    images: ['https://via.placeholder.com/400x400/92400e/ffffff?text=Coffee+Maker'],
+    images: ['https://picsum.photos/400x400/92400e/ffffff?text=Coffee+Maker'],
     sku: 'COFFEE001',
     slug: 'coffee-maker'
   },
@@ -70,7 +70,7 @@ const sampleProducts = [
     price: 129.99,
     category: 'Sports & Outdoors',
     countInStock: 22,
-    images: ['https://via.placeholder.com/400x400/dc2626/ffffff?text=Running+Shoes'],
+    images: ['https://picsum.photos/400x400/dc2626/ffffff?text=Running+Shoes'],
     sku: 'SHOES001',
     slug: 'running-shoes',
     isFeatured: true
@@ -81,7 +81,7 @@ const sampleProducts = [
     price: 49.99,
     category: 'Fashion',
     countInStock: 35,
-    images: ['https://via.placeholder.com/400x400/059669/ffffff?text=Backpack'],
+    images: ['https://picsum.photos/400x400/059669/ffffff?text=Backpack'],
     sku: 'BAG001',
     slug: 'backpack'
   }

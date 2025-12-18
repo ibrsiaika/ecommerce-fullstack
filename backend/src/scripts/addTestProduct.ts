@@ -7,7 +7,7 @@ const testProduct = {
   price: 99.99,
   category: 'Electronics',
   countInStock: 10,
-  images: ['https://via.placeholder.com/400'],
+  images: ['https://picsum.photos/400'],
   sku: 'TEST001'
 };
 

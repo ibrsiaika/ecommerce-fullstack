@@ -84,96 +84,88 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link
-              to="/login"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
-              sign in to your existing account
-            </Link>
-          </p>
-        </div>
+    <div className="min-h-screen bg-white">
+      <div className="container py-16 lg:py-24">
+        <div className="max-w-md mx-auto">
+          {/* Header */}
+          <div className="mb-12">
+            <div className="h-10 w-10 rounded-lg bg-black flex items-center justify-center text-white font-bold mb-4">
+              E
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Create account</h1>
+            <p className="text-gray-600">
+              Already have an account?{' '}
+              <Link to="/login" className="font-semibold text-gray-900 hover:underline">
+                Sign in
+              </Link>
+            </p>
+          </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {/* Error Alert */}
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
+            <div className="mb-6 p-4 rounded-lg border border-red-200 bg-red-50">
+              <p className="text-sm text-red-700 font-medium">{error}</p>
             </div>
           )}
 
+          {/* Validation Errors */}
           {validationErrors.length > 0 && (
-            <div className="rounded-md bg-red-50 p-4">
+            <div className="mb-6 p-4 rounded-lg border border-red-200 bg-red-50">
               <ul className="text-sm text-red-700 space-y-1">
-                {validationErrors.map((error, index) => (
-                  <li key={index}>• {error}</li>
+                {validationErrors.map((err, index) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <span className="mt-0.5">•</span>
+                    <span>{err}</span>
+                  </li>
                 ))}
               </ul>
             </div>
           )}
 
-          <div className="space-y-4">
-            {/* Name */}
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Full Name */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Full Name
+              <label htmlFor="name" className="block text-sm font-medium text-gray-900 mb-2">
+                Full name
               </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiUser className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  autoComplete="name"
-                  required
-                  value={name}
-                  onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter your full name"
-                />
-              </div>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                required
+                value={name}
+                onChange={handleChange}
+                placeholder="John Doe"
+                className="input w-full"
+              />
             </div>
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2">
                 Email address
               </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiMail className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter your email"
-                />
-              </div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={handleChange}
+                placeholder="name@example.com"
+                className="input w-full"
+              />
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-900 mb-2">
                 Password
               </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiLock className="h-5 w-5 text-gray-400" />
-                </div>
+              <div className="relative">
                 <input
                   id="password"
                   name="password"
@@ -182,32 +174,25 @@ const Register: React.FC = () => {
                   required
                   value={password}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter your password"
+                  placeholder="••••••••"
+                  className="input w-full pr-10"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
-                  {showPassword ? (
-                    <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  ) : (
-                    <FiEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  )}
+                  {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                 </button>
               </div>
             </div>
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-900 mb-2">
+                Confirm password
               </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiLock className="h-5 w-5 text-gray-400" />
-                </div>
+              <div className="relative">
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
@@ -216,41 +201,48 @@ const Register: React.FC = () => {
                   required
                   value={confirmPassword}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Confirm your password"
+                  placeholder="••••••••"
+                  className="input w-full pr-10"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
-                  {showConfirmPassword ? (
-                    <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  ) : (
-                    <FiEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  )}
+                  {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                 </button>
               </div>
             </div>
-          </div>
 
-          <div>
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn btn-primary w-full py-3 text-base font-medium"
             >
-              {isLoading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Creating account...
-                </div>
-              ) : (
-                'Create account'
-              )}
+              {isLoading ? 'Creating account...' : 'Create account'}
             </button>
+          </form>
+
+          {/* Password Requirements Info */}
+          <div className="mt-8 p-4 rounded-lg bg-gray-50 border border-gray-200">
+            <p className="text-xs text-gray-600 font-medium uppercase tracking-wider mb-2">Requirements</p>
+            <ul className="space-y-2 text-sm text-gray-700">
+              <li className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-gray-400"></span>
+                <span>At least 6 characters</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-gray-400"></span>
+                <span>Passwords must match</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-gray-400"></span>
+                <span>Valid email address</span>
+              </li>
+            </ul>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

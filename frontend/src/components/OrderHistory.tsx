@@ -73,127 +73,118 @@ const OrderHistory: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block mb-6">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-black"></div>
+          </div>
+          <p className="text-xl text-gray-600 font-semibold">Loading your orders...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-6xl mx-auto py-8 px-4">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
+      <div className="min-h-screen bg-white">
+        <div className="container py-16">
+          <div className="p-6 rounded-xl bg-red-50 border-2 border-red-200">
+            <p className="text-red-700 font-semibold text-lg">⚠️ {error}</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Order History</h1>
+    <div className="min-h-screen bg-white">
+      <div className="container py-16 lg:py-20">
+        <div className="mb-12">
+          <h1 className="text-5xl font-bold text-gray-900 mb-3">Order History</h1>
+          <p className="text-xl text-gray-600">Track and manage all your orders</p>
+        </div>
 
-      {orders.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
-            <svg className="mx-auto h-24 w-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
+        {orders.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="text-8xl mb-8">📦</div>
+            <h3 className="text-3xl font-bold text-gray-900 mb-4">No orders yet</h3>
+            <p className="text-xl text-gray-600 mb-10 max-w-md mx-auto">You haven't placed any orders. Start shopping to see your orders here.</p>
+            <Link
+              to="/products"
+              className="btn btn-primary inline-block px-12 py-4 rounded-xl text-lg font-bold shadow-lg hover:shadow-xl transition-shadow"
+            >
+              Start Shopping
+            </Link>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
-          <p className="text-gray-600 mb-4">You haven't placed any orders. Start shopping to see your orders here.</p>
-          <Link
-            to="/products"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-          >
-            Start Shopping
-          </Link>
-        </div>
-      ) : (
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Order
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Payment
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {orders.map((order) => (
-                  <tr key={order._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        #{order.orderNumber}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {formatDate(order.createdAt)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        ${order.totalPrice.toFixed(2)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          order.isPaid
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {order.isPaid ? 'Paid' : 'Unpaid'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.orderStatus)}`}
-                      >
-                        {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+        ) : (
+          <div className="space-y-4">
+            {orders.map((order) => (
+              <div 
+                key={order._id} 
+                className="surface rounded-xl p-8 border border-gray-200 hover:shadow-lg transition-all duration-300 hover:border-gray-300"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-6 gap-8 items-center">
+                  {/* Order Number */}
+                  <div>
+                    <p className="text-sm text-gray-600 font-semibold uppercase tracking-widest">Order ID</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-2">#{order.orderNumber}</p>
+                  </div>
+
+                  {/* Date */}
+                  <div>
+                    <p className="text-sm text-gray-600 font-semibold uppercase tracking-widest">Date</p>
+                    <p className="text-lg font-semibold text-gray-900 mt-2">{formatDate(order.createdAt)}</p>
+                  </div>
+
+                  {/* Total */}
+                  <div>
+                    <p className="text-sm text-gray-600 font-semibold uppercase tracking-widest">Total</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-2">${order.totalPrice.toFixed(2)}</p>
+                  </div>
+
+                  {/* Payment Status */}
+                  <div>
+                    <p className="text-sm text-gray-600 font-semibold uppercase tracking-widest">Payment</p>
+                    <span className={`inline-flex px-4 py-2 rounded-full font-bold text-sm mt-2 ${
+                      order.isPaid
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {order.isPaid ? '✓ Paid' : '⏳ Pending'}
+                    </span>
+                  </div>
+
+                  {/* Order Status */}
+                  <div>
+                    <p className="text-sm text-gray-600 font-semibold uppercase tracking-widest">Status</p>
+                    <span className={`inline-flex px-4 py-2 rounded-full font-bold text-sm mt-2 ${getStatusColor(order.orderStatus)}`}>
+                      {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-3">
+                    <Link
+                      to={`/order/${order._id}`}
+                      className="btn btn-outline px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 transition-colors flex-1"
+                    >
+                      View Details
+                    </Link>
+                    {!order.isPaid && (
                       <Link
-                        to={`/order/${order._id}`}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
+                        to={`/order/${order._id}/pay`}
+                        className="btn btn-primary px-4 py-2 rounded-lg font-bold text-sm hover:shadow-lg transition-shadow flex-1"
                       >
-                        View Details
+                        Pay Now
                       </Link>
-                      {!order.isPaid && (
-                        <Link
-                          to={`/order/${order._id}/pay`}
-                          className="text-green-600 hover:text-green-900"
-                        >
-                          Pay Now
-                        </Link>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
