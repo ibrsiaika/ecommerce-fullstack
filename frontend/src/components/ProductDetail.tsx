@@ -78,7 +78,7 @@ const ProductDetail: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-amber-400"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
       </div>
     );
   }
@@ -92,19 +92,18 @@ const ProductDetail: React.FC = () => {
   }
 
   return (
-    <div className="container py-10 text-white">
+    <div className="container py-10 text-gray-900">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <div className="space-y-4">
-          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-2xl">
+          <div className="relative overflow-hidden rounded-lg bg-gray-200">
             <img
               src={product.images[selectedImage] || 'https://via.placeholder.com/600'}
               alt={product.name}
               className="h-[420px] w-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             <div className="absolute bottom-4 left-4 flex gap-2">
-              <span className="pill bg-white/10 text-white border-white/20">{product.category}</span>
-              <span className="pill bg-amber-400/20 text-amber-100 border-amber-200/20">SKU {product.sku}</span>
+              <span className="pill">{product.category}</span>
+              <span className="pill">SKU {product.sku}</span>
             </div>
           </div>
 
@@ -114,8 +113,8 @@ const ProductDetail: React.FC = () => {
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`overflow-hidden rounded-xl border ${
-                    selectedImage === index ? 'border-amber-400' : 'border-white/10'
+                  className={`overflow-hidden rounded-lg border ${
+                    selectedImage === index ? 'border-black' : 'border-gray-300'
                   }`}
                 >
                   <img
@@ -131,40 +130,40 @@ const ProductDetail: React.FC = () => {
 
         <div className="surface p-6 space-y-6">
           <div>
-            <h1 className="text-3xl font-semibold">{product.name}</h1>
-            <p className="text-white/60 mt-2">Thoughtfully sourced, ready to ship.</p>
+            <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
+            <p className="text-gray-600 mt-2">Quality essentials for everyday use.</p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 text-white/80">
+          <div className="flex flex-wrap items-center gap-3 text-gray-700">
             <div className="flex items-center gap-1">
               {[...Array(5)].map((_, i) => (
-                <span key={i} className={i < Math.floor(product.rating) ? 'text-amber-300' : 'text-white/30'}>
+                <span key={i} className={i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-300'}>
                   ★
                 </span>
               ))}
               <span className="ml-2 text-sm">{product.rating.toFixed(1)} ({product.numReviews} reviews)</span>
             </div>
-            <span className={`pill ${product.countInStock > 0 ? 'bg-emerald-400/20 text-emerald-100 border-emerald-200/20' : 'bg-white/10 text-white border-white/15'}`}>
-              {product.countInStock > 0 ? `${product.countInStock} in studio` : 'Reserved'}
+            <span className={`pill ${product.countInStock > 0 ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+              {product.countInStock > 0 ? `${product.countInStock} in stock` : 'Out of stock'}
             </span>
           </div>
 
           <div>
-            <p className="text-4xl font-semibold text-amber-200">${product.price.toFixed(2)}</p>
+            <p className="text-4xl font-bold text-gray-900">${product.price.toFixed(2)}</p>
             {product.comparePrice && (
-              <p className="text-sm text-white/50">Previously ${product.comparePrice.toFixed(2)}</p>
+              <p className="text-sm text-gray-500">Was ${product.comparePrice.toFixed(2)}</p>
             )}
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-2">Description</h3>
-            <p className="text-white/70 leading-relaxed">{product.description}</p>
+            <h3 className="text-lg font-semibold mb-2 text-gray-900">Description</h3>
+            <p className="text-gray-600 leading-relaxed">{product.description}</p>
           </div>
 
           {product.countInStock > 0 && (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <label htmlFor="quantity" className="text-sm font-medium text-white/80">
+                <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
                   Quantity
                 </label>
                 <select
