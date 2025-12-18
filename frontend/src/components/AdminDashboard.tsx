@@ -119,21 +119,21 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
-        <div className="mb-10 animate-fade-in">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">Admin Dashboard</h1>
-          <p className="text-gray-600 text-lg">Manage your platform, monitor metrics, and control the marketplace</p>
+        <div className="mb-8 sm:mb-10 animate-fade-in">
+          <h1 className="text-2xl sm:text-3xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">Admin Dashboard</h1>
+          <p className="text-sm sm:text-base lg:text-lg text-gray-600">Manage your platform, monitor metrics, and control the marketplace</p>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex gap-2 mb-10 bg-white rounded-xl p-2 shadow-card w-fit animate-slide-down border border-gray-100">
+        <div className="flex gap-1 sm:gap-2 mb-8 sm:mb-10 bg-white rounded-lg sm:rounded-xl p-1 sm:p-2 shadow-card w-full sm:w-fit animate-slide-down border border-gray-100 overflow-x-auto">
           {(['overview', 'revenue', 'products', 'sellers'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2.5 font-semibold rounded-lg transition-all duration-200 capitalize ${
+              className={`px-3 sm:px-6 py-2 sm:py-2.5 font-semibold text-xs sm:text-base rounded-lg transition-all duration-200 capitalize whitespace-nowrap flex-shrink-0 ${
                 activeTab === tab
                   ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
                   : 'text-gray-700 hover:bg-gray-50'
@@ -148,51 +148,51 @@ const AdminDashboard: React.FC = () => {
       {activeTab === 'overview' && (
         <>
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {/* Total Orders Card */}
-            <div className="bg-white rounded-xl p-6 shadow-card hover:shadow-card-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 border border-gray-100 group animate-slide-up" style={{animationDelay: '0ms'}}>
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-lg bg-gradient-to-br from-blue-100 to-blue-50 group-hover:from-blue-200 group-hover:to-blue-100 transition-colors">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-card hover:shadow-card-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 border border-gray-100 group animate-slide-up" style={{animationDelay: '0ms'}}>
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <div className="p-2 sm:p-3 rounded-lg bg-gradient-to-br from-blue-100 to-blue-50 group-hover:from-blue-200 group-hover:to-blue-100 transition-colors">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
               </div>
-              <p className="text-gray-600 text-sm font-semibold uppercase tracking-wide">Total Orders</p>
-              <p className="text-4xl font-bold text-blue-600 mt-2">{stats.totalOrders}</p>
-              <div className="mt-4 w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <p className="text-gray-600 text-xs sm:text-sm font-semibold uppercase tracking-wide">Total Orders</p>
+              <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-600 mt-2">{stats.totalOrders}</p>
+              <div className="mt-3 sm:mt-4 w-full h-1 sm:h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div className="h-full w-3/4 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full"></div>
               </div>
             </div>
 
             {/* Total Products Card */}
-            <div className="bg-white rounded-xl p-6 shadow-card hover:shadow-card-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 border border-gray-100 group animate-slide-up" style={{animationDelay: '100ms'}}>
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-lg bg-gradient-to-br from-green-100 to-green-50 group-hover:from-green-200 group-hover:to-green-100 transition-colors">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-card hover:shadow-card-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 border border-gray-100 group animate-slide-up" style={{animationDelay: '100ms'}}>
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <div className="p-2 sm:p-3 rounded-lg bg-gradient-to-br from-green-100 to-green-50 group-hover:from-green-200 group-hover:to-green-100 transition-colors">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                 </div>
               </div>
-              <p className="text-gray-600 text-sm font-semibold uppercase tracking-wide">Total Products</p>
-              <p className="text-4xl font-bold text-green-600 mt-2">{stats.totalProducts}</p>
-              <div className="mt-4 w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <p className="text-gray-600 text-xs sm:text-sm font-semibold uppercase tracking-wide">Total Products</p>
+              <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-600 mt-2">{stats.totalProducts}</p>
+              <div className="mt-3 sm:mt-4 w-full h-1 sm:h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div className="h-full w-3/4 bg-gradient-to-r from-green-400 to-green-600 rounded-full"></div>
               </div>
             </div>
 
             {/* Total Users Card */}
-            <div className="bg-white rounded-xl p-6 shadow-card hover:shadow-card-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 border border-gray-100 group animate-slide-up" style={{animationDelay: '200ms'}}>
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-lg bg-gradient-to-br from-purple-100 to-purple-50 group-hover:from-purple-200 group-hover:to-purple-100 transition-colors">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-card hover:shadow-card-lg transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 border border-gray-100 group animate-slide-up" style={{animationDelay: '200ms'}}>
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <div className="p-2 sm:p-3 rounded-lg bg-gradient-to-br from-purple-100 to-purple-50 group-hover:from-purple-200 group-hover:to-purple-100 transition-colors">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                   </svg>
                 </div>
               </div>
-              <p className="text-gray-600 text-sm font-semibold uppercase tracking-wide">Total Users</p>
-              <p className="text-4xl font-bold text-purple-600 mt-2">{stats.totalUsers}</p>
-              <div className="mt-4 w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <p className="text-gray-600 text-xs sm:text-sm font-semibold uppercase tracking-wide">Total Users</p>
+              <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-purple-600 mt-2">{stats.totalUsers}</p>
+              <div className="mt-3 sm:mt-4 w-full h-1 sm:h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div className="h-full w-3/4 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full"></div>
               </div>
             </div>

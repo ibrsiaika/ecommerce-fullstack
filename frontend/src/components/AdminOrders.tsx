@@ -143,183 +143,170 @@ const AdminOrders: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block mb-6">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-black"></div>
+          </div>
+          <p className="text-xl text-gray-600 font-semibold">Loading orders...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto py-8 px-4">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
+      <div className="min-h-screen bg-white">
+        <div className="container py-16">
+          <div className="p-6 rounded-xl bg-red-50 border-2 border-red-200">
+            <p className="text-red-700 font-semibold text-lg">⚠️ {error}</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Order Management</h1>
-        <div className="text-sm text-gray-600">
-          Total Orders: {orders.length}
-        </div>
-      </div>
-
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Order
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Payment
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {orders.map((order) => (
-                <tr key={order._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">#{order.orderNumber}</div>
-                      {order.trackingNumber && (
-                        <div className="text-xs text-gray-500">Track: {order.trackingNumber}</div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{order.user.name}</div>
-                      <div className="text-sm text-gray-500">{order.user.email}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatDate(order.createdAt)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    ${order.totalPrice.toFixed(2)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        order.isPaid
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {order.isPaid ? 'Paid' : 'Unpaid'}
-                    </span>
-                    {order.isPaid && order.paidAt && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        {formatDate(order.paidAt)}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.orderStatus)}`}
-                    >
-                      {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
-                    </span>
-                    {order.isDelivered && order.deliveredAt && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        Delivered: {formatDate(order.deliveredAt)}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="space-y-1">
-                      <Link
-                        to={`/order/${order._id}`}
-                        className="text-blue-600 hover:text-blue-900 block"
-                      >
-                        View Details
-                      </Link>
-                      
-                      {order.orderStatus !== 'delivered' && order.orderStatus !== 'cancelled' && (
-                        <div className="space-y-1">
-                          {order.orderStatus === 'pending' && (
-                            <button
-                              onClick={() => updateOrderStatus(order._id, 'processing')}
-                              disabled={updatingOrder === order._id}
-                              className="text-blue-600 hover:text-blue-900 block disabled:opacity-50"
-                            >
-                              Mark Processing
-                            </button>
-                          )}
-                          
-                          {order.orderStatus === 'processing' && (
-                            <button
-                              onClick={() => {
-                                const trackingNumber = prompt('Enter tracking number (optional):');
-                                updateOrderStatus(order._id, 'shipped', trackingNumber || undefined);
-                              }}
-                              disabled={updatingOrder === order._id}
-                              className="text-purple-600 hover:text-purple-900 block disabled:opacity-50"
-                            >
-                              Mark Shipped
-                            </button>
-                          )}
-                          
-                          {order.orderStatus === 'shipped' && (
-                            <button
-                              onClick={() => markAsDelivered(order._id)}
-                              disabled={updatingOrder === order._id}
-                              className="text-green-600 hover:text-green-900 block disabled:opacity-50"
-                            >
-                              Mark Delivered
-                            </button>
-                          )}
-                          
-                          <button
-                            onClick={() => updateOrderStatus(order._id, 'cancelled')}
-                            disabled={updatingOrder === order._id}
-                            className="text-red-600 hover:text-red-900 block disabled:opacity-50"
-                          >
-                            Cancel Order
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {orders.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
-            <svg className="mx-auto h-24 w-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
+    <div className="min-h-screen bg-white">
+      <div className="container py-16 lg:py-20">
+        <div className="mb-12">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <h1 className="text-5xl font-bold text-gray-900 mb-3">📦 Order Management</h1>
+              <p className="text-xl text-gray-600">Manage all customer orders and update statuses</p>
+            </div>
+            <div className="surface rounded-xl p-6 border border-gray-200">
+              <p className="text-sm text-gray-600 font-semibold uppercase tracking-widest mb-2">Total Orders</p>
+              <p className="text-4xl font-bold text-gray-900">{orders.length}</p>
+            </div>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
-          <p className="text-gray-600">Orders will appear here once customers start placing them.</p>
         </div>
-      )}
+
+        {orders.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="text-8xl mb-8">📦</div>
+            <h3 className="text-3xl font-bold text-gray-900 mb-4">No Orders Yet</h3>
+            <p className="text-xl text-gray-600 mb-10">Orders will appear here once customers start placing them.</p>
+          </div>
+        ) : (
+          <div className="surface rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
+                    <th className="px-8 py-4 text-left text-sm font-bold uppercase tracking-widest text-gray-700">Order</th>
+                    <th className="px-8 py-4 text-left text-sm font-bold uppercase tracking-widest text-gray-700">Customer</th>
+                    <th className="px-8 py-4 text-left text-sm font-bold uppercase tracking-widest text-gray-700">Date</th>
+                    <th className="px-8 py-4 text-left text-sm font-bold uppercase tracking-widest text-gray-700">Amount</th>
+                    <th className="px-8 py-4 text-left text-sm font-bold uppercase tracking-widest text-gray-700">Payment</th>
+                    <th className="px-8 py-4 text-left text-sm font-bold uppercase tracking-widest text-gray-700">Status</th>
+                    <th className="px-8 py-4 text-left text-sm font-bold uppercase tracking-widest text-gray-700">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {orders.map((order) => (
+                    <tr key={order._id} className="hover:bg-gray-50 transition-colors duration-200">
+                      <td className="px-8 py-6">
+                        <div>
+                          <p className="text-lg font-bold text-gray-900">#{order.orderNumber}</p>
+                          {order.trackingNumber && (
+                            <p className="text-sm text-gray-600 mt-1">📍 {order.trackingNumber}</p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div>
+                          <p className="font-bold text-gray-900">{order.user.name}</p>
+                          <p className="text-sm text-gray-600 mt-1">{order.user.email}</p>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6 text-gray-900 font-semibold">{formatDate(order.createdAt)}</td>
+                      <td className="px-8 py-6">
+                        <p className="text-2xl font-bold text-gray-900">${order.totalPrice.toFixed(2)}</p>
+                      </td>
+                      <td className="px-8 py-6">
+                        <span className={`inline-flex px-4 py-2 rounded-full font-bold text-sm ${
+                          order.isPaid
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {order.isPaid ? '✓ Paid' : '⏳ Pending'}
+                        </span>
+                        {order.isPaid && order.paidAt && (
+                          <p className="text-xs text-gray-600 mt-2">{formatDate(order.paidAt)}</p>
+                        )}
+                      </td>
+                      <td className="px-8 py-6">
+                        <span className={`inline-flex px-4 py-2 rounded-full font-bold text-sm ${getStatusColor(order.orderStatus)}`}>
+                          {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
+                        </span>
+                        {order.isDelivered && order.deliveredAt && (
+                          <p className="text-xs text-gray-600 mt-2">📦 {formatDate(order.deliveredAt)}</p>
+                        )}
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="space-y-2">
+                          <Link
+                            to={`/order/${order._id}`}
+                            className="btn btn-outline text-sm px-4 py-2 rounded-lg font-bold w-full text-center hover:bg-gray-50 transition-colors"
+                          >
+                            View
+                          </Link>
+                          
+                          {order.orderStatus !== 'delivered' && order.orderStatus !== 'cancelled' && (
+                            <div className="space-y-2">
+                              {order.orderStatus === 'pending' && (
+                                <button
+                                  onClick={() => updateOrderStatus(order._id, 'processing')}
+                                  disabled={updatingOrder === order._id}
+                                  className="text-sm px-4 py-2 rounded-lg font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 w-full transition-colors disabled:opacity-50"
+                                >
+                                  ⚙️ Process
+                                </button>
+                              )}
+                              
+                              {order.orderStatus === 'processing' && (
+                                <button
+                                  onClick={() => {
+                                    const trackingNumber = prompt('Enter tracking number (optional):');
+                                    updateOrderStatus(order._id, 'shipped', trackingNumber || undefined);
+                                  }}
+                                  disabled={updatingOrder === order._id}
+                                  className="text-sm px-4 py-2 rounded-lg font-bold bg-purple-50 text-purple-600 hover:bg-purple-100 w-full transition-colors disabled:opacity-50"
+                                >
+                                  🚚 Ship
+                                </button>
+                              )}
+                              
+                              {order.orderStatus === 'shipped' && (
+                                <button
+                                  onClick={() => markAsDelivered(order._id)}
+                                  disabled={updatingOrder === order._id}
+                                  className="text-sm px-4 py-2 rounded-lg font-bold bg-green-50 text-green-600 hover:bg-green-100 w-full transition-colors disabled:opacity-50"
+                                >
+                                  ✓ Deliver
+                                </button>
+                              )}
+                              
+                              <button
+                                onClick={() => updateOrderStatus(order._id, 'cancelled')}
+                                disabled={updatingOrder === order._id}
+                                className="text-sm px-4 py-2 rounded-lg font-bold bg-red-50 text-red-600 hover:bg-red-100 w-full transition-colors disabled:opacity-50"
+                              >
+                                ✕ Cancel
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

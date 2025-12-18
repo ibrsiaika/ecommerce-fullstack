@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { login } from '../../store/slices/authSlice';
-import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -50,63 +50,56 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link
-              to="/register"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
-              create a new account
-            </Link>
-          </p>
-        </div>
+    <div className="min-h-screen bg-white">
+      <div className="container px-4 sm:px-6 lg:px-8 py-8 sm:py-16 lg:py-24">
+        <div className="max-w-md mx-auto">
+          {/* Header */}
+          <div className="mb-8 sm:mb-12">
+            <div className="h-8 sm:h-10 w-8 sm:w-10 rounded-lg bg-black flex items-center justify-center text-white font-bold mb-3 sm:mb-4 text-sm">
+              E
+            </div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">Welcome back</h1>
+            <p className="text-sm sm:text-base text-gray-600">
+              Don't have an account?{' '}
+              <Link to="/register" className="font-semibold text-gray-900 hover:underline">
+                Create one
+              </Link>
+            </p>
+          </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {/* Error Alert */}
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
+            <div className="mb-6 p-3 sm:p-4 rounded-lg border border-red-200 bg-red-50">
+              <p className="text-xs sm:text-sm text-red-700 font-medium">{error}</p>
             </div>
           )}
 
-          <div className="space-y-4">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-xs sm:text-sm font-medium text-gray-900 mb-2">
                 Email address
               </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiMail className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter your email"
-                />
-              </div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={handleChange}
+                placeholder="name@example.com"
+                className="input w-full text-sm"
+              />
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-xs sm:text-sm font-medium text-gray-900 mb-2">
                 Password
               </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiLock className="h-5 w-5 text-gray-400" />
-                </div>
+              <div className="relative">
                 <input
                   id="password"
                   name="password"
@@ -115,55 +108,39 @@ const Login: React.FC = () => {
                   required
                   value={password}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter your password"
+                  placeholder="••••••••"
+                  className="input w-full pr-10 text-sm"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 flex-shrink-0"
                 >
-                  {showPassword ? (
-                    <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  ) : (
-                    <FiEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  )}
+                  {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                 </button>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center justify-between">
-            <div className="text-sm">
-              <Link
-                to="/forgot-password"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
-                Forgot your password?
-              </Link>
-            </div>
-          </div>
-
-          <div>
+            {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading || !email || !password}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
+              className="btn btn-primary w-full py-2 sm:py-3 text-sm sm:text-base font-medium rounded-lg"
             >
-              {isLoading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Signing in...
-                </div>
-              ) : (
-                'Sign in'
-              )}
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
+          </form>
+
+          {/* Demo Info */}
+          <div className="mt-6 sm:mt-8 p-3 sm:p-4 rounded-lg bg-gray-50 border border-gray-200">
+            <p className="text-xs text-gray-600 font-medium uppercase tracking-wider mb-2">Demo credentials</p>
+            <p className="text-xs sm:text-sm text-gray-700 break-all">Email: <code className="bg-white px-2 py-1 rounded border border-gray-200 text-xs">user@example.com</code></p>
+            <p className="text-xs sm:text-sm text-gray-700 mt-1 break-all">Password: <code className="bg-white px-2 py-1 rounded border border-gray-200 text-xs">password123</code></p>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
-};
+}
 
 export default Login;

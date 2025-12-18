@@ -16,7 +16,7 @@ interface ReviewsProps {
   onReviewAdded: () => void;
 }
 
-const Reviews: React.FC<ReviewsProps> = ({ productId, reviews, onReviewAdded }) => {
+const Reviews: React.FC<ReviewsProps> = ({ productId, reviews = [], onReviewAdded }) => {
   const { user, isAuthenticated } = useAppSelector((state: any) => state.auth);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [rating, setRating] = useState(5);
@@ -89,7 +89,7 @@ const Reviews: React.FC<ReviewsProps> = ({ productId, reviews, onReviewAdded }) 
     );
   };
 
-  const userHasReviewed = reviews.some(review => review.user === user?.id);
+  const userHasReviewed = reviews && reviews.length > 0 && reviews.some(review => review.user === user?.id);
 
   return (
     <div className="mt-8">

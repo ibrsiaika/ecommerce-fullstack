@@ -107,17 +107,24 @@ const OrderDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block mb-6">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-black"></div>
+          </div>
+          <p className="text-xl text-gray-600 font-semibold">Loading order details...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto py-8 px-4">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
+      <div className="min-h-screen bg-white">
+        <div className="container py-16">
+          <div className="p-6 rounded-xl bg-red-50 border-2 border-red-200">
+            <p className="text-red-700 font-semibold text-lg">⚠️ {error}</p>
+          </div>
         </div>
       </div>
     );
@@ -125,154 +132,189 @@ const OrderDetail: React.FC = () => {
 
   if (!order) {
     return (
-      <div className="max-w-4xl mx-auto py-8 px-4">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Order not found</h1>
+          <div className="text-6xl mb-6">❌</div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">Order Not Found</h1>
+          <p className="text-xl text-gray-600">We couldn't find the order you're looking for.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      {/* Order Header */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Order #{order.orderNumber}</h1>
-            <p className="text-gray-600">Placed on {formatDate(order.createdAt)}</p>
-          </div>
-          <div className="text-right">
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.orderStatus)}`}>
-              {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
-            </span>
-            {order.trackingNumber && (
-              <p className="text-sm text-gray-600 mt-2">
-                Tracking: {order.trackingNumber}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Payment and Delivery Status */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="border rounded-lg p-4">
-            <h3 className="font-semibold text-gray-900 mb-2">Payment Status</h3>
-            <div className="flex items-center">
-              <div className={`w-3 h-3 rounded-full mr-2 ${order.isPaid ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <span className={order.isPaid ? 'text-green-600' : 'text-red-600'}>
-                {order.isPaid ? `Paid on ${formatDate(order.paidAt!)}` : 'Not Paid'}
-              </span>
+    <div className="min-h-screen bg-white">
+      <div className="container py-16 lg:py-20">
+        {/* Header Section */}
+        <div className="mb-12">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <h1 className="text-5xl font-bold text-gray-900 mb-3">Order #{order.orderNumber}</h1>
+              <p className="text-xl text-gray-600">📅 Placed on {formatDate(order.createdAt)}</p>
             </div>
-            <p className="text-sm text-gray-600 mt-1">Method: {order.paymentMethod}</p>
-          </div>
-
-          <div className="border rounded-lg p-4">
-            <h3 className="font-semibold text-gray-900 mb-2">Delivery Status</h3>
-            <div className="flex items-center">
-              <div className={`w-3 h-3 rounded-full mr-2 ${order.isDelivered ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-              <span className={order.isDelivered ? 'text-green-600' : 'text-yellow-600'}>
-                {order.isDelivered ? `Delivered on ${formatDate(order.deliveredAt!)}` : 'Not Delivered'}
+            <div className="text-right">
+              <span className={`inline-flex px-6 py-3 rounded-full text-lg font-bold ${getStatusColor(order.orderStatus)}`}>
+                {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
               </span>
+              {order.trackingNumber && (
+                <p className="text-lg text-gray-600 mt-3 font-semibold">
+                  📦 Tracking: {order.trackingNumber}
+                </p>
+              )}
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Order Items */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Order Items</h2>
-            <div className="space-y-4">
-              {order.orderItems.map((item, index) => (
-                <div key={index} className="flex items-center space-x-4 border-b pb-4">
-                  <img 
-                    src={item.image} 
-                    alt={item.name}
-                    className="w-16 h-16 object-cover rounded-lg"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                    <p className="text-gray-600">Quantity: {item.quantity}</p>
-                    <p className="text-gray-600">Price: ${item.price.toFixed(2)} each</p>
+        {/* Status Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          <div className="surface rounded-2xl p-8 border-2 border-gray-200">
+            <div className="flex items-center gap-4 mb-4">
+              <div className={`text-4xl ${order.isPaid ? '✓' : '⏳'}`}></div>
+              <h3 className="text-2xl font-bold text-gray-900">Payment Status</h3>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className={`w-4 h-4 rounded-full ${order.isPaid ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                <span className={`text-lg font-bold ${order.isPaid ? 'text-green-600' : 'text-yellow-600'}`}>
+                  {order.isPaid ? `✓ Paid on ${formatDate(order.paidAt!)}` : '⏳ Payment Pending'}
+                </span>
+              </div>
+              <p className="text-gray-600 text-lg">💳 Method: <span className="font-semibold text-gray-900">{order.paymentMethod}</span></p>
+            </div>
+          </div>
+
+          <div className="surface rounded-2xl p-8 border-2 border-gray-200">
+            <div className="flex items-center gap-4 mb-4">
+              <div className={`text-4xl ${order.isDelivered ? '📦' : '🚚'}`}></div>
+              <h3 className="text-2xl font-bold text-gray-900">Delivery Status</h3>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className={`w-4 h-4 rounded-full ${order.isDelivered ? 'bg-green-500' : 'bg-blue-500'}`}></div>
+                <span className={`text-lg font-bold ${order.isDelivered ? 'text-green-600' : 'text-blue-600'}`}>
+                  {order.isDelivered ? `✓ Delivered on ${formatDate(order.deliveredAt!)}` : '🚚 In Transit'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Order Items */}
+          <div className="lg:col-span-2">
+            <div className="surface rounded-2xl p-8 border border-gray-200 mb-8">
+              <h2 className="text-4xl font-bold text-gray-900 mb-8">📦 Order Items</h2>
+              <div className="space-y-6">
+                {order.orderItems.map((item, index) => (
+                  <div key={index} className="flex gap-6 pb-6 border-b border-gray-200 last:border-0 last:pb-0">
+                    <img 
+                      src={item.image} 
+                      alt={item.name}
+                      className="w-32 h-32 object-cover rounded-2xl shadow-lg"
+                    />
+                    <div className="flex-1">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-3">{item.name}</h3>
+                      <div className="space-y-2 text-lg text-gray-600">
+                        <p><span className="font-semibold text-gray-900">Qty:</span> {item.quantity}</p>
+                        <p><span className="font-semibold text-gray-900">Price:</span> ${item.price.toFixed(2)} each</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-3xl font-bold text-gray-900">
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-gray-900">
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </p>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Shipping Address */}
+            <div className="surface rounded-2xl p-8 border border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                📍 Shipping Address
+              </h2>
+              <div className="space-y-3 text-lg text-gray-700 leading-relaxed">
+                <p className="font-semibold">{order.shippingAddress.address}</p>
+                <p>{order.shippingAddress.city}, {order.shippingAddress.postalCode}</p>
+                <p className="font-semibold">{order.shippingAddress.country}</p>
+              </div>
+            </div>
+
+            {/* Order Summary */}
+            <div className="surface rounded-2xl p-8 border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                💰 Order Summary
+              </h2>
+              <div className="space-y-4">
+                <div className="flex justify-between text-lg">
+                  <span className="text-gray-600 font-semibold">Items:</span>
+                  <span className="font-bold text-gray-900">${order.itemsPrice.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-lg">
+                  <span className="text-gray-600 font-semibold">Shipping:</span>
+                  <span className="font-bold text-gray-900">${order.shippingPrice.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-lg">
+                  <span className="text-gray-600 font-semibold">Tax:</span>
+                  <span className="font-bold text-gray-900">${order.taxPrice.toFixed(2)}</span>
+                </div>
+                <div className="border-t-2 border-gray-300 pt-4">
+                  <div className="flex justify-between text-3xl font-bold">
+                    <span>Total:</span>
+                    <span className="text-gray-900">${order.totalPrice.toFixed(2)}</span>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
+
+            {/* Payment Result */}
+            {order.paymentResult && (
+              <div className="surface rounded-2xl p-8 border border-green-200 bg-green-50">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  ✓ Payment Details
+                </h2>
+                <div className="space-y-3 text-gray-700">
+                  <div>
+                    <p className="text-sm text-gray-600 font-semibold uppercase tracking-widest">Transaction ID</p>
+                    <p className="text-lg font-bold text-gray-900 mt-1 break-all">{order.paymentResult.id}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 font-semibold uppercase tracking-widest">Status</p>
+                    <p className="text-lg font-bold text-green-700 mt-1">{order.paymentResult.status}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 font-semibold uppercase tracking-widest">Updated</p>
+                    <p className="text-lg font-bold text-gray-900 mt-1">{formatDate(order.paymentResult.update_time)}</p>
+                  </div>
+                  {order.paymentResult.email_address && (
+                    <div>
+                      <p className="text-sm text-gray-600 font-semibold uppercase tracking-widest">Email</p>
+                      <p className="text-lg font-bold text-gray-900 mt-1">{order.paymentResult.email_address}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Payment Section for Unpaid Orders */}
+            {!order.isPaid && (
+              <div className="surface rounded-2xl p-8 border-2 border-yellow-200 bg-yellow-50">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">⏳ Complete Payment</h2>
+                <Payment
+                  orderId={order._id}
+                  amount={order.totalPrice}
+                  paymentMethod={order.paymentMethod}
+                  onPaymentSuccess={() => {
+                    window.location.reload();
+                  }}
+                />
+              </div>
+            )}
           </div>
-        </div>
-
-        {/* Order Summary and Details */}
-        <div className="space-y-6">
-          {/* Shipping Address */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Shipping Address</h2>
-            <div className="text-gray-600">
-              <p>{order.shippingAddress.address}</p>
-              <p>{order.shippingAddress.city}, {order.shippingAddress.postalCode}</p>
-              <p>{order.shippingAddress.country}</p>
-            </div>
-          </div>
-
-          {/* Order Summary */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h2>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Items:</span>
-                <span className="font-medium">${order.itemsPrice.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Shipping:</span>
-                <span className="font-medium">${order.shippingPrice.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Tax:</span>
-                <span className="font-medium">${order.taxPrice.toFixed(2)}</span>
-              </div>
-              <hr />
-              <div className="flex justify-between text-lg font-bold">
-                <span>Total:</span>
-                <span>${order.totalPrice.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Payment Result */}
-          {order.paymentResult && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Payment Details</h2>
-              <div className="text-gray-600 space-y-1">
-                <p><span className="font-medium">Transaction ID:</span> {order.paymentResult.id}</p>
-                <p><span className="font-medium">Status:</span> {order.paymentResult.status}</p>
-                <p><span className="font-medium">Updated:</span> {formatDate(order.paymentResult.update_time)}</p>
-                {order.paymentResult.email_address && (
-                  <p><span className="font-medium">Email:</span> {order.paymentResult.email_address}</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Payment Section for Unpaid Orders */}
-          {!order.isPaid && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <Payment
-                orderId={order._id}
-                amount={order.totalPrice}
-                paymentMethod={order.paymentMethod}
-                onPaymentSuccess={() => {
-                  // Refresh the page or refetch order data
-                  window.location.reload();
-                }}
-              />
-            </div>
-          )}
         </div>
       </div>
     </div>
