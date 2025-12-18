@@ -71,6 +71,14 @@ const Header: React.FC = () => {
             {/* Auth Actions - Desktop */}
             {isAuthenticated ? (
               <div className="hidden sm:flex items-center gap-3">
+                {user?.role !== 'seller' && user?.role !== 'admin' && (
+                  <Link
+                    to="/seller/register"
+                    className="text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 transition px-3 py-2 rounded-lg hover:bg-gray-50"
+                  >
+                    Sell
+                  </Link>
+                )}
                 <Link
                   to="/profile"
                   className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition px-3 py-2 rounded-lg hover:bg-gray-50"
@@ -93,12 +101,6 @@ const Header: React.FC = () => {
                   className="text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 transition px-3 py-2 rounded-lg hover:bg-gray-50"
                 >
                   Login
-                </Link>
-                <Link
-                  to="/seller/register"
-                  className="text-xs sm:text-sm font-medium text-gray-600 hover:text-gray-900 transition px-3 py-2 rounded-lg hover:bg-gray-50"
-                >
-                  Sell
                 </Link>
                 <Link
                   to="/register"
@@ -140,6 +142,15 @@ const Header: React.FC = () => {
             <div className="border-t border-gray-200 pt-4 mt-4 space-y-2">
               {isAuthenticated ? (
                 <>
+                  {user?.role !== 'seller' && user?.role !== 'admin' && (
+                    <Link
+                      to="/seller/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-white rounded-lg transition"
+                    >
+                      🏪 <span>Become a Seller</span>
+                    </Link>
+                  )}
                   <Link
                     to="/profile"
                     onClick={() => setMobileMenuOpen(false)}

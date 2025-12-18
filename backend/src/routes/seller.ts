@@ -7,6 +7,95 @@ import { AuthenticatedRequest } from '../middleware/auth';
 
 const router = express.Router();
 
+// @route   POST /api/sellers/register
+// @desc    Register as seller with GST details
+// @access  Private (requires user to be logged in)
+router.post(
+  '/register',
+  protect,
+  asyncHandler(async (req: any, res: Response) => {
+    const {
+      storeName,
+      businessType,
+      description,
+      gstNumber,
+      pan,
+      businessAddress,
+      city,
+      state,
+      zipCode,
+      phone,
+      bankAccountNumber,
+      ifscCode,
+      bankName,
+    } = req.body;
+
+    // Validate required fields
+    if (
+      !storeName ||
+      !businessType ||
+      !description ||
+      !gstNumber ||
+      !pan ||
+      !businessAddress ||
+      !city ||
+      !state ||
+      !phone ||
+      !bankAccountNumber ||
+      !ifscCode ||
+      !bankName
+    ) {
+      return sendError(res, 400, 'All fields are required');
+    }
+
+    try {
+      // Create store with seller details
+      const storeData = {
+        name: storeName,
+        description,
+        businessType,
+        gstNumber,
+        pan,
+        owner: req.user._id,
+        email: req.user.email,
+        phone,
+        address: {
+          street: businessAddress,
+          city,
+          state,
+          country: 'India',
+          zipCode,
+        },
+        bankDetails: {
+          accountNumber: bankAccountNumber,
+          ifscCode,
+          bankName,
+          accountName: req.user.name,
+        },
+      };
+
+      // Use existing createStore method
+      const store = await sellerService.createStore(req.user._id.toString(), storeData);
+
+      // Update user role to seller
+      await require('../models/User').default.findByIdAndUpdate(
+        req.user._id,
+        { role: 'seller' },
+        { new: true }
+      );
+
+      sendSuccess(
+        res,
+        201,
+        { store, message: 'Seller registration completed successfully!' },
+        'Registered as seller'
+      );
+    } catch (err: any) {
+      sendError(res, 400, err.message || 'Error registering as seller');
+    }
+  })
+);
+
 // @route   POST /api/seller/store
 // @desc    Create seller store
 // @access  Private

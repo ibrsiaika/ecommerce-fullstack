@@ -9,6 +9,9 @@ export interface IStore extends Document {
   owner: mongoose.Types.ObjectId;
   email: string;
   phone: string;
+  businessType: 'individual' | 'partnership' | 'company' | 'llp';
+  gstNumber?: string;
+  pan?: string;
   address: {
     street: string;
     city: string;
@@ -24,7 +27,7 @@ export interface IStore extends Document {
   bankDetails: {
     accountName: string;
     accountNumber: string;
-    routingNumber: string;
+    ifscCode: string;
     bankName: string;
   };
   commissionRate: number; // percentage
@@ -73,6 +76,23 @@ const storeSchema: Schema = new Schema(
       type: String,
       required: true
     },
+    businessType: {
+      type: String,
+      enum: ['individual', 'partnership', 'company', 'llp'],
+      required: true
+    },
+    gstNumber: {
+      type: String,
+      sparse: true,
+      uppercase: true,
+      match: [/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, 'Invalid GST number']
+    },
+    pan: {
+      type: String,
+      sparse: true,
+      uppercase: true,
+      match: [/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN format']
+    },
     address: {
       street: String,
       city: String,
@@ -107,7 +127,7 @@ const storeSchema: Schema = new Schema(
     bankDetails: {
       accountName: String,
       accountNumber: String,
-      routingNumber: String,
+      ifscCode: String,
       bankName: String
     },
     commissionRate: {
