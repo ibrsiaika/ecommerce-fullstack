@@ -11,6 +11,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "seed:admin": "ts-node src/scripts/seedAdmin.ts",
+    "seed:admin:reset": "ts-node src/scripts/resetAdmin.ts",
     "seed": "ts-node src/scripts/seedProducts.ts",
     "seed:all": "npm run seed:admin && npm run seed",
     "lint": "eslint src --ext .ts",

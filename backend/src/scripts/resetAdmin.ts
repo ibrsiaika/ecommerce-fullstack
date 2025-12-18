@@ -2,21 +2,17 @@ import mongoose from 'mongoose';
 import User from '../models/User';
 import connectDB from '../config/database';
 
-export const seedAdmin = async () => {
+export const resetAdmin = async () => {
   try {
     await connectDB();
     
-    // Check if admin user already exists
-    const existingAdmin = await User.findOne({ email: 'admin@example.com' });
-    if (existingAdmin) {
-      console.log('✅ Admin user already exists');
-      console.log('Email: admin@example.com');
-      console.log('Password: admin123');
-      mongoose.connection.close();
-      return;
+    // Delete existing admin user
+    const deleted = await User.deleteOne({ email: 'admin@example.com' });
+    if (deleted.deletedCount > 0) {
+      console.log('✅ Deleted existing admin user');
     }
     
-    // Create admin user - DO NOT hash password here, User model will do it in pre-save hook
+    // Create new admin user - User model will hash password in pre-save hook
     const adminUser = new User({
       name: 'Admin User',
       email: 'admin@example.com',
@@ -33,7 +29,7 @@ export const seedAdmin = async () => {
     console.log('Password: admin123');
     
   } catch (error) {
-    console.error('❌ Error creating admin user:', error);
+    console.error('❌ Error resetting admin user:', error);
   } finally {
     mongoose.connection.close();
   }
@@ -41,7 +37,7 @@ export const seedAdmin = async () => {
 
 // Run if executed directly
 if (require.main === module) {
-  seedAdmin();
+  resetAdmin();
 }
 
-export default seedAdmin;
+export default resetAdmin;
