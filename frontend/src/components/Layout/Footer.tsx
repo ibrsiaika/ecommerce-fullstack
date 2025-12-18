@@ -3,80 +3,78 @@ import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-gray-800 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Company Info */}
-          <div className="col-span-1 md:col-span-2">
-            <h3 className="text-2xl font-bold mb-4">E-Commerce</h3>
-            <p className="text-gray-300 mb-4">
-              Your one-stop shop for all your needs. We provide high-quality products 
-              with excellent customer service and fast delivery.
+    <footer className="border-t border-white/10 bg-gradient-to-b from-transparent to-black/40 text-white">
+      <div className="container py-12">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-4 lg:gap-14">
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 shadow-lg shadow-amber-900/40 flex items-center justify-center text-slate-900 font-black">
+                E.
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-white/60">Maison</p>
+                <p className="text-xl font-semibold text-white">E-Commerce</p>
+              </div>
+            </div>
+            <p className="mt-4 text-white/70 leading-relaxed">
+              Curated essentials, intentional luxuries, and a concierge team that cares about every parcel. 
+              Every interaction is designed to feel private, personal, and beautifully considered.
             </p>
-            <p className="text-gray-300">
-              © 2024 E-Commerce. All rights reserved.
-            </p>
+            <div className="mt-6 flex flex-wrap gap-3 text-xs uppercase tracking-[0.2em] text-white/50">
+              <span className="pill bg-white/10 text-white border-white/20">Same-week delivery</span>
+              <span className="pill bg-white/5 text-white border-white/10">Insured shipments</span>
+              <span className="pill bg-white/5 text-white border-white/10">Human concierge</span>
+            </div>
           </div>
 
-          {/* Quick Links */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2">
+            <h4 className="text-sm uppercase tracking-[0.2em] text-white/60">Navigate</h4>
+            <ul className="mt-4 space-y-3">
               <li>
-                <Link to="/" className="text-gray-300 hover:text-white transition-colors">
+                <Link to="/" className="text-white/80 hover:text-white transition-colors">
                   Home
                 </Link>
               </li>
               <li>
-                <Link to="/products" className="text-gray-300 hover:text-white transition-colors">
-                  Products
+                <Link to="/products" className="text-white/80 hover:text-white transition-colors">
+                  Collections
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-gray-300 hover:text-white transition-colors">
-                  About Us
+                <Link to="/orders" className="text-white/80 hover:text-white transition-colors">
+                  Orders
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-gray-300 hover:text-white transition-colors">
-                  Contact
+                <Link to="/cart" className="text-white/80 hover:text-white transition-colors">
+                  Cart
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Customer Service */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Customer Service</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/support" className="text-gray-300 hover:text-white transition-colors">
-                  Support Center
-                </Link>
+            <h4 className="text-sm uppercase tracking-[0.2em] text-white/60">Concierge</h4>
+            <ul className="mt-4 space-y-3 text-white/80">
+              <li className="flex items-center justify-between">
+                <span>Live chat</span>
+                <span className="pill bg-emerald-400/10 text-emerald-200 border-emerald-200/20">Online</span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span>Call</span>
+                <span className="text-white font-semibold">+1 (555) 401-2024</span>
               </li>
               <li>
-                <Link to="/shipping" className="text-gray-300 hover:text-white transition-colors">
-                  Shipping Info
-                </Link>
-              </li>
-              <li>
-                <Link to="/returns" className="text-gray-300 hover:text-white transition-colors">
-                  Returns
-                </Link>
-              </li>
-              <li>
-                <Link to="/faq" className="text-gray-300 hover:text-white transition-colors">
-                  FAQ
-                </Link>
+                <span className="block">White-glove support</span>
+                <span className="text-xs text-white/60">10am – 10pm, 7 days a week</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-gray-700 mt-8 pt-8 text-center">
-          <p className="text-gray-300">
-            Built with React, TypeScript, and Tailwind CSS
-          </p>
+        <div className="mt-10 flex flex-col gap-4 border-t border-white/10 pt-6 text-sm text-white/60 md:flex-row md:items-center md:justify-between">
+          <p>© 2024 E-Commerce. Crafted for people who expect more.</p>
+          <p className="text-white/50">Built with React, TypeScript, and a lot of care.</p>
         </div>
       </div>
     </footer>
