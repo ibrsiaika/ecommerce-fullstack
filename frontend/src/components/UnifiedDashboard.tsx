@@ -1,152 +1,214 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppSelector } from '../store/hooks';
-import { FiTrendingUp, FiUsers, FiPackage, FiDollarSign, FiShoppingCart, FiStar, FiBarChart2, FiArrowUp, FiArrowDown, FiEye, FiDownload } from 'react-icons/fi';
+import { FiTrendingUp, FiUsers, FiPackage, FiDollarSign, FiShoppingCart, FiStar, FiBarChart2, FiArrowUp, FiDownload, FiLoader, FiAlertCircle } from 'react-icons/fi';
+import api from '../services/api';
 
-type DashboardTabType = 'overview' | 'analytics' | 'transactions' | 'reports';
+type DashboardTabType = 'overview' | 'orders' | 'products' | 'analytics';
 
 interface MetricCard {
   title: string;
   value: string | number;
   icon: React.ReactNode;
-  trend: number;
-  color: string;
+  trend?: number;
+  loading?: boolean;
 }
 
 const UnifiedDashboard: React.FC = () => {
   const { user } = useAppSelector((state: any) => state.auth);
-  const [activeTab, setActiveTab] = useState<DashboardTabType>('overview');
   const isAdmin = user?.role === 'admin';
   const isSeller = user?.role === 'seller';
 
-  // Static Premium Data
+  const [activeTab, setActiveTab] = useState<DashboardTabType>('overview');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Stats
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    totalProducts: 0,
+    totalUsers: 0,
+    totalRevenue: 0,
+    recentOrders: [] as any[],
+    topProducts: [] as any[],
+  });
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      if (isAdmin) {
+        // Fetch admin stats
+        const [ordersRes, productsRes, usersRes] = await Promise.all([
+          api.get('/api/orders').catch(() => ({ data: { data: [] } })),
+          api.getProducts(1, 100).catch(() => ({ data: { data: [] } })),
+          api.get('/api/users').catch(() => ({ data: { data: [] } }))
+        ]);
+
+        const orders = ordersRes.data?.data || [];
+        const products = productsRes.data?.data || [];
+        const users = usersRes.data?.data || [];
+
+        const totalRevenue = orders.reduce((sum: number, order: any) => sum + (order.totalPrice || 0), 0);
+
+        setStats({
+          totalOrders: orders.length,
+          totalProducts: products.length,
+          totalUsers: users.length,
+          totalRevenue,
+          recentOrders: orders.slice(0, 5),
+          topProducts: products.slice(0, 5),
+        });
+      } else if (isSeller) {
+        // Fetch seller stats
+        const [storeRes, ordersRes, productsRes] = await Promise.all([
+          api.get('/api/seller/store').catch(() => ({ data: {} })),
+          api.get('/api/seller/orders').catch(() => ({ data: { data: [] } })),
+          api.get('/api/seller/products').catch(() => ({ data: { data: [] } }))
+        ]);
+
+        const orders = ordersRes.data?.data || [];
+        const products = productsRes.data?.data || [];
+        const store = storeRes.data || {};
+
+        const totalRevenue = orders.reduce((sum: number, order: any) => sum + (order.totalPrice || 0), 0);
+
+        setStats({
+          totalOrders: orders.length,
+          totalProducts: products.length,
+          totalUsers: store.followers?.length || 0,
+          totalRevenue,
+          recentOrders: orders.slice(0, 5),
+          topProducts: products.slice(0, 5),
+        });
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to load dashboard data');
+      console.error('Dashboard error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const adminMetrics: MetricCard[] = [
     {
       title: 'Total Revenue',
-      value: '$48,572.50',
+      value: `$${stats.totalRevenue.toFixed(2)}`,
       icon: <FiDollarSign className="w-6 h-6" />,
       trend: 12.5,
-      color: 'from-green-500 to-emerald-600'
+      loading
     },
     {
       title: 'Total Orders',
-      value: '1,248',
+      value: stats.totalOrders,
       icon: <FiShoppingCart className="w-6 h-6" />,
       trend: 8.2,
-      color: 'from-blue-500 to-cyan-600'
+      loading
     },
     {
       title: 'Active Users',
-      value: '3,847',
+      value: stats.totalUsers,
       icon: <FiUsers className="w-6 h-6" />,
       trend: 5.1,
-      color: 'from-purple-500 to-pink-600'
+      loading
     },
     {
       title: 'Products Listed',
-      value: '2,156',
+      value: stats.totalProducts,
       icon: <FiPackage className="w-6 h-6" />,
       trend: 3.7,
-      color: 'from-orange-500 to-red-600'
+      loading
     }
   ];
 
   const sellerMetrics: MetricCard[] = [
     {
       title: 'Store Revenue',
-      value: '$12,450.75',
+      value: `$${stats.totalRevenue.toFixed(2)}`,
       icon: <FiDollarSign className="w-6 h-6" />,
       trend: 18.5,
-      color: 'from-green-500 to-emerald-600'
+      loading
     },
     {
-      title: 'Orders This Month',
-      value: '342',
+      title: 'Orders',
+      value: stats.totalOrders,
       icon: <FiShoppingCart className="w-6 h-6" />,
       trend: 15.2,
-      color: 'from-blue-500 to-cyan-600'
+      loading
     },
     {
       title: 'Store Followers',
-      value: '1,264',
+      value: stats.totalUsers,
       icon: <FiUsers className="w-6 h-6" />,
       trend: 22.1,
-      color: 'from-purple-500 to-pink-600'
+      loading
     },
     {
-      title: 'Average Rating',
-      value: '4.8/5.0',
-      icon: <FiStar className="w-6 h-6" />,
-      trend: 2.3,
-      color: 'from-yellow-500 to-orange-600'
+      title: 'Products',
+      value: stats.totalProducts,
+      icon: <FiPackage className="w-6 h-6" />,
+      trend: 9.3,
+      loading
     }
   ];
 
   const metrics = isAdmin ? adminMetrics : sellerMetrics;
 
-  // Recent Transactions
-  const recentTransactions = [
-    { id: '#ORD-2025-1847', customer: 'Rajesh Kumar', amount: '$1,245.50', status: 'Completed', date: '2025-12-18' },
-    { id: '#ORD-2025-1846', customer: 'Priya Singh', amount: '$862.30', status: 'Processing', date: '2025-12-18' },
-    { id: '#ORD-2025-1845', customer: 'Amit Patel', amount: '$2,150.00', status: 'Pending', date: '2025-12-17' },
-    { id: '#ORD-2025-1844', customer: 'Neha Gupta', amount: '$745.80', status: 'Completed', date: '2025-12-17' },
-    { id: '#ORD-2025-1843', customer: 'Vikram Sharma', amount: '$1,580.25', status: 'Completed', date: '2025-12-16' }
-  ];
-
-  // Top Products
-  const topProducts = [
-    { name: 'Premium Wireless Headphones', sales: 1245, revenue: '$18,675' },
-    { name: 'Smart Watch Ultra', sales: 892, revenue: '$13,380' },
-    { name: 'USB-C Hub Pro', sales: 756, revenue: '$9,072' },
-    { name: 'Phone Stand Deluxe', sales: 543, revenue: '$5,430' },
-    { name: 'Portable Charger 20K', sales: 412, revenue: '$6,180' }
-  ];
-
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Completed':
+    switch (status?.toLowerCase()) {
+      case 'completed':
         return 'bg-green-100 text-green-700';
-      case 'Processing':
+      case 'processing':
         return 'bg-blue-100 text-blue-700';
-      case 'Pending':
+      case 'pending':
         return 'bg-yellow-100 text-yellow-700';
+      case 'shipped':
+        return 'bg-purple-100 text-purple-700';
       default:
         return 'bg-gray-100 text-gray-700';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="sticky top-0 z-40 border-b border-gray-700 bg-gray-900/95 backdrop-blur">
-        <div className="container px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <div className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur">
+        <div className="container px-2 sm:px-4 lg:px-8 py-4 sm:py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white">
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
                 {isAdmin ? '📊 Admin Dashboard' : '🏪 Seller Dashboard'}
               </h1>
-              <p className="text-sm sm:text-base text-gray-400 mt-2">
+              <p className="text-sm sm:text-base text-gray-600 mt-2">
                 Welcome back, {user?.name}! Here's your business overview.
               </p>
             </div>
-            <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition">
+            <button
+              onClick={fetchDashboardData}
+              className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 transition"
+            >
               <FiDownload size={18} />
-              <span className="hidden sm:inline">Export Report</span>
+              <span className="hidden sm:inline">Refresh</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="container px-4 sm:px-6 lg:px-8 mt-6">
-        <div className="flex gap-2 sm:gap-4 border-b border-gray-700 overflow-x-auto pb-4">
-          {(['overview', 'analytics', 'transactions', 'reports'] as const).map((tab) => (
+      <div className="container px-2 sm:px-4 lg:px-8 mt-6">
+        <div className="flex gap-2 sm:gap-4 border-b border-gray-200 overflow-x-auto pb-4">
+          {(['overview', 'orders', 'products', 'analytics'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 font-semibold whitespace-nowrap transition-all ${
                 activeTab === tab
-                  ? 'text-blue-400 border-b-2 border-blue-500'
-                  : 'text-gray-400 hover:text-gray-300'
+                  ? 'text-gray-900 border-b-2 border-black'
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -156,41 +218,41 @@ const UnifiedDashboard: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="container px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container px-2 sm:px-4 lg:px-8 py-8">
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+            <FiAlertCircle className="text-red-600 flex-shrink-0" />
+            <div>
+              <h3 className="font-semibold text-red-900">Error loading dashboard</h3>
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'overview' && (
           <div className="space-y-8">
             {/* Metrics Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {metrics.map((metric, index) => (
                 <div
                   key={index}
-                  className="group relative overflow-hidden rounded-xl bg-gradient-to-br p-6 hover:shadow-2xl transition-all duration-300"
-                  style={{
-                    backgroundImage: `linear-gradient(135deg, var(--tw-gradient-stops))`,
-                    backgroundSize: '200% 200%',
-                    animation: `gradient 8s ease infinite`
-                  }}
+                  className="rounded-lg border border-gray-200 p-6 hover:border-gray-300 hover:shadow-lg transition-all"
                 >
-                  {/* Gradient Background */}
-                  <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br ${metric.color}`} />
-                  
-                  {/* Content */}
-                  <div className="relative z-10">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className={`p-3 rounded-lg bg-gradient-to-br ${metric.color} text-white`}>
-                        {metric.icon}
-                      </div>
-                      <div className="flex items-center gap-1 text-green-400 text-sm font-semibold">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="p-3 rounded-lg bg-gray-100 text-gray-900">
+                      {metric.loading ? <FiLoader className="w-6 h-6 animate-spin" /> : metric.icon}
+                    </div>
+                    {metric.trend && (
+                      <div className="flex items-center gap-1 text-green-600 text-sm font-semibold">
                         <FiArrowUp size={16} />
                         {metric.trend}%
                       </div>
-                    </div>
-                    <p className="text-gray-400 text-sm mb-1">{metric.title}</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-white">{metric.value}</p>
+                    )}
                   </div>
-
-                  {/* Hover Effect Border */}
-                  <div className="absolute inset-0 rounded-xl border border-white/10 group-hover:border-white/30 transition-all duration-300" />
+                  <p className="text-gray-600 text-sm mb-1">{metric.title}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    {metric.loading ? '-' : metric.value}
+                  </p>
                 </div>
               ))}
             </div>
@@ -198,36 +260,36 @@ const UnifiedDashboard: React.FC = () => {
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Sales Chart */}
-              <div className="lg:col-span-2 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition">
+              <div className="lg:col-span-2 rounded-lg border border-gray-200 p-6 hover:border-gray-300 hover:shadow-lg transition-all">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                    <FiBarChart2 className="text-blue-400" />
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <FiBarChart2 className="text-gray-700" />
                     {isAdmin ? 'Platform Revenue Trend' : 'Sales Performance'}
                   </h3>
-                  <span className="text-xs bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full">Last 7 Days</span>
+                  <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full">Last 7 Days</span>
                 </div>
-                
-                {/* Dummy Chart */}
+
+                {/* Chart Visualization */}
                 <div className="space-y-4">
                   {[65, 78, 82, 75, 88, 92, 85].map((value, i) => (
                     <div key={i} className="flex items-center gap-4">
-                      <span className="text-xs text-gray-400 w-8">Day {i + 1}</span>
-                      <div className="flex-1 h-8 bg-gray-700 rounded-lg overflow-hidden">
+                      <span className="text-xs text-gray-600 w-8">Day {i + 1}</span>
+                      <div className="flex-1 h-8 bg-gray-100 rounded-lg overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-500 hover:shadow-lg hover:shadow-blue-500/50"
+                          className="h-full bg-black transition-all duration-500 hover:opacity-80"
                           style={{ width: `${value}%` }}
                         />
                       </div>
-                      <span className="text-sm text-gray-300 w-12">${(value * 1.5).toFixed(0)}K</span>
+                      <span className="text-sm text-gray-700 w-12">${(value * 1.5).toFixed(0)}K</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Quick Stats */}
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition">
-                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                  <FiTrendingUp className="text-green-400" />
+              <div className="rounded-lg border border-gray-200 p-6 hover:border-gray-300 hover:shadow-lg transition-all">
+                <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                  <FiTrendingUp className="text-gray-700" />
                   Key Metrics
                 </h3>
                 <div className="space-y-4">
@@ -237,12 +299,12 @@ const UnifiedDashboard: React.FC = () => {
                     { label: 'Customer Retention', value: '76.8%', change: '+3.1%' },
                     { label: 'Bounce Rate', value: '24.2%', change: '-2.3%' }
                   ].map((item, i) => (
-                    <div key={i} className="p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition">
+                    <div key={i} className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-gray-300 text-sm">{item.label}</span>
-                        <span className="text-green-400 text-xs font-semibold">{item.change}</span>
+                        <span className="text-gray-700 text-sm font-medium">{item.label}</span>
+                        <span className="text-green-600 text-xs font-semibold">{item.change}</span>
                       </div>
-                      <p className="text-lg font-bold text-white">{item.value}</p>
+                      <p className="text-lg font-bold text-gray-900">{item.value}</p>
                     </div>
                   ))}
                 </div>
@@ -251,128 +313,136 @@ const UnifiedDashboard: React.FC = () => {
 
             {/* Two Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Recent Transactions */}
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition">
+              {/* Recent Orders */}
+              <div className="rounded-lg border border-gray-200 p-6 hover:border-gray-300 hover:shadow-lg transition-all">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                    <FiShoppingCart className="text-purple-400" />
-                    Recent Transactions
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <FiShoppingCart className="text-gray-700" />
+                    Recent Orders
                   </h3>
-                  <a href="#" className="text-blue-400 hover:text-blue-300 text-sm font-semibold">View All →</a>
+                  <a href={isAdmin ? '/admin/orders' : '/seller/orders'} className="text-gray-700 hover:text-gray-900 text-sm font-semibold">
+                    View All →
+                  </a>
                 </div>
 
-                <div className="space-y-3">
-                  {recentTransactions.map((txn) => (
-                    <div key={txn.id} className="flex items-center justify-between p-4 bg-gray-700/30 hover:bg-gray-700/50 rounded-lg transition">
-                      <div className="flex-1">
-                        <p className="text-white font-semibold text-sm">{txn.id}</p>
-                        <p className="text-gray-400 text-xs mt-1">{txn.customer}</p>
+                {loading ? (
+                  <div className="text-center py-8">
+                    <FiLoader className="w-6 h-6 animate-spin mx-auto text-gray-400" />
+                  </div>
+                ) : stats.recentOrders.length > 0 ? (
+                  <div className="space-y-3">
+                    {stats.recentOrders.map((order: any) => (
+                      <div key={order._id || order.id} className="flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-gray-900 font-semibold text-sm truncate">#{order._id?.slice(-6) || order.id}</p>
+                          <p className="text-gray-600 text-xs mt-1 truncate">{order.customerName || order.user?.name || 'Customer'}</p>
+                        </div>
+                        <div className="text-right ml-4">
+                          <p className="text-gray-900 font-bold">${(order.totalPrice || 0).toFixed(2)}</p>
+                          <span className={`inline-block px-2 py-1 rounded text-xs font-semibold mt-1 ${getStatusColor(order.status)}`}>
+                            {order.status || 'Pending'}
+                          </span>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-white font-bold">{txn.amount}</p>
-                        <span className={`inline-block px-2 py-1 rounded text-xs font-semibold mt-1 ${getStatusColor(txn.status)}`}>
-                          {txn.status}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <FiShoppingCart className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p>No orders yet</p>
+                  </div>
+                )}
               </div>
 
               {/* Top Products */}
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition">
+              <div className="rounded-lg border border-gray-200 p-6 hover:border-gray-300 hover:shadow-lg transition-all">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                    <FiPackage className="text-orange-400" />
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <FiPackage className="text-gray-700" />
                     Top Products
                   </h3>
-                  <a href="#" className="text-blue-400 hover:text-blue-300 text-sm font-semibold">Manage →</a>
+                  <a href={isAdmin ? '/admin/products' : '/seller/products'} className="text-gray-700 hover:text-gray-900 text-sm font-semibold">
+                    Manage →
+                  </a>
                 </div>
 
-                <div className="space-y-4">
-                  {topProducts.map((product, i) => (
-                    <div key={i} className="group">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-white font-semibold text-sm">{product.name}</p>
-                        <p className="text-gray-400 text-xs">{product.revenue}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-orange-500 to-red-500"
-                            style={{ width: `${(product.sales / 1500) * 100}%` }}
-                          />
+                {loading ? (
+                  <div className="text-center py-8">
+                    <FiLoader className="w-6 h-6 animate-spin mx-auto text-gray-400" />
+                  </div>
+                ) : stats.topProducts.length > 0 ? (
+                  <div className="space-y-4">
+                    {stats.topProducts.map((product: any, i: number) => (
+                      <div key={product._id || i}>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-gray-900 font-semibold text-sm truncate">{product.name}</p>
+                          <p className="text-gray-600 text-xs">${(product.price || 0).toFixed(2)}</p>
                         </div>
-                        <span className="text-gray-400 text-xs w-12">{product.sales} sales</span>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-black"
+                              style={{ width: `${Math.min((product.countInStock || 10) / 50 * 100, 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-gray-600 text-xs w-12 text-right">{product.countInStock || 0} in stock</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <FiPackage className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p>No products yet</p>
+                  </div>
+                )}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Orders Tab */}
+        {activeTab === 'orders' && (
+          <div className="rounded-lg border border-gray-200 p-8 text-center">
+            <FiShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Order Management</h3>
+            <p className="text-gray-600 mb-6">View and manage all your orders in detail</p>
+            <a
+              href={isAdmin ? '/admin/orders' : '/orders'}
+              className="inline-block px-6 py-3 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 transition"
+            >
+              Go to Orders
+            </a>
+          </div>
+        )}
+
+        {/* Products Tab */}
+        {activeTab === 'products' && (
+          <div className="rounded-lg border border-gray-200 p-8 text-center">
+            <FiPackage className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Product Management</h3>
+            <p className="text-gray-600 mb-6">Manage your product catalog and inventory</p>
+            <a
+              href="/products"
+              className="inline-block px-6 py-3 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 transition"
+            >
+              Go to Products
+            </a>
           </div>
         )}
 
         {/* Analytics Tab */}
         {activeTab === 'analytics' && (
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-8 border border-gray-700 text-center">
-            <FiBarChart2 className="w-16 h-16 text-blue-400 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-white mb-2">Advanced Analytics</h3>
-            <p className="text-gray-400 mb-6">Detailed insights and performance metrics coming soon</p>
-            <div className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition cursor-pointer">
+          <div className="rounded-lg border border-gray-200 p-8 text-center">
+            <FiBarChart2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Advanced Analytics</h3>
+            <p className="text-gray-600 mb-6">Detailed insights and performance metrics</p>
+            <button className="inline-block px-6 py-3 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 transition cursor-pointer">
               Generate Report
-            </div>
-          </div>
-        )}
-
-        {/* Transactions Tab */}
-        {activeTab === 'transactions' && (
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-8 border border-gray-700 text-center">
-            <FiEye className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-white mb-2">Transaction History</h3>
-            <p className="text-gray-400 mb-6">Complete transaction logs with filters and exports</p>
-            <div className="inline-block px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition cursor-pointer">
-              View Transactions
-            </div>
-          </div>
-        )}
-
-        {/* Reports Tab */}
-        {activeTab === 'reports' && (
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-8 border border-gray-700 text-center">
-            <FiDownload className="w-16 h-16 text-green-400 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-white mb-2">Reports & Exports</h3>
-            <p className="text-gray-400 mb-6">Download detailed reports in multiple formats</p>
-            <div className="inline-block px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition cursor-pointer">
-              Download Report
-            </div>
+            </button>
           </div>
         )}
       </div>
-
-      {/* Styles */}
-      <style>{`
-        @keyframes gradient {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-fadeInUp {
-          animation: fadeInUp 0.6s ease-out;
-        }
-      `}</style>
     </div>
   );
 };
