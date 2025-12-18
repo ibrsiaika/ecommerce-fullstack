@@ -118,7 +118,8 @@ export class ProductService {
     );
 
     if (existingReview) {
-      throw new AppError('You have already reviewed this product', 400);
+      // Keep the wording consistent with the REST layer
+      throw new AppError('Product already reviewed', 400);
     }
 
     product.reviews.push({
