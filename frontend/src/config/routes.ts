@@ -13,6 +13,7 @@ const AdminMetrics = lazy(() => import('../components/AdminMetrics'));
 const AdminOrders = lazy(() => import('../components/AdminOrders'));
 const AdminUsers = lazy(() => import('../components/AdminUsers'));
 const SellerDashboard = lazy(() => import('../components/SellerDashboard'));
+const SellerRegistration = lazy(() => import('../pages/SellerRegistration'));
 
 /**
  * Route configuration interface
@@ -32,7 +33,8 @@ export const publicRoutes: RouteConfig[] = [
   { path: '/', component: Home },
   { path: '/products', component: ProductList },
   { path: '/products/:id', component: ProductDetail },
-  { path: '/cart', component: Cart }
+  { path: '/cart', component: Cart },
+  { path: '/seller/register', component: SellerRegistration }
 ];
 
 /**

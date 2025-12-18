@@ -1,0 +1,483 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppDispatch } from '../store/hooks';
+
+interface FormData {
+  storeName: string;
+  businessType: string;
+  description: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  bankAccount: string;
+  taxId: string;
+}
+
+const SellerRegistration: React.FC = () => {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [formData, setFormData] = useState<FormData>({
+    storeName: '',
+    businessType: 'individual',
+    description: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    bankAccount: '',
+    taxId: '',
+  });
+
+  const steps = [
+    { number: 1, title: 'Store Info', icon: '🏪' },
+    { number: 2, title: 'Location', icon: '📍' },
+    { number: 3, title: 'Payment', icon: '💳' },
+    { number: 4, title: 'Review', icon: '✓' },
+  ];
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const validateStep = () => {
+    switch (currentStep) {
+      case 1:
+        if (!formData.storeName.trim()) {
+          setError('Store name is required');
+          return false;
+        }
+        if (!formData.description.trim()) {
+          setError('Store description is required');
+          return false;
+        }
+        return true;
+      case 2:
+        if (!formData.phone.trim()) {
+          setError('Phone number is required');
+          return false;
+        }
+        if (!formData.address.trim() || !formData.city.trim() || !formData.state.trim()) {
+          setError('Address information is required');
+          return false;
+        }
+        return true;
+      case 3:
+        if (!formData.bankAccount.trim()) {
+          setError('Bank account is required');
+          return false;
+        }
+        if (!formData.taxId.trim()) {
+          setError('Tax ID is required');
+          return false;
+        }
+        return true;
+      default:
+        return true;
+    }
+  };
+
+  const handleNext = () => {
+    setError(null);
+    if (validateStep()) {
+      if (currentStep < 4) {
+        setCurrentStep(currentStep + 1);
+      }
+    }
+  };
+
+  const handlePrevious = () => {
+    setError(null);
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSubmit = async () => {
+    setError(null);
+    if (!validateStep()) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/sellers/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to register as seller');
+      }
+
+      // Success - redirect to seller dashboard
+      navigate('/seller');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 sm:py-12 lg:py-16">
+      <div className="container px-2 sm:px-4 lg:px-8">
+        {/* Header */}
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-2 sm:mb-3">
+            Start Selling
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600">
+            Join thousands of sellers on our platform
+          </p>
+        </div>
+
+        <div className="max-w-3xl mx-auto">
+          {/* Steps Indicator */}
+          <div className="mb-8 sm:mb-12">
+            <div className="flex items-center justify-between">
+              {steps.map((step, index) => (
+                <React.Fragment key={step.number}>
+                  <div
+                    className={`flex flex-col items-center transition-all duration-300 ${
+                      currentStep >= step.number ? 'opacity-100' : 'opacity-50'
+                    }`}
+                  >
+                    <div
+                      className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center font-bold text-sm sm:text-base transition-all duration-300 ${
+                        currentStep === step.number
+                          ? 'bg-black text-white scale-110 shadow-lg'
+                          : currentStep > step.number
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-200 text-gray-700'
+                      }`}
+                    >
+                      {currentStep > step.number ? '✓' : step.icon}
+                    </div>
+                    <p className="text-xs sm:text-sm font-semibold mt-2 text-gray-900 text-center">
+                      {step.title}
+                    </p>
+                  </div>
+
+                  {index < steps.length - 1 && (
+                    <div
+                      className={`flex-1 h-1 sm:h-1.5 mx-2 sm:mx-4 transition-all duration-300 ${
+                        currentStep > step.number ? 'bg-green-500' : 'bg-gray-300'
+                      }`}
+                    />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+
+          {/* Form Content */}
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-6 sm:p-8 lg:p-10">
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-700 text-sm sm:text-base font-medium">⚠️ {error}</p>
+              </div>
+            )}
+
+            {/* Step 1: Store Info */}
+            {currentStep === 1 && (
+              <div className="space-y-4 sm:space-y-6 animate-fadeIn">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
+                    Tell us about your store
+                  </h2>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Store Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="storeName"
+                    value={formData.storeName}
+                    onChange={handleInputChange}
+                    placeholder="Your unique store name"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Business Type *
+                  </label>
+                  <select
+                    name="businessType"
+                    value={formData.businessType}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition"
+                  >
+                    <option value="individual">Individual Seller</option>
+                    <option value="business">Business</option>
+                    <option value="corporation">Corporation</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Store Description *
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Tell customers about your store..."
+                    rows={4}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition resize-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Location */}
+            {currentStep === 2 && (
+              <div className="space-y-4 sm:space-y-6 animate-fadeIn">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
+                    Where are you located?
+                  </h2>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder="+1 (555) 000-0000"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Street Address *
+                  </label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    placeholder="123 Main Street"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      City *
+                    </label>
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      placeholder="New York"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      State *
+                    </label>
+                    <input
+                      type="text"
+                      name="state"
+                      value={formData.state}
+                      onChange={handleInputChange}
+                      placeholder="NY"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    ZIP Code
+                  </label>
+                  <input
+                    type="text"
+                    name="zipCode"
+                    value={formData.zipCode}
+                    onChange={handleInputChange}
+                    placeholder="10001"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Payment */}
+            {currentStep === 3 && (
+              <div className="space-y-4 sm:space-y-6 animate-fadeIn">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
+                    Payment Information
+                  </h2>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-blue-700">
+                    🔒 Your payment information is secure and encrypted.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Bank Account Number *
+                  </label>
+                  <input
+                    type="text"
+                    name="bankAccount"
+                    value={formData.bankAccount}
+                    onChange={handleInputChange}
+                    placeholder="•••• •••• •••• 1234"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Tax ID / EIN *
+                  </label>
+                  <input
+                    type="text"
+                    name="taxId"
+                    value={formData.taxId}
+                    onChange={handleInputChange}
+                    placeholder="XX-XXXXXXX"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition"
+                  />
+                </div>
+
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    By continuing, you agree to our Seller Terms and Privacy Policy. We'll verify your information to ensure compliance with regulations.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Review */}
+            {currentStep === 4 && (
+              <div className="space-y-6 animate-fadeIn">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
+                    Review Your Information
+                  </h2>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Store Information</h3>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                      <div>
+                        <p className="text-xs text-gray-600 font-semibold">STORE NAME</p>
+                        <p className="text-gray-900 font-medium">{formData.storeName}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600 font-semibold">BUSINESS TYPE</p>
+                        <p className="text-gray-900 font-medium capitalize">{formData.businessType}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600 font-semibold">DESCRIPTION</p>
+                        <p className="text-gray-900">{formData.description}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Location</h3>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                      <div>
+                        <p className="text-xs text-gray-600 font-semibold">ADDRESS</p>
+                        <p className="text-gray-900">{formData.address}, {formData.city}, {formData.state} {formData.zipCode}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600 font-semibold">PHONE</p>
+                        <p className="text-gray-900">{formData.phone}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p className="text-sm text-green-700">
+                      ✓ All information looks good. Click submit to complete your seller registration.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div className="flex gap-4 mt-8 sm:mt-10">
+              <button
+                onClick={handlePrevious}
+                disabled={currentStep === 1}
+                className="flex-1 px-6 py-3 border-2 border-gray-900 text-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                ← Previous
+              </button>
+              {currentStep < 4 ? (
+                <button
+                  onClick={handleNext}
+                  className="flex-1 px-6 py-3 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+                >
+                  Next →
+                </button>
+              ) : (
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Creating Store...' : '✓ Complete Registration'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-in-out;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default SellerRegistration;
