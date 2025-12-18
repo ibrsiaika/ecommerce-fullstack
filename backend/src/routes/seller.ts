@@ -84,14 +84,14 @@ router.post(
         { new: true }
       );
 
-      sendSuccess(
+      return sendSuccess(
         res,
         201,
         { store, message: 'Seller registration completed successfully!' },
         'Registered as seller'
       );
     } catch (err: any) {
-      sendError(res, 400, err.message || 'Error registering as seller');
+      return sendError(res, 400, err.message || 'Error registering as seller');
     }
   })
 );
