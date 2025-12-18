@@ -155,7 +155,13 @@ export class OrderService {
 
       // Send payment confirmation email
       try {
-        await emailService.sendOrderConfirmation((order.user as any).email, order);
+        const user = await Order.findById(orderId).select('user').populate('user', 'name');
+        await emailService.sendOrderConfirmation(
+          (order.user as any).email,
+          (order.user as any).name,
+          (order as any).orderNumber || orderId,
+          order.totalPrice
+        );
       } catch (error) {
         console.error('Failed to send confirmation email:', error);
       }
