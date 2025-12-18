@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import Reviews from './Reviews';
-import axios from 'axios';
+import api from '../services/api';
 
 interface Product {
   _id: string;
@@ -38,8 +38,6 @@ const ProductDetail: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
 
-  const API_BASE_URL = 'http://localhost:5000/api';
-
   useEffect(() => {
     if (id) {
       fetchProduct();
@@ -49,12 +47,10 @@ const ProductDetail: React.FC = () => {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/products/${id}`);
-      if (response.data.success) {
-        setProduct(response.data.data);
-      } else {
-        setError('Product not found');
-      }
+      const response = await api.getProduct(id!);
+      const payload = response.data.data || response.data;
+      setProduct(payload);
+      setError(null);
     } catch (err) {
       setError('Failed to fetch product');
       console.error('Error fetching product:', err);
@@ -82,7 +78,7 @@ const ProductDetail: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-amber-400"></div>
       </div>
     );
   }
@@ -96,32 +92,36 @@ const ProductDetail: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Product Images */}
+    <div className="container py-10 text-white">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <div className="space-y-4">
-          <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-200">
+          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-2xl">
             <img
               src={product.images[selectedImage] || 'https://via.placeholder.com/600'}
               alt={product.name}
-              className="h-96 w-full object-cover object-center"
+              className="h-[420px] w-full object-cover"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            <div className="absolute bottom-4 left-4 flex gap-2">
+              <span className="pill bg-white/10 text-white border-white/20">{product.category}</span>
+              <span className="pill bg-amber-400/20 text-amber-100 border-amber-200/20">SKU {product.sku}</span>
+            </div>
           </div>
-          
+
           {product.images.length > 1 && (
             <div className="grid grid-cols-4 gap-2">
               {product.images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-md border-2 ${
-                    selectedImage === index ? 'border-blue-500' : 'border-gray-200'
+                  className={`overflow-hidden rounded-xl border ${
+                    selectedImage === index ? 'border-amber-400' : 'border-white/10'
                   }`}
                 >
                   <img
                     src={image}
                     alt={`${product.name} ${index + 1}`}
-                    className="h-20 w-full object-cover object-center"
+                    className="h-20 w-full object-cover"
                   />
                 </button>
               ))}
@@ -129,78 +129,49 @@ const ProductDetail: React.FC = () => {
           )}
         </div>
 
-        {/* Product Info */}
-        <div className="space-y-6">
+        <div className="surface p-6 space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
-            <p className="text-sm text-gray-600 mt-2">SKU: {product.sku}</p>
+            <h1 className="text-3xl font-semibold">{product.name}</h1>
+            <p className="text-white/60 mt-2">Thoughtfully sourced, ready to ship.</p>
           </div>
 
-          {/* Rating */}
-          <div className="flex items-center space-x-2">
-            <div className="flex items-center">
+          <div className="flex flex-wrap items-center gap-3 text-white/80">
+            <div className="flex items-center gap-1">
               {[...Array(5)].map((_, i) => (
-                <svg
-                  key={i}
-                  className={`h-5 w-5 ${
-                    i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-300'
-                  }`}
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
+                <span key={i} className={i < Math.floor(product.rating) ? 'text-amber-300' : 'text-white/30'}>
+                  ★
+                </span>
               ))}
+              <span className="ml-2 text-sm">{product.rating.toFixed(1)} ({product.numReviews} reviews)</span>
             </div>
-            <span className="text-sm text-gray-600">
-              {product.rating.toFixed(1)} ({product.numReviews} reviews)
+            <span className={`pill ${product.countInStock > 0 ? 'bg-emerald-400/20 text-emerald-100 border-emerald-200/20' : 'bg-white/10 text-white border-white/15'}`}>
+              {product.countInStock > 0 ? `${product.countInStock} in studio` : 'Reserved'}
             </span>
           </div>
 
-          {/* Price */}
           <div>
-            <p className="text-3xl font-bold text-gray-900">${product.price.toFixed(2)}</p>
+            <p className="text-4xl font-semibold text-amber-200">${product.price.toFixed(2)}</p>
+            {product.comparePrice && (
+              <p className="text-sm text-white/50">Previously ${product.comparePrice.toFixed(2)}</p>
+            )}
           </div>
 
-          {/* Stock Status */}
           <div>
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-              product.countInStock > 0
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
-            }`}>
-              {product.countInStock > 0 
-                ? `${product.countInStock} in stock` 
-                : 'Out of stock'
-              }
-            </span>
+            <h3 className="text-lg font-semibold mb-2">Description</h3>
+            <p className="text-white/70 leading-relaxed">{product.description}</p>
           </div>
 
-          {/* Description */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Description</h3>
-            <p className="text-gray-700">{product.description}</p>
-          </div>
-
-          {/* Category */}
-          <div>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              {product.category}
-            </span>
-          </div>
-
-          {/* Add to Cart */}
           {product.countInStock > 0 && (
             <div className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
-                  Quantity:
+              <div className="flex items-center gap-4">
+                <label htmlFor="quantity" className="text-sm font-medium text-white/80">
+                  Quantity
                 </label>
                 <select
                   id="quantity"
                   value={quantity}
                   onChange={(e) => setQuantity(parseInt(e.target.value))}
-                  className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input max-w-[140px]"
                 >
                   {[...Array(Math.min(product.countInStock, 10))].map((_, i) => (
                     <option key={i + 1} value={i + 1}>
@@ -212,21 +183,22 @@ const ProductDetail: React.FC = () => {
 
               <button
                 onClick={handleAddToCart}
-                className="w-full bg-blue-600 text-white py-3 px-6 rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full btn btn-primary rounded-xl py-3 text-base font-semibold"
               >
-                Add to Cart
+                Add to bag
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Reviews Section */}
-      <Reviews 
-        productId={product._id} 
-        reviews={product.reviews} 
-        onReviewAdded={fetchProduct}
-      />
+      <div className="mt-8 surface p-6">
+        <Reviews
+          productId={product._id}
+          reviews={product.reviews}
+          onReviewAdded={fetchProduct}
+        />
+      </div>
     </div>
   );
 };
