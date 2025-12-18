@@ -58,7 +58,7 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <span className="block">Phone</span>
-                <span className="text-sm font-medium text-gray-900">+1 (555) 401-2024</span>
+                <span className="text-sm font-medium text-gray-900">+1 (555) 401-2025</span>
               </li>
               <li>
                 <span className="block text-sm">Monday – Friday, 9am – 6pm</span>
@@ -68,7 +68,7 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="mt-10 flex flex-col gap-4 border-t border-gray-200 pt-6 text-sm text-gray-600 md:flex-row md:items-center md:justify-between">
-          <p>© 2024 E-Commerce. All rights reserved.</p>
+          <p>© 2025 E-Commerce. All rights reserved.</p>
           <p className="text-gray-500">Built with React, TypeScript, and Tailwind CSS</p>
         </div>
       </div>

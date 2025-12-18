@@ -31,10 +31,10 @@ const AdminVerificationWorkflow: React.FC = () => {
       email: 'john@example.com',
       storeName: 'Premium Electronics',
       storeCategory: 'Electronics',
-      businessLicense: 'BL-2024-001',
+      businessLicense: 'BL-2025-001',
       taxId: 'TX-001234567',
       bankDetails: '****1234',
-      appliedDate: '2024-01-15',
+      appliedDate: '2025-01-15',
       status: 'pending',
       documents: {
         idDocument: 'https://via.placeholder.com/400x300',
@@ -48,10 +48,10 @@ const AdminVerificationWorkflow: React.FC = () => {
       email: 'jane@example.com',
       storeName: 'Fashion Hub',
       storeCategory: 'Fashion',
-      businessLicense: 'BL-2024-002',
+      businessLicense: 'BL-2025-002',
       taxId: 'TX-002345678',
       bankDetails: '****5678',
-      appliedDate: '2024-01-10',
+      appliedDate: '2025-01-10',
       status: 'reviewing',
       documents: {
         idDocument: 'https://via.placeholder.com/400x300',
@@ -65,10 +65,10 @@ const AdminVerificationWorkflow: React.FC = () => {
       email: 'bob@example.com',
       storeName: 'Home Decor Store',
       storeCategory: 'Home & Garden',
-      businessLicense: 'BL-2024-003',
+      businessLicense: 'BL-2025-003',
       taxId: 'TX-003456789',
       bankDetails: '****9012',
-      appliedDate: '2024-01-01',
+      appliedDate: '2025-01-01',
       status: 'approved',
       documents: {
         idDocument: 'https://via.placeholder.com/400x300',
@@ -76,7 +76,7 @@ const AdminVerificationWorkflow: React.FC = () => {
         taxCertificate: 'https://via.placeholder.com/400x300',
       },
       reviewedBy: 'Admin User',
-      reviewedDate: '2024-01-05',
+      reviewedDate: '2025-01-05',
     },
   ]);
 

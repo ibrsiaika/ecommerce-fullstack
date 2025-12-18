@@ -108,21 +108,21 @@ const SellerProfile: React.FC<{ sellerId?: string }> = ({ sellerId }) => {
       author: 'Alice Johnson',
       rating: 5,
       comment: 'Excellent quality and fast shipping! Highly recommended.',
-      createdAt: '2024-01-10',
+      createdAt: '2025-01-10',
     },
     {
       _id: '2',
       author: 'Bob Smith',
       rating: 4,
       comment: 'Good products, arrived on time. Very satisfied.',
-      createdAt: '2024-01-08',
+      createdAt: '2025-01-08',
     },
     {
       _id: '3',
       author: 'Carol White',
       rating: 5,
       comment: 'Best seller I have dealt with. Great customer service!',
-      createdAt: '2024-01-05',
+      createdAt: '2025-01-05',
     },
   ];
 
