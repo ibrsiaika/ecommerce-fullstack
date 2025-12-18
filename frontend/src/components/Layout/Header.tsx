@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { logout } from '../../store/slices/authSlice';
-import { FiShoppingCart, FiUser, FiLogOut, FiLogIn, FiUserPlus } from 'react-icons/fi';
+import { FiShoppingCart, FiUser, FiLogOut, FiLogIn, FiUserPlus, FiMenu } from 'react-icons/fi';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -18,32 +18,36 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-white shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link to="/" className="flex-shrink-0 flex items-center">
-            <h1 className="text-2xl font-bold text-indigo-600">E-Commerce</h1>
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl shadow-xl">
+      <div className="container">
+        <div className="flex items-center justify-between py-3">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 shadow-lg shadow-amber-900/40 flex items-center justify-center text-slate-900 font-black">
+              E.
+            </div>
+            <div className="leading-tight">
+              <p className="text-sm uppercase tracking-[0.3em] text-white/60">Maison</p>
+              <p className="text-xl font-semibold text-white">E-Commerce</p>
+            </div>
           </Link>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden md:flex items-center gap-3 lg:gap-5">
             <Link
               to="/"
-              className="text-gray-900 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              className="px-3 py-2 rounded-lg text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors"
             >
               Home
             </Link>
             <Link
               to="/products"
-              className="text-gray-900 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              className="px-3 py-2 rounded-lg text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors"
             >
-              Products
+              Collections
             </Link>
             {isAuthenticated && (
               <Link
                 to="/orders"
-                className="text-gray-900 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                className="px-3 py-2 rounded-lg text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors"
               >
                 Orders
               </Link>
@@ -51,7 +55,7 @@ const Header: React.FC = () => {
             {isAuthenticated && user?.role === 'admin' && (
               <Link
                 to="/admin/dashboard"
-                className="text-red-600 hover:text-red-700 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                className="px-3 py-2 rounded-lg text-sm font-medium text-amber-200 hover:text-amber-50 hover:bg-amber-500/20 transition-colors"
               >
                 Admin
               </Link>
@@ -59,118 +63,108 @@ const Header: React.FC = () => {
             {isAuthenticated && (user?.role === 'seller' || user?.role === 'admin') && (
               <Link
                 to="/seller/dashboard"
-                className="text-green-600 hover:text-green-700 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                className="px-3 py-2 rounded-lg text-sm font-medium text-emerald-200 hover:text-emerald-50 hover:bg-emerald-500/20 transition-colors"
               >
                 Seller
               </Link>
             )}
           </nav>
 
-          {/* Right side icons */}
-          <div className="flex items-center space-x-4">
-            {/* Cart */}
+          <div className="flex items-center gap-2">
             <Link
               to="/cart"
-              className="relative p-2 text-gray-700 hover:text-indigo-600 transition-colors"
+              className="relative flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-white hover:bg-white/20 transition"
             >
-              <FiShoppingCart size={24} />
+              <FiShoppingCart size={18} />
+              <span className="hidden md:block text-sm font-medium">Bag</span>
               {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 bg-amber-500 text-slate-900 text-xs rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center font-semibold">
                   {totalItems}
                 </span>
               )}
             </Link>
 
-            {/* User Authentication */}
             {isAuthenticated ? (
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center space-x-1">
-                  <Link
-                    to="/profile"
-                    className="flex items-center space-x-1 text-gray-700 hover:text-indigo-600 transition-colors"
-                  >
-                    <FiUser size={20} />
-                    <span className="hidden sm:block text-sm">{user?.name}</span>
-                  </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-white hover:bg-white/20 transition"
+                >
+                  <FiUser size={18} />
+                  <div className="hidden sm:block text-left">
+                    <p className="text-xs text-white/70">Signed in</p>
+                    <p className="text-sm font-semibold leading-tight">{user?.name}</p>
+                  </div>
                   {user?.role && (
-                    <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                      user.role === 'admin' ? 'bg-red-100 text-red-800' :
-                      user.role === 'seller' ? 'bg-green-100 text-green-800' :
-                      'bg-blue-100 text-blue-800'
-                    }`}>
-                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                    <span className="pill bg-white/10 text-white border-white/20">
+                      {user.role}
                     </span>
                   )}
-                </div>
+                </Link>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center space-x-1 text-gray-700 hover:text-red-600 transition-colors p-2"
+                  className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-2 text-white/80 hover:text-white hover:bg-white/15 transition"
                 >
-                  <FiLogOut size={20} />
-                  <span className="hidden sm:block text-sm">Logout</span>
+                  <FiLogOut size={18} />
+                  <span className="hidden sm:block text-sm font-medium">Logout</span>
                 </button>
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <Link
                   to="/login"
-                  className="flex items-center space-x-1 text-gray-700 hover:text-indigo-600 transition-colors p-2"
+                  className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-white hover:bg-white/20 transition"
                 >
-                  <FiLogIn size={20} />
-                  <span className="hidden sm:block text-sm">Login</span>
+                  <FiLogIn size={18} />
+                  <span className="hidden sm:block text-sm font-medium">Login</span>
                 </Link>
                 <Link
                   to="/register"
-                  className="flex items-center space-x-1 bg-indigo-600 text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm transition-colors"
+                  className="flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 px-3 py-2 text-slate-900 font-semibold shadow-lg shadow-amber-900/30 hover:from-amber-500 hover:to-amber-700 transition"
                 >
-                  <FiUserPlus size={20} />
-                  <span className="hidden sm:block">Register</span>
+                  <FiUserPlus size={18} />
+                  <span className="hidden sm:block text-sm font-semibold">Create account</span>
                 </Link>
               </div>
             )}
+
+            <button className="md:hidden rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition" aria-label="Toggle menu">
+              <FiMenu size={18} />
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Mobile Navigation */}
-      <div className="md:hidden border-t border-gray-200">
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          <Link
-            to="/"
-            className="text-gray-900 hover:text-indigo-600 block px-3 py-2 rounded-md text-base font-medium"
-          >
-            Home
-          </Link>
-          <Link
-            to="/products"
-            className="text-gray-900 hover:text-indigo-600 block px-3 py-2 rounded-md text-base font-medium"
-          >
-            Products
-          </Link>
-          {isAuthenticated && (
+        <div className="hidden md:flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80 shadow-inner shadow-black/30">
+          <span className="pill bg-white/10 text-white border-white/20">Concierge onboarding</span>
+          <p className="flex-1 text-center text-white/70">
+            We curate essentials, gifting, and statement pieces—shipped with white-glove care.
+          </p>
+          <div className="flex items-center gap-4 text-white/70">
+            <span className="text-xs uppercase tracking-[0.2em]">Support</span>
+            <span className="font-semibold text-white">Live within 5 minutes</span>
+          </div>
+        </div>
+
+        <div className="md:hidden mt-2 flex items-center gap-2 overflow-x-auto pb-2">
+          {[
+            { label: 'Home', href: '/' },
+            { label: 'Collections', href: '/products' },
+            ...(isAuthenticated ? [{ label: 'Orders', href: '/orders' }] : []),
+            ...(isAuthenticated && user?.role === 'admin'
+              ? [{ label: 'Admin', href: '/admin/dashboard' }]
+              : []),
+            ...(isAuthenticated && (user?.role === 'seller' || user?.role === 'admin')
+              ? [{ label: 'Seller', href: '/seller/dashboard' }]
+              : []),
+          ].map((item) => (
             <Link
-              to="/orders"
-              className="text-gray-900 hover:text-indigo-600 block px-3 py-2 rounded-md text-base font-medium"
+              key={item.href}
+              to={item.href}
+              className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/15"
             >
-              Orders
+              {item.label}
             </Link>
-          )}
-          {isAuthenticated && user?.role === 'admin' && (
-            <Link
-              to="/admin/dashboard"
-              className="text-red-600 hover:text-red-700 block px-3 py-2 rounded-md text-base font-medium"
-            >
-              Admin Dashboard
-            </Link>
-          )}
-          {isAuthenticated && (user?.role === 'seller' || user?.role === 'admin') && (
-            <Link
-              to="/seller/dashboard"
-              className="text-green-600 hover:text-green-700 block px-3 py-2 rounded-md text-base font-medium"
-            >
-              Seller Dashboard
-            </Link>
-          )}
+          ))}
         </div>
       </div>
     </header>

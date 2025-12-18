@@ -1,286 +1,152 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { validationResult, body } from 'express-validator';
-import Product from '../models/Product';
+import { asyncHandler, AppError } from '../middleware/appError';
+import productService from '../services/productService';
+import { sendPaginatedSuccess, sendSuccess, sendValidationError } from '../utils/response';
+
+const mapProductPreview = (product: any) => ({
+  _id: product._id,
+  id: product._id,
+  name: product.name,
+  description: product.description,
+  slug: product.slug,
+  price: product.price,
+  comparePrice: product.comparePrice,
+  category: product.category,
+  brand: product.brand,
+  image: product.images?.[0],
+  images: product.images,
+  rating: product.rating,
+  numReviews: product.numReviews,
+  countInStock: product.countInStock,
+  sku: product.sku,
+  isFeatured: product.isFeatured,
+  createdAt: product.createdAt,
+  updatedAt: product.updatedAt
+});
+
+const parseNumber = (value?: string | string[], fallback: number = 0) => {
+  if (!value) return fallback;
+  const parsed = Array.isArray(value) ? parseFloat(value[0]) : parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
 
 // @desc    Get all products with filtering, search, and pagination
 // @route   GET /api/products
 // @access  Public
-export const getProducts = async (req: Request, res: Response) => {
-  try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const skip = (page - 1) * limit;
+export const getProducts = asyncHandler(async (req: Request, res: Response) => {
+  const page = Math.max(parseInt(req.query.page as string, 10) || 1, 1);
+  const limit = Math.min(parseInt(req.query.limit as string, 10) || 12, 50);
 
-    // Build query
-    const query: any = {};
-    
-    // Category filter
-    if (req.query.category) {
-      query.category = req.query.category;
-    }
+  const { products, pagination } = await productService.getAll(
+    page,
+    limit,
+    req.query.category as string,
+    parseNumber(req.query.minPrice as string),
+    parseNumber(req.query.maxPrice as string),
+    req.query.search as string
+  );
 
-    // Price range filter
-    if (req.query.minPrice || req.query.maxPrice) {
-      query.price = {};
-      if (req.query.minPrice) query.price.$gte = parseFloat(req.query.minPrice as string);
-      if (req.query.maxPrice) query.price.$lte = parseFloat(req.query.maxPrice as string);
-    }
-
-    // Search filter
-    if (req.query.search) {
-      query.$or = [
-        { name: { $regex: req.query.search, $options: 'i' } },
-        { description: { $regex: req.query.search, $options: 'i' } }
-      ];
-    }
-
-    // Execute query
-    const products = await Product.find(query)
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .skip(skip);
-
-    const total = await Product.countDocuments(query);
-
-    res.json({
-      success: true,
-      data: products,
-      pagination: {
-        page,
-        pages: Math.ceil(total / limit),
-        total,
-        limit
-      }
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-};
+  const curated = products.map(mapProductPreview);
+  return sendPaginatedSuccess(res, 200, curated, pagination.page, pagination.limit, pagination.total, 'Products loaded');
+});
 
 // @desc    Get single product
 // @route   GET /api/products/:id
 // @access  Public
-export const getProduct = async (req: Request, res: Response) => {
-  try {
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      res.status(404).json({
-        success: false,
-        error: 'Product not found'
-      });
-      return;
-    }
-
-    res.json({
-      success: true,
-      data: product
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-};
+export const getProduct = asyncHandler(async (req: Request, res: Response) => {
+  const product = await productService.getById(req.params.id);
+  return sendSuccess(res, 200, mapProductPreview(product));
+});
 
 // @desc    Create new product
 // @route   POST /api/products
 // @access  Private/Admin
-export const createProduct = async (req: Request, res: Response) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      res.status(400).json({
-        success: false,
-        errors: errors.array()
-      });
-      return;
-    }
-
-    const product = await Product.create({
-      ...req.body,
-      user: (req as any).user.id
-    });
-
-    res.status(201).json({
-      success: true,
-      data: product
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+export const createProduct = asyncHandler(async (req: Request, res: Response) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return sendValidationError(res, errors.array().map(err => err.msg));
   }
-};
+
+  const product = await productService.create({
+    ...req.body,
+    user: (req as any).user?.id
+  });
+
+  return sendSuccess(res, 201, mapProductPreview(product), 'Product created');
+});
 
 // @desc    Update product
 // @route   PUT /api/products/:id
 // @access  Private/Admin
-export const updateProduct = async (req: Request, res: Response) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      res.status(400).json({
-        success: false,
-        errors: errors.array()
-      });
-      return;
-    }
-
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      res.status(404).json({
-        success: false,
-        error: 'Product not found'
-      });
-      return;
-    }
-
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-
-    res.json({
-      success: true,
-      data: updatedProduct
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+export const updateProduct = asyncHandler(async (req: Request, res: Response) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return sendValidationError(res, errors.array().map(err => err.msg));
   }
-};
+
+  const updatedProduct = await productService.update(req.params.id, req.body);
+  return sendSuccess(res, 200, mapProductPreview(updatedProduct), 'Product updated');
+});
 
 // @desc    Delete product
 // @route   DELETE /api/products/:id
 // @access  Private/Admin
-export const deleteProduct = async (req: Request, res: Response) => {
-  try {
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      res.status(404).json({
-        success: false,
-        error: 'Product not found'
-      });
-      return;
-    }
-
-    await Product.findByIdAndDelete(req.params.id);
-
-    res.json({
-      success: true,
-      message: 'Product deleted successfully'
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-};
+export const deleteProduct = asyncHandler(async (req: Request, res: Response) => {
+  await productService.delete(req.params.id);
+  return sendSuccess(res, 200, null, 'Product deleted successfully');
+});
 
 // @desc    Get product categories
 // @route   GET /api/products/categories
 // @access  Public
-export const getCategories = async (req: Request, res: Response) => {
-  try {
-    const categories = await Product.distinct('category');
-
-    res.json({
-      success: true,
-      data: categories
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-};
+export const getCategories = asyncHandler(async (_req: Request, res: Response) => {
+  const categories = await productService.getCategories();
+  return sendSuccess(res, 200, categories);
+});
 
 // @desc    Get featured products
 // @route   GET /api/products/featured
 // @access  Public
-export const getFeaturedProducts = async (req: Request, res: Response) => {
-  try {
-    const products = await Product.find({ featured: true }).limit(8);
-
-    res.json({
-      success: true,
-      data: products
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-};
+export const getFeaturedProducts = asyncHandler(async (req: Request, res: Response) => {
+  const limit = Math.min(parseInt(req.query.limit as string, 10) || 8, 24);
+  const products = await productService.getFeatured(limit);
+  return sendSuccess(res, 200, products.map(mapProductPreview));
+});
 
 // @desc    Add product review
 // @route   POST /api/products/:id/reviews
 // @access  Private
-export const addProductReview = async (req: Request, res: Response) => {
-  try {
-    const { rating, comment } = req.body;
-    const user = (req as any).user;
-
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      res.status(404).json({
-        success: false,
-        error: 'Product not found'
-      });
-      return;
-    }
-
-    // Check if user has already reviewed this product
-    const alreadyReviewed = product.reviews.find(
-      (review) => review.user.toString() === user.id.toString()
-    );
-
-    if (alreadyReviewed) {
-      res.status(400).json({
-        success: false,
-        error: 'Product already reviewed'
-      });
-      return;
-    }
-
-    // Add review
-    const review = {
-      user: user.id,
-      name: user.name,
-      rating: Number(rating),
-      comment,
-      createdAt: new Date()
-    };
-
-    product.reviews.push(review);
-    await product.save();
-
-    res.status(201).json({
-      success: true,
-      message: 'Review added successfully'
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+export const addProductReview = asyncHandler(async (req: Request, res: Response) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return sendValidationError(res, errors.array().map(err => err.msg));
   }
-};
+
+  const user = (req as any).user;
+  if (!user) {
+    throw new AppError('Unauthorized', 401);
+  }
+
+  const product = await productService.addReview(
+    req.params.id,
+    user.id,
+    user.name,
+    Number(req.body.rating),
+    req.body.comment
+  );
+
+  return sendSuccess(
+    res,
+    201,
+    {
+      reviews: product.reviews,
+      rating: product.rating,
+      numReviews: product.numReviews
+    },
+    'Review added successfully'
+  );
+});
 
 // Validation rules for product creation/update
 export const productValidation = [

@@ -1,7 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api';
+import api from '../../services/api';
 
 // User interface
 export interface User {
@@ -32,17 +30,10 @@ const initialState: AuthState = {
   isAuthenticated: false,
 };
 
-// Configure axios defaults
-axios.defaults.baseURL = API_URL;
-axios.defaults.withCredentials = true;
-
-// Set auth token in headers
-const setAuthToken = (token: string | null) => {
+const persistToken = (token: string | null) => {
   if (token) {
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     localStorage.setItem('token', token);
   } else {
-    delete axios.defaults.headers.common['Authorization'];
     localStorage.removeItem('token');
   }
 };
@@ -52,9 +43,9 @@ export const register = createAsyncThunk(
   'auth/register',
   async (userData: { name: string; email: string; password: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.post('/auth/register', userData);
+      const response = await api.register(userData);
       const { token, data } = response.data;
-      setAuthToken(token);
+      persistToken(token);
       return { user: data, token };
     } catch (error: any) {
       const message = error.response?.data?.error || error.message || 'Registration failed';
@@ -68,9 +59,9 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.post('/auth/login', credentials);
+      const response = await api.login(credentials);
       const { token, data } = response.data;
-      setAuthToken(token);
+      persistToken(token);
       return { user: data, token };
     } catch (error: any) {
       const message = error.response?.data?.error || error.message || 'Login failed';
@@ -85,10 +76,14 @@ export const getCurrentUser = createAsyncThunk(
   async (_, { rejectWithValue, getState }) => {
     try {
       const state = getState() as { auth: AuthState };
-      if (state.auth.token) {
-        setAuthToken(state.auth.token);
+      const token = state.auth.token || localStorage.getItem('token');
+
+      if (!token) {
+        return rejectWithValue('No token available');
       }
-      const response = await axios.get('/auth/me');
+
+      persistToken(token);
+      const response = await api.get('/api/auth/me');
       return response.data.data;
     } catch (error: any) {
       const message = error.response?.data?.error || error.message || 'Failed to get user';
@@ -102,12 +97,11 @@ export const logout = createAsyncThunk(
   'auth/logout',
   async () => {
     try {
-      await axios.post('/auth/logout');
-      setAuthToken(null);
+      await api.logout();
+      persistToken(null);
       return null;
     } catch (error: any) {
-      // Even if logout fails on server, clear local storage
-      setAuthToken(null);
+      persistToken(null);
       return null;
     }
   }
@@ -118,7 +112,7 @@ export const updateProfile = createAsyncThunk(
   'auth/updateProfile',
   async (userData: { name: string; email: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.put('/auth/updatedetails', userData);
+      const response = await api.put('/api/auth/updatedetails', userData);
       return response.data.data;
     } catch (error: any) {
       const message = error.response?.data?.error || error.message || 'Update failed';
@@ -132,9 +126,9 @@ export const changePassword = createAsyncThunk(
   'auth/changePassword',
   async (passwordData: { currentPassword: string; newPassword: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.put('/auth/updatepassword', passwordData);
+      const response = await api.put('/api/auth/updatepassword', passwordData);
       const { token, data } = response.data;
-      setAuthToken(token);
+      persistToken(token);
       return { user: data, token };
     } catch (error: any) {
       const message = error.response?.data?.error || error.message || 'Password change failed';
@@ -156,7 +150,7 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
-      setAuthToken(null);
+      persistToken(null);
     },
   },
   extraReducers: (builder) => {
@@ -210,7 +204,7 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
-        setAuthToken(null);
+        persistToken(null);
       })
       // Logout
       .addCase(logout.fulfilled, (state) => {

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '../../services/api';
 
 export interface Product {
   id: string;
@@ -70,7 +70,14 @@ export const getProducts = createAsyncThunk(
   'products/getProducts',
   async (params: { page?: number; limit?: number; category?: string; search?: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.get('/products', { params });
+      const response = await api.getProducts(
+        params.page,
+        params.limit,
+        params.category,
+        undefined,
+        undefined,
+        params.search
+      );
       return response.data;
     } catch (error: any) {
       const message = error.response?.data?.error || error.message || 'Failed to fetch products';
@@ -84,7 +91,7 @@ export const getProduct = createAsyncThunk(
   'products/getProduct',
   async (id: string, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`/products/${id}`);
+      const response = await api.getProduct(id);
       return response.data.data;
     } catch (error: any) {
       const message = error.response?.data?.error || error.message || 'Failed to fetch product';
@@ -98,8 +105,8 @@ export const getFeaturedProducts = createAsyncThunk(
   'products/getFeaturedProducts',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get('/products?featured=true&limit=8');
-      return response.data.data;
+      const response = await api.getFeaturedProducts(8);
+      return response.data.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error || error.message || 'Failed to fetch featured products';
       return rejectWithValue(message);
@@ -131,7 +138,12 @@ const productSlice = createSlice({
       .addCase(getProducts.fulfilled, (state, action) => {
         state.isLoading = false;
         state.products = action.payload.data;
-        state.pagination = action.payload.pagination;
+        state.pagination = {
+          currentPage: action.payload.pagination?.page || 1,
+          totalPages: action.payload.pagination?.pages || 1,
+          totalProducts: action.payload.pagination?.total || action.payload.data?.length || 0,
+          limit: action.payload.pagination?.limit || state.pagination.limit,
+        };
         state.error = null;
       })
       .addCase(getProducts.rejected, (state, action) => {
