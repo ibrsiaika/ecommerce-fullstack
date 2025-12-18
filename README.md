@@ -2,15 +2,15 @@
 
 <div align="center">
 
-![Status](https://img.shields.io/badge/Status-Production%20Ready-success?style=flat-square)
-![Node.js](https://img.shields.io/badge/Node.js-18%2B-green?style=flat-square)
-![React](https://img.shields.io/badge/React-19-blue?style=flat-square)
-![MongoDB](https://img.shields.io/badge/MongoDB-Latest-green?style=flat-square)
-![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Production%20Ready-000?style=for-the-badge)
+![Node.js](https://img.shields.io/badge/Node.js-18%2B-000?style=for-the-badge)
+![React](https://img.shields.io/badge/React-19-000?style=for-the-badge)
+![MongoDB](https://img.shields.io/badge/MongoDB-Latest-000?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-000?style=for-the-badge)
 
-**A complete full-stack e-commerce platform with modern technologies and enterprise features.**
+**A complete, clean, and modern full-stack e-commerce platform.**
 
-[Features](#features) • [Tech Stack](#tech-stack) • [Quick Start](#quick-start) • [API Docs](#api-documentation)
+[✨ Features](#features) • [⚙️ Tech Stack](#tech-stack) • [🚀 Quick Start](#quick-start) • [📖 API Docs](#api-documentation)
 
 </div>
 
@@ -33,155 +33,119 @@
 
 ## 🎯 Overview
 
-A fully-featured e-commerce platform demonstrating complete full-stack development with:
+A clean, minimal full-stack e-commerce platform built with modern technologies:
 
-- **React 19** + **TypeScript** modern frontend with Vite
-- **Node.js + Express** powerful backend API
-- **MongoDB** flexible NoSQL database
-- **Stripe** payment integration
-- **JWT** authentication & authorization
-- **Comprehensive test** suite with Jest
-- **Admin dashboard** for platform management
-- **Responsive design** for all devices (mobile, tablet, desktop)
+- **React 19** + **TypeScript** frontend
+- **Node.js + Express** backend
+- **MongoDB** database
+- **Stripe** payments
+- **JWT** authentication
+- **Fully tested** with Jest
+- **Admin & Seller dashboards**
+- **Responsive design**
 
-**Perfect for:**
-- Learning full-stack development
-- Building a production e-commerce store
-- Portfolio showcase
-- Interview preparation
+> **Built for**: Learning • Production use • Portfolio showcase • Job interviews
 
 ---
 
 ## ✨ Key Features
 
-### 🛍️ Shopping Features
-- ✅ Product catalog with categories and tags
-- ✅ Advanced search and filtering (price, rating, category)
+### 🛍️ Shopping
+- ✅ Product catalog with categories
+- ✅ Search & filtering (price, rating, category)
 - ✅ Shopping cart with persistent storage
-- ✅ Wishlist/favorites functionality
-- ✅ Product reviews and ratings (1-5 stars)
-- ✅ Stock management and availability tracking
-- ✅ Product variants (size, color, etc)
-- ✅ Quick view and detailed product pages
+- ✅ Wishlist functionality
+- ✅ Reviews & ratings (1-5 stars)
+- ✅ Stock tracking & variants
+- ✅ Quick view & detailed pages
 
-### 💳 Payment & Orders
-- ✅ Stripe payment integration (card, Apple Pay, Google Pay)
+### 💳 Payments & Orders
+- ✅ Stripe integration (card, Apple Pay, Google Pay)
 - ✅ Multiple payment methods
-- ✅ Order tracking with real-time updates
-- ✅ Complete order history
-- ✅ Invoice generation and download
-- ✅ Order status management (pending, processing, shipped, delivered)
+- ✅ Order tracking & history
+- ✅ Invoice generation
+- ✅ Order status management
 - ✅ Refund processing
-- ✅ Email notifications for orders
+- ✅ Email notifications
 
 ### 👥 User Management
-- ✅ User registration with email verification
-- ✅ Secure login with JWT tokens
-- ✅ User profile management
-- ✅ Multiple address management
-- ✅ Password reset functionality
-- ✅ Email verification
-- ✅ Role-based access control (User, Admin)
-- ✅ Account settings and preferences
+- ✅ Registration & email verification
+- ✅ Secure JWT authentication
+- ✅ Profile management
+- ✅ Multiple address storage
+- ✅ Password reset
+- ✅ Role-based access control
+- ✅ Account settings
 
 ### 📊 Admin Dashboard
-- ✅ Comprehensive admin panel
-- ✅ Product management (CRUD operations)
-- ✅ Order management and tracking
-- ✅ User management
-- ✅ Sales analytics and reports
+- ✅ Platform statistics
+- ✅ Product management (CRUD)
+- ✅ Order & user management
+- ✅ Sales analytics & reports
 - ✅ Inventory tracking
-- ✅ Discount and coupon management
-- ✅ Revenue metrics and charts
+- ✅ Discount & coupon system
 
-### 🏪 Multi-Vendor Marketplace (NEW!)
-- ✅ Seller store creation & management
+### 🏪 Marketplace
+- ✅ Seller store creation
 - ✅ Seller verification workflow
-- ✅ Public store profiles & storefronts
-- ✅ Store ratings and followers
-- ✅ Seller dashboard with metrics
-- ✅ Product management per seller
-- ✅ Seller-specific order tracking
-- ✅ Store analytics & performance
+- ✅ Public storefronts
+- ✅ Store ratings & followers
+- ✅ Seller dashboard & metrics
 
-### 💼 Seller Account System (NEW!)
-- ✅ Complete seller dashboard
+### 💼 Seller Accounts
 - ✅ Store profile management
-- ✅ Product inventory management
-- ✅ Order management & fulfillment
-- ✅ Real-time earnings tracking
-- ✅ Commission system (configurable)
-- ✅ Withdrawal requests & payments
-- ✅ Bank account management
-- ✅ Seller ratings & reviews
-- ✅ Customer insights for sellers
+- ✅ Product inventory
+- ✅ Order fulfillment
+- ✅ Earnings tracking
+- ✅ Commission system
+- ✅ Withdrawal requests
+- ✅ Seller analytics
 
-### 👥 Enhanced Buyer Accounts (NEW!)
-- ✅ User profile management
-- ✅ Complete order history
-- ✅ Saved addresses
-- ✅ Wishlist management
-- ✅ Product reviews & ratings
-- ✅ Account preferences
-- ✅ Purchase history
-- ✅ Notification settings
-
-### 📈 Analytics & Reports (NEW!)
-- ✅ Revenue trends (daily/monthly)
+### 📈 Analytics
+- ✅ Revenue trends
 - ✅ Sales by category
-- ✅ Top selling products
-- ✅ User growth metrics
+- ✅ Top products & sellers
 - ✅ Conversion rates
-- ✅ Customer satisfaction scores
-- ✅ Seller performance rankings
-- ✅ Payment status analytics
+- ✅ Customer insights
 
 ### 🔐 Security
-- ✅ Password hashing with bcryptjs
-- ✅ JWT token authentication
-- ✅ Rate limiting on API endpoints
-- ✅ CORS security configuration
-- ✅ Input validation and sanitization
+- ✅ Password hashing (bcryptjs)
+- ✅ JWT token auth
+- ✅ Rate limiting
+- ✅ CORS protection
+- ✅ Input validation
 - ✅ XSS protection
 - ✅ HTTPS ready
-- ✅ Helmet.js security headers
+- ✅ Security headers
 
 ### 📱 Responsive Design
-- ✅ Mobile-first approach
-- ✅ Tablet optimization
+- ✅ Mobile-first
+- ✅ Tablet optimized
 - ✅ Desktop experience
-- ✅ Accessibility (WCAG 2.1)
-- ✅ Progressive enhancement
-- ✅ Touch-friendly UI
+- ✅ WCAG 2.1 accessible
 
 ---
 
 ## 🛠 Technology Stack
 
-### **Frontend**
+### Frontend
 ```
-React 19 • TypeScript • Vite
-Redux Toolkit • React Router v7
-Tailwind CSS • React Hook Form
-Stripe.js • Axios • Lucide Icons
-```
-
-### **Backend**
-```
-Node.js • Express.js • TypeScript
-MongoDB • Mongoose ODM
-JWT • bcryptjs
-Stripe API • Nodemailer
-Multer • Cloudinary • Swagger
-Jest • Supertest
+React 19  •  TypeScript  •  Vite  •  Redux Toolkit
+React Router  •  Tailwind CSS  •  React Hook Form
+Stripe.js  •  Axios
 ```
 
-### **DevOps & Infrastructure**
+### Backend
 ```
-Docker • Docker Compose
-GitHub Actions (CI/CD)
-Environment Management
-API Documentation (Swagger/OpenAPI)
+Node.js  •  Express.js  •  TypeScript  •  MongoDB
+Mongoose  •  JWT  •  bcryptjs  •  Stripe API
+Nodemailer  •  Multer  •  Swagger  •  Jest
+```
+
+### DevOps
+```
+Docker  •  Docker Compose  •  GitHub Actions
+Environment Management  •  API Documentation
 ```
 
 ---
@@ -239,106 +203,83 @@ VITE_API_URL=http://localhost:5000
 VITE_STRIPE_PUBLIC_KEY=pk_test_...
 ```
 
-### Step 4: Start Development Servers
-
+### 4. Start Servers
 ```bash
-# Terminal 1: Backend (runs on port 5000)
-cd backend
-npm run dev
+# Terminal 1: Backend (port 5000)
+cd backend && npm run dev
 
-# Terminal 2: Frontend (runs on port 5173)
-cd frontend
-npm run dev
+# Terminal 2: Frontend (port 5173)
+cd frontend && npm run dev
 ```
 
-### Access the Application
-
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:5000
-- **API Documentation**: http://localhost:5000/api-docs
-- **Health Check**: http://localhost:5000/health
+### Access
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:5000 |
+| API Docs | http://localhost:5000/api-docs |
+| Health Check | http://localhost:5000/health |
 
 ### Demo Credentials
-
 ```
-Email: test@example.com
-Password: Test123!@#
-Role: User
-
-Admin Email: admin@example.com
-Admin Password: Admin123!@#
-Role: Admin
+Email: test@example.com | Password: Test123!@#
+Admin: admin@example.com | Password: Admin123!@#
 ```
+
+---
 
 ---
 
 ## 🔌 API Endpoints
 
-### Admin Dashboard Endpoints
-```
-GET    /api/admin/stats                    - Get dashboard statistics
-GET    /api/admin/stats/trends             - Get revenue trends (daily/monthly)
-GET    /api/admin/top-products             - Get top selling products
-GET    /api/admin/top-categories           - Get sales by category
-GET    /api/admin/user-growth              - Get user growth metrics
-GET    /api/admin/seller-rankings          - Get seller performance rankings
-GET    /api/admin/customer-insights        - Get customer insights
-GET    /api/admin/payment-metrics          - Get payment status analytics
-GET    /api/admin/sellers/pending          - Get pending seller verifications
-POST   /api/admin/sellers/:id/verify       - Verify seller account
-```
+### Admin  
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/admin/stats` | Dashboard statistics |
+| GET | `/api/admin/stats/trends` | Revenue trends |
+| GET | `/api/admin/top-products` | Top selling products |
+| GET | `/api/admin/user-growth` | User growth metrics |
+| GET | `/api/admin/sellers/pending` | Pending verifications |
+| POST | `/api/admin/sellers/:id/verify` | Verify seller |
 
-### Seller Endpoints
-```
-GET    /api/seller/dashboard               - Get seller dashboard data
-GET    /api/seller/store                   - Get seller store profile
-PUT    /api/seller/store                   - Update seller store
-GET    /api/seller/products                - Get seller's products
-POST   /api/seller/products                - Create new product
-GET    /api/seller/orders                  - Get seller's orders
-GET    /api/seller/order/:id               - Get order details
-PUT    /api/seller/order/:id/status        - Update order status
-GET    /api/seller/earnings                - Get earnings summary
-GET    /api/seller/withdrawals             - Get withdrawal history
-POST   /api/seller/withdrawals             - Request withdrawal
-GET    /api/seller/analytics               - Get seller analytics
-GET    /api/seller/public/:storeId         - Get public store profile
-```
+### Seller
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/seller/dashboard` | Dashboard data |
+| GET/PUT | `/api/seller/store` | Store profile |
+| GET | `/api/seller/products` | Seller products |
+| GET | `/api/seller/orders` | Seller orders |
+| GET | `/api/seller/earnings` | Earnings summary |
+| POST | `/api/seller/withdrawals` | Request withdrawal |
 
-### Product Endpoints
-```
-GET    /api/products                       - Get all products (with pagination)
-GET    /api/products/:id                   - Get single product
-POST   /api/products                       - Create product (seller/admin)
-PUT    /api/products/:id                   - Update product (seller/admin)
-DELETE /api/products/:id                   - Delete product (seller/admin)
-POST   /api/products/:id/reviews           - Add product review
-GET    /api/products/:id/reviews           - Get product reviews
-```
+### Products
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/products` | All products |
+| GET | `/api/products/:id` | Single product |
+| POST | `/api/products` | Create product |
+| PUT | `/api/products/:id` | Update product |
+| DELETE | `/api/products/:id` | Delete product |
+| POST | `/api/products/:id/reviews` | Add review |
 
-### Order Endpoints
-```
-GET    /api/orders                         - Get user's orders
-GET    /api/orders/:id                     - Get order details
-POST   /api/orders                         - Create new order
-PUT    /api/orders/:id                     - Update order
-DELETE /api/orders/:id                     - Cancel order
-```
+### Orders
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/orders` | User orders |
+| GET | `/api/orders/:id` | Order details |
+| POST | `/api/orders` | Create order |
+| PUT | `/api/orders/:id` | Update order |
 
-### User Endpoints
-```
-POST   /api/auth/register                  - Register new user
-POST   /api/auth/login                     - Login user
-POST   /api/auth/logout                    - Logout user
-GET    /api/users/profile                  - Get user profile
-PUT    /api/users/profile                  - Update user profile
-GET    /api/users/addresses                - Get saved addresses
-POST   /api/users/addresses                - Add new address
-DELETE /api/users/addresses/:id            - Delete address
-GET    /api/users/wishlist                 - Get wishlist
-POST   /api/users/wishlist/:productId      - Add to wishlist
-DELETE /api/users/wishlist/:productId      - Remove from wishlist
-```
+### Auth & Users
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Register |
+| POST | `/api/auth/login` | Login |
+| POST | `/api/auth/logout` | Logout |
+| GET | `/api/users/profile` | Get profile |
+| PUT | `/api/users/profile` | Update profile |
+| GET | `/api/users/wishlist` | Get wishlist |
+| POST | `/api/users/wishlist/:id` | Add to wishlist |
 
 ---
 
@@ -346,67 +287,42 @@ DELETE /api/users/wishlist/:productId      - Remove from wishlist
 
 ```
 ecommerce-fullstack/
-│
-├── frontend/                    # React Frontend
+├── frontend/              # React 19 + TypeScript + Vite
 │   ├── src/
-│   │   ├── pages/              # Page components
-│   │   ├── components/         # Reusable components
-│   │   ├── features/           # Feature modules
-│   │   ├── hooks/              # Custom React hooks
-│   │   ├── store/              # Redux configuration
-│   │   ├── services/           # API service calls
-│   │   ├── types/              # TypeScript interfaces
-│   │   ├── styles/             # Global styles
-│   │   └── main.tsx            # Entry point
-│   ├── public/                 # Static assets
-│   ├── index.html
-│   ├── vite.config.ts
-│   ├── tsconfig.json
+│   │   ├── pages/         # Page components
+│   │   ├── components/    # Reusable components
+│   │   ├── features/      # Feature modules
+│   │   ├── store/         # Redux store
+│   │   ├── services/      # API calls
+│   │   ├── types/         # TypeScript types
+│   │   └── styles/        # Global styles
+│   ├── public/            # Static assets
 │   └── package.json
 │
-├── backend/                     # Express Backend
+├── backend/               # Node.js + Express + TypeScript
 │   ├── src/
-│   │   ├── models/             # Mongoose schemas
-│   │   ├── routes/             # API route handlers
-│   │   ├── controllers/        # Business logic
-│   │   ├── middleware/         # Express middleware
-│   │   ├── services/           # Service layer
-│   │   ├── utils/              # Utility functions
-│   │   ├── config/             # Configuration files
-│   │   └── server.ts           # Express app entry
-│   ├── tests/                  # Jest test suites
-│   ├── dist/                   # Compiled output
-│   ├── jest.config.json
-│   ├── tsconfig.json
+│   │   ├── models/        # Mongoose schemas
+│   │   ├── routes/        # API routes
+│   │   ├── controllers/   # Business logic
+│   │   ├── middleware/    # Express middleware
+│   │   ├── services/      # Service layer
+│   │   ├── utils/         # Utilities
+│   │   └── server.ts      # App entry
+│   ├── tests/             # Jest tests
 │   └── package.json
 │
-├── shared/                     # Shared Code
-│   └── types.ts               # Shared TypeScript types
-│
+├── shared/                # Shared TypeScript types
 ├── docker-compose.yml
-├── .gitignore
 ├── README.md
-├── LICENSE
-└── CONTRIBUTING.md
+└── LICENSE
 ```
 
 ---
 
 ## 📚 API Documentation
 
-### Base URL
-```
-http://localhost:5000/api
-```
-
-### Authentication Endpoints
-
-**Register User**
-```bash
-POST /auth/register
-Content-Type: application/json
-
-{
+**Base URL**: `http://localhost:5000/api`  
+**Full Docs**: `http://localhost:5000/api-docs`
   "name": "John Doe",
   "email": "john@example.com",
   "password": "SecurePassword123!",
@@ -585,33 +501,79 @@ Response:
 }
 ```
 
-**Get Order by ID**
-```bash
-GET /orders/:id
-Authorization: Bearer token
+---
 
-Response:
-{
-  "success": true,
-  "data": {
-    "id": "order_id",
-    "user": { "name": "John Doe", "email": "john@example.com" },
-    "items": [...],
-    "shippingAddress": {...},
-    "status": "shipped",
-    "tracking": "TRACK123456",
-    "totalPrice": 199.98,
-    "createdAt": "2025-12-11T10:30:00Z",
-    "updatedAt": "2025-12-11T12:00:00Z"
-  }
-}
+## 🧪 Testing
+
+```bash
+# Run all tests
+cd backend && npm test
+
+# Watch mode
+npm run test:watch
+
+# Coverage report
+npm test -- --coverage
 ```
 
-**Update Order Status (Admin)**
+**Coverage**: 33 tests (Auth: 8, Products: 8, Orders: 17)
+
+---
+
+## 📦 Deployment
+
+### Quick Start
 ```bash
-PUT /orders/:id/status
-Authorization: Bearer admin_token
-Content-Type: application/json
+# Using Docker
+docker-compose up --build
+
+# Manual
+cd backend && npm run build && npm start
+cd frontend && npm run build
+```
+
+---
+
+## 🚀 Optimizations
+
+- ✅ Code splitting & lazy loading
+- ✅ Image optimization (Cloudinary)
+- ✅ Database query optimization
+- ✅ Gzip compression
+- ✅ Minified production builds
+
+---
+
+## 🔐 Security
+
+- ✅ bcryptjs password hashing
+- ✅ JWT authentication
+- ✅ Rate limiting
+- ✅ CORS protection
+- ✅ Input validation
+- ✅ XSS protection (Helmet.js)
+- ✅ HTTPS in production
+
+---
+
+## 🏗️ Architecture
+
+```
+Frontend
+├── Pages (Home, Product, Cart, Orders)
+├── Components (Cards, Headers, Forms)
+├── Redux (Products, Cart, Auth)
+└── Services (API, utilities)
+
+Backend
+├── Models (User, Product, Order, Store)
+├── Routes (auth, products, orders)
+├── Controllers (business logic)  
+├── Services (data operations)
+└── Middleware (auth, validation)
+```
+
+---
 
 {
   "status": "shipped"
@@ -627,335 +589,58 @@ Response:
 
 ---
 
-## 🧪 Testing
-
-### Run All Tests
-
-```bash
-cd backend
-npm test
-```
-
-### Run Tests in Watch Mode
-
-```bash
-npm run test:watch
-```
-
-### Generate Coverage Report
-
-```bash
-npm test -- --coverage
-```
-
-### Run Specific Test File
-
-```bash
-npm test -- tests/auth.test.ts
-```
-
-### Test Coverage
-
-The project includes comprehensive tests for:
-- ✅ Authentication endpoints (register, login, logout)
-- ✅ Product operations (get, create, update, delete)
-- ✅ Order management (create, retrieve, update status)
-- ✅ User management
-- ✅ Payment processing
-- ✅ Admin functions
-- ✅ Error handling
-- ✅ Validation
-
-**Current Coverage:**
-- 33 total tests
-- Authentication: 8 tests
-- Products: 8 tests
-- Orders: 17 tests
-
----
-
-## 📦 Building & Deployment
-
-### Development Build
-
-```bash
-# Frontend
-cd frontend
-npm run build
-
-# Backend
-cd backend
-npm run build
-```
-
-### Production Deployment
-
-#### Using Docker Compose
-
-```bash
-docker-compose up --build
-```
-
-#### Manual Deployment
-
-```bash
-# Backend
-cd backend
-npm run build
-npm start
-
-# Frontend (deploy dist to hosting)
-cd frontend
-npm run build
-# Upload dist/ folder to Vercel, Netlify, or your hosting
-```
-
-### Environment Variables for Production
-
-Set these on your deployment platform:
-
-**Backend:**
-```
-NODE_ENV=production
-DATABASE_URL=mongodb+srv://user:pass@cluster.mongodb.net/ecommerce
-JWT_SECRET=your_very_long_random_secret_key
-STRIPE_SECRET_KEY=sk_live_...
-PORT=5000
-```
-
-**Frontend:**
-```
-VITE_API_URL=https://api.yourdomain.com
-VITE_STRIPE_PUBLIC_KEY=pk_live_...
-```
-
----
-
-## 🚀 Performance Optimizations
-
-- ✅ Code splitting with Vite
-- ✅ Image optimization with Cloudinary
-- ✅ Database query optimization
-- ✅ API response caching
-- ✅ Gzip compression middleware
-- ✅ Lazy loading React components
-- ✅ Minified production builds
-- ✅ CDN for static assets
-
----
-
-## 🔐 Security Best Practices
-
-- ✅ Password hashing with bcryptjs (10 salt rounds)
-- ✅ JWT token authentication
-- ✅ Rate limiting on auth endpoints
-- ✅ CORS properly configured
-- ✅ Input validation with express-validator
-- ✅ MongoDB injection prevention
-- ✅ XSS protection with Helmet.js
-- ✅ Environment variables for sensitive data
-- ✅ HTTPS enforced in production
-- ✅ Secure cookie settings
-
----
-
-## 🏗️ Architecture
-
-### Backend Architecture
-```
-backend/
-├── src/
-│   ├── models/              # MongoDB Schemas
-│   │   ├── User.ts          # User authentication & profiles
-│   │   ├── Product.ts       # Product catalog
-│   │   ├── Order.ts         # Order management
-│   │   ├── Store.ts         # Seller stores & profiles
-│   │   ├── Analytics.ts     # Platform metrics & aggregations
-│   │   └── Withdrawal.ts    # Payment withdrawals
-│   │
-│   ├── services/            # Business Logic
-│   │   ├── productService.ts
-│   │   ├── orderService.ts
-│   │   ├── adminService.ts
-│   │   └── sellerService.ts
-│   │
-│   ├── routes/              # API Endpoints
-│   │   ├── auth.ts
-│   │   ├── products.ts
-│   │   ├── orders.ts
-│   │   ├── users.ts
-│   │   ├── admin.ts         # Admin endpoints (10 routes)
-│   │   └── seller.ts        # Seller endpoints (11 routes)
-│   │
-│   ├── middleware/          # Express Middleware
-│   │   ├── auth.ts
-│   │   ├── errorHandler.ts
-│   │   └── validation.ts
-│   │
-│   ├── utils/               # Utilities
-│   │   ├── logger.ts
-│   │   ├── appError.ts
-│   │   └── responses.ts
-│   │
-│   └── server.ts            # Main server file
-
-```
-
-### Frontend Architecture
-```
-frontend/
-├── src/
-│   ├── components/          # React Components
-│   │   ├── AdminMetrics.tsx       # Admin dashboard
-│   │   ├── SellerDashboard.tsx    # Seller dashboard
-│   │   ├── Header.tsx
-│   │   ├── Sidebar.tsx
-│   │   └── ...
-│   │
-│   ├── pages/               # Page Components
-│   │   ├── AdminPage.tsx
-│   │   ├── SellerPage.tsx
-│   │   ├── ProductsPage.tsx
-│   │   └── ...
-│   │
-│   ├── services/            # API Services
-│   │   ├── api.ts           # Axios instance & endpoints
-│   │   └── authService.ts
-│   │
-│   ├── store/               # Redux Store
-│   │   ├── authSlice.ts
-│   │   ├── productSlice.ts
-│   │   └── ...
-│   │
-│   ├── types/               # TypeScript Types
-│   │   └── index.ts
-│   │
-│   ├── utils/               # Utilities
-│   │   ├── formatters.ts
-│   │   └── validators.ts
-│   │
-│   └── App.tsx              # Main app component
-```
-
-### Database Schema
-
-**User Model**
-```typescript
-{
-  _id: ObjectId
-  email: String (unique)
-  password: String (hashed)
-  firstName: String
-  lastName: String
-  profilePicture: String (URL)
-  role: Enum ['User', 'Seller', 'Admin']
-  phone: String
-  addresses: Array
-  preferences: Object
-  createdAt: Date
-  updatedAt: Date
-}
-```
-
-**Store Model (NEW)**
-```typescript
-{
-  _id: ObjectId
-  ownerId: ObjectId (ref: User)
-  storeName: String
-  description: String
-  logo: String (URL)
-  banner: String (URL)
-  verified: Boolean
-  verificationDate: Date
-  category: String
-  rating: Number
-  followers: Array (ref: User)
-  bankDetails: Object
-  commissionRate: Number
-  totalEarnings: Number
-  totalOrders: Number
-  createdAt: Date
-  updatedAt: Date
-}
-```
-
-**Analytics Model (NEW)**
-```typescript
-{
-  _id: ObjectId
-  date: Date
-  totalRevenue: Number
-  totalOrders: Number
-  totalUsers: Number
-  topProducts: Array
-  topCategories: Array
-  conversionRate: Number
-  customerRetention: Number
-  createdAt: Date
-}
-```
-
----
-
-## 📈 Features Roadmap
+## 🏗️ Backend Structure
 
 - [ ] Mobile app (React Native)
-- [ ] Advanced product recommendations (ML)
-- [ ] Email marketing integration
-- [ ] Loyalty rewards program
-- [ ] Marketplace for multiple vendors
-- [ ] Live chat customer support
+- [ ] AI recommendations
+- [ ] Email marketing
+- [ ] Loyalty program
+- [ ] Live chat support
 - [ ] Push notifications
-- [ ] GraphQL API alternative
-- [ ] Social login (Google, Facebook)
-- [ ] Multi-currency support
+- [ ] GraphQL API
+- [ ] Social login
+- [ ] Multi-currency
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+We welcome contributions! 
 
-### Quick Start for Contributors
-
+**Get Started:**
 ```bash
-# Fork and clone
 git clone https://github.com/ibrsaiaika/ecommerce-fullstack.git
 cd ecommerce-fullstack
-
-# Create feature branch
 git checkout -b feature/your-feature
-
-# Make changes and commit
-git commit -m "feat: Add new feature"
-
-# Push and create pull request
+# Make changes
+git commit -m "feat: Your feature"
 git push origin feature/your-feature
 ```
+
+**Guidelines:**
+- Follow existing code style
+- Write tests for new features
+- Keep commits atomic & descriptive
+- Update documentation
 
 ---
 
 ## 📝 License
 
-MIT License - see [LICENSE](./LICENSE) file for details.
+MIT License - see [LICENSE](./LICENSE) file
 
 ---
 
-## 👨‍💻 Author
+## �‍💻 Author
 
-**@ibrsaiaika** - Full Stack Developer
-
-- **GitHub**: [@ibrsaiaika](https://github.com/ibrsaiaika)
+**@ibrsaiaika** - Full Stack Developer  
+[GitHub](https://github.com/ibrsaiaika)
 
 ---
 
-## 🙏 Acknowledgments
+## 🙏 Thanks
 
-- React & Vite communities
-- Express.js & Node.js communities
-- MongoDB & Mongoose teams
-- Stripe for payment integration
+React • Vite • Express • Node.js • MongoDB • Stripe
 - Cloudinary for image hosting
 - All open-source contributors
 
