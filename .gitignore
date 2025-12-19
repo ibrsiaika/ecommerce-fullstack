@@ -58,3 +58,5 @@ temp/
 *.tmp
 
 .github/
+backend/package-lock.json
+frontend/package-lock.json

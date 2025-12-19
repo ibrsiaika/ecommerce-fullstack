@@ -23,8 +23,7 @@ const Header: React.FC = () => {
     { label: 'Home', href: '/' },
     { label: 'Collections', href: '/products' },
     ...(isAuthenticated ? [{ label: 'Orders', href: '/orders' }] : []),
-    ...(isAuthenticated && user?.role === 'admin' ? [{ label: 'Admin', href: '/admin/dashboard' }] : []),
-    ...(isAuthenticated && (user?.role === 'seller' || user?.role === 'admin') ? [{ label: 'Seller', href: '/seller/dashboard' }] : []),
+    ...(isAuthenticated && user?.role === 'admin' ? [{ label: 'Control Panel', href: '/admin/dashboard' }] : []),
   ];
 
   return (

@@ -72,8 +72,8 @@ const productSchema: Schema = new Schema({
   },
   slug: {
     type: String,
-    unique: true,
-    lowercase: true
+    lowercase: true,
+    index: true
   },
   description: {
     type: String,
@@ -204,6 +204,7 @@ productSchema.pre<IProduct>('save', function(next) {
 });
 
 // Create indexes for better performance
+productSchema.index({ slug: 1 }, { unique: true, sparse: true });
 productSchema.index({ name: 'text', description: 'text', tags: 'text' });
 productSchema.index({ category: 1, subcategory: 1 });
 productSchema.index({ price: 1 });
