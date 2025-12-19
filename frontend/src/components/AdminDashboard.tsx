@@ -5,9 +5,10 @@ import { logout } from '../store/slices/authSlice';
 import { 
   FiPackage, FiDollarSign, FiShoppingCart, FiUsers, 
   FiMenu, FiX, FiSettings, FiGrid, FiEdit2, FiTrash2, FiPlus, FiSearch,
-  FiEye, FiStar, FiHome, FiLogOut, FiTrendingUp, FiActivity
+  FiEye, FiStar, FiHome, FiLogOut, FiTrendingUp
 } from 'react-icons/fi';
 import api from '../services/api';
+import { DashboardLoader } from './Loading';
 
 type AdminTab = 'overview' | 'products' | 'orders' | 'users' | 'settings';
 
@@ -39,9 +40,9 @@ const AdminDashboard: React.FC = () => {
     try {
       setLoading(true);
       const [ordersRes, productsRes, usersRes] = await Promise.all([
-        api.get('/orders').catch(() => ({ data: { data: [] } })),
+        api.get('/api/orders').catch(() => ({ data: { data: [] } })),
         api.getProducts(1, 100).catch(() => ({ data: { data: [] } })),
-        api.get('/users').catch(() => ({ data: { data: [] } }))
+        api.get('/api/users').catch(() => ({ data: { data: [] } }))
       ]);
 
       setOrders(ordersRes.data?.data || []);
@@ -57,7 +58,7 @@ const AdminDashboard: React.FC = () => {
   const handleAddProduct = async () => {
     if (!newProduct.name || !newProduct.price) return;
     try {
-      await api.post('/products', {
+      await api.post('/api/products', {
         name: newProduct.name,
         price: parseFloat(newProduct.price),
         countInStock: parseInt(newProduct.countInStock) || 0,
@@ -75,7 +76,7 @@ const AdminDashboard: React.FC = () => {
   const handleDeleteProduct = async (id: string) => {
     if (!window.confirm('Delete this product?')) return;
     try {
-      await api.delete(`/products/${id}`);
+      await api.delete(`/api/products/${id}`);
       fetchData();
     } catch (err) {
       console.error('Error deleting product:', err);
@@ -85,7 +86,7 @@ const AdminDashboard: React.FC = () => {
   const handleDeleteUser = async (id: string) => {
     if (!window.confirm('Delete this user?')) return;
     try {
-      await api.delete(`/users/${id}`);
+      await api.delete(`/api/users/${id}`);
       fetchData();
     } catch (err) {
       console.error('Error deleting user:', err);
@@ -94,7 +95,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleUpdateOrderStatus = async (orderId: string, status: string) => {
     try {
-      await api.put(`/orders/${orderId}`, { status });
+      await api.put(`/api/orders/${orderId}`, { status });
       fetchData();
     } catch (err) {
       console.error('Error updating order:', err);
@@ -248,12 +249,7 @@ const AdminDashboard: React.FC = () => {
         {/* Content */}
         <div className="flex-1 overflow-auto p-3 sm:p-6 bg-white">
           {loading ? (
-            <div className="flex items-center justify-center h-96">
-              <div className="space-y-4 text-center">
-                <div className="w-12 h-12 rounded-full border-4 border-gray-300 border-t-black animate-spin mx-auto"></div>
-                <p className="text-gray-600 font-semibold text-sm">Loading...</p>
-              </div>
-            </div>
+            <DashboardLoader />
           ) : (
             <>
               {/* Overview Tab */}
@@ -596,7 +592,7 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeIn {
           from {
             opacity: 0;
