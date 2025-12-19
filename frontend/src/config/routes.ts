@@ -8,7 +8,7 @@ const Cart = lazy(() => import('../components/Cart'));
 const Checkout = lazy(() => import('../components/Checkout'));
 const OrderHistory = lazy(() => import('../components/OrderHistory'));
 const OrderDetail = lazy(() => import('../components/OrderDetail'));
-const UnifiedDashboard = lazy(() => import('../components/UnifiedDashboard'));
+const AdminDashboard = lazy(() => import('../components/AdminDashboard'));
 const SellerRegistration = lazy(() => import('../pages/SellerRegistration'));
 
 /**
@@ -55,14 +55,10 @@ export const protectedRoutes: RouteConfig[] = [
  * Admin routes - require admin role
  */
 export const adminRoutes: RouteConfig[] = [
-  { path: '/admin', component: UnifiedDashboard, adminOnly: true },
-  { path: '/admin/dashboard', component: UnifiedDashboard, adminOnly: true }
-];
+  { path: '/admin', component: AdminDashboard, adminOnly: true },
+  { path: '/admin/dashboard', component: AdminDashboard, adminOnly: true }];
 
 /**
  * Seller routes - require seller role
  */
-export const sellerRoutes: RouteConfig[] = [
-  { path: '/seller', component: UnifiedDashboard, sellerOnly: true },
-  { path: '/seller/dashboard', component: UnifiedDashboard, sellerOnly: true }
-];
+export const sellerRoutes: RouteConfig[] = [];

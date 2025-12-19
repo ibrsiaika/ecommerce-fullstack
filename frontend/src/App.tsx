@@ -90,47 +90,63 @@ function AppContent() {
     <>
       <PageLoader isLoading={!appReady || authLoading} message="Loading app..." />
       <Router>
-        <Layout>
-          <Routes>
-            {/* Public routes */}
-            {publicRoutes.map((route) => (
-              <Route key={route.path} path={route.path} element={renderRoute(route)} />
-            ))}
+        <Routes>
+          {/* Admin routes - NOT wrapped in Layout */}
+          {adminRoutes.map((route) => (
+            <Route key={route.path} path={route.path} element={renderRoute(route, 'admin')} />
+          ))}
 
-            {/* Auth routes */}
-            {authRoutes.map((route) => (
-              <Route key={route.path} path={route.path} element={renderRoute(route)} />
-            ))}
+          {/* All other routes wrapped in Layout */}
+          {publicRoutes.map((route) => (
+            <Route key={route.path} path={route.path} element={
+              <Layout>
+                {renderRoute(route)}
+              </Layout>
+            } />
+          ))}
 
-            {/* Protected routes */}
-            {protectedRoutes.map((route) => (
-              <Route key={route.path} path={route.path} element={renderRoute(route)} />
-            ))}
+          {/* Auth routes */}
+          {authRoutes.map((route) => (
+            <Route key={route.path} path={route.path} element={
+              <Layout>
+                {renderRoute(route)}
+              </Layout>
+            } />
+          ))}
 
-            {/* Admin routes */}
-            {adminRoutes.map((route) => (
-              <Route key={route.path} path={route.path} element={renderRoute(route, 'admin')} />
-            ))}
+          {/* Protected routes */}
+          {protectedRoutes.map((route) => (
+            <Route key={route.path} path={route.path} element={
+              <Layout>
+                {renderRoute(route)}
+              </Layout>
+            } />
+          ))}
 
-            {/* Seller routes */}
-            {sellerRoutes.map((route) => (
-              <Route key={route.path} path={route.path} element={renderRoute(route, 'seller')} />
-            ))}
+          {/* Seller routes */}
+          {sellerRoutes.map((route) => (
+            <Route key={route.path} path={route.path} element={
+              <Layout>
+                {renderRoute(route, 'seller')}
+              </Layout>
+            } />
+          ))}
 
-            {/* 404 fallback */}
-            <Route
-              path="*"
-              element={
+          {/* 404 fallback */}
+          <Route
+            path="*"
+            element={
+              <Layout>
                 <div className="min-h-screen flex items-center justify-center">
                   <div className="text-center">
                     <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
                     <p className="text-gray-600">Page not found</p>
                   </div>
                 </div>
-              }
-            />
-          </Routes>
-        </Layout>
+              </Layout>
+            }
+          />
+        </Routes>
       </Router>
     </>
   );
