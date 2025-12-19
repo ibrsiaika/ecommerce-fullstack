@@ -5,12 +5,13 @@ import { logout } from '../store/slices/authSlice';
 import { 
   FiPackage, FiDollarSign, FiShoppingCart, FiUsers, 
   FiMenu, FiX, FiSettings, FiGrid, FiEdit2, FiTrash2, FiPlus, FiSearch,
-  FiEye, FiStar, FiHome, FiLogOut, FiTrendingUp
+  FiEye, FiStar, FiHome, FiLogOut, FiTrendingUp, FiSliders
 } from 'react-icons/fi';
 import api from '../services/api';
 import { DashboardLoader } from './Loading';
+import AdminSettings from './AdminSettings';
 
-type AdminTab = 'overview' | 'products' | 'orders' | 'users' | 'settings';
+type AdminTab = 'overview' | 'products' | 'orders' | 'users' | 'settings' | 'customization';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -107,7 +108,8 @@ const AdminDashboard: React.FC = () => {
     { id: 'products', label: 'Products', icon: <FiPackage size={20} /> },
     { id: 'orders', label: 'Orders', icon: <FiShoppingCart size={20} /> },
     { id: 'users', label: 'Users', icon: <FiUsers size={20} /> },
-    { id: 'settings', label: 'Settings', icon: <FiSettings size={20} /> }
+    { id: 'settings', label: 'Settings', icon: <FiSettings size={20} /> },
+    { id: 'customization', label: 'Customize', icon: <FiSliders size={20} /> }
   ] as const;
 
   const stats = [
@@ -240,6 +242,7 @@ const AdminDashboard: React.FC = () => {
                 {activeTab === 'orders' && 'Orders'}
                 {activeTab === 'users' && 'Users'}
                 {activeTab === 'settings' && 'Settings'}
+                {activeTab === 'customization' && 'Customization'}
               </h2>
               <p className="text-xs text-gray-500 mt-0.5 hidden sm:block">Welcome back, {user?.name}</p>
             </div>
@@ -585,6 +588,13 @@ const AdminDashboard: React.FC = () => {
                   >
                     Save Changes
                   </button>
+                </div>
+              )}
+
+              {/* Customization Tab */}
+              {activeTab === 'customization' && (
+                <div className="animate-fadeIn">
+                  <AdminSettings />
                 </div>
               )}
             </>
