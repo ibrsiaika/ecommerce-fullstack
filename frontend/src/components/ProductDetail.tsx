@@ -4,6 +4,7 @@ import { useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import Reviews from './Reviews';
 import api from '../services/api';
+import { FiShoppingBag, FiCheck, FiTruck, FiArrowLeft, FiArrowRight } from 'react-icons/fi';
 
 interface Product {
   _id: string;
@@ -79,8 +80,8 @@ const ProductDetail: React.FC = () => {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-black mb-6"></div>
+          <div className="inline-block mb-6">
+            <div className="animate-spin rounded-full h-20 w-20 border-4 border-gray-200 border-t-black"></div>
           </div>
           <p className="text-xl text-gray-600 font-semibold">Loading product details...</p>
         </div>
@@ -91,10 +92,10 @@ const ProductDetail: React.FC = () => {
   if (error || !product) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center max-w-md">
-          <div className="text-6xl mb-6">😕</div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Product not found</h2>
-          <p className="text-lg text-gray-600">{error || 'The product you are looking for does not exist.'}</p>
+        <div className="text-center max-w-md px-4">
+          <div className="text-7xl mb-6">📦</div>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Product not found</h2>
+          <p className="text-lg text-gray-600 mb-8">{error || 'The product you are looking for does not exist.'}</p>
         </div>
       </div>
     );
@@ -102,31 +103,55 @@ const ProductDetail: React.FC = () => {
 
   return (
     <div className="bg-white min-h-screen">
-      <div className="container px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
-        <div className="grid grid-cols-1 gap-8 sm:gap-10 lg:gap-12 lg:grid-cols-2">
+      {/* Decorative background */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gray-50 rounded-full -mr-48 -mt-48 pointer-events-none" />
+      
+      <div className="container px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 relative">
+        <div className="grid grid-cols-1 gap-8 sm:gap-10 lg:gap-16 lg:grid-cols-2">
           {/* Image Gallery */}
           <div className="space-y-4 sm:space-y-6">
-            <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gray-100 h-64 sm:h-80 lg:h-[500px] shadow-xl">
+            {/* Main Image */}
+            <div className="relative overflow-hidden rounded-2xl bg-gray-100 aspect-square shadow-xl group">
               <img
                 src={product.images[selectedImage] || 'https://picsum.photos/600'}
                 alt={product.name}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              <div className="absolute bottom-3 sm:bottom-6 left-3 sm:left-6 flex gap-2 sm:gap-3 flex-wrap">
-                <span className="pill bg-white text-gray-900 font-semibold text-xs sm:text-sm">{product.category}</span>
-                <span className="pill bg-black text-white font-semibold text-xs sm:text-sm">SKU {product.sku}</span>
+              {/* Category & SKU Badges */}
+              <div className="absolute bottom-4 left-4 flex gap-3 flex-wrap">
+                <span className="px-4 py-2 rounded-full bg-white text-gray-900 font-semibold text-sm shadow-lg backdrop-blur-sm">
+                  {product.category}
+                </span>
+                <span className="px-4 py-2 rounded-full bg-black text-white font-semibold text-sm shadow-lg">
+                  SKU {product.sku}
+                </span>
+              </div>
+              
+              {/* Stock Badge */}
+              <div className="absolute top-4 right-4">
+                {product.countInStock > 0 ? (
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/90 text-white font-semibold text-sm backdrop-blur-sm shadow-lg">
+                    <FiCheck size={18} />
+                    In Stock
+                  </div>
+                ) : (
+                  <div className="px-4 py-2 rounded-full bg-red-500/90 text-white font-semibold text-sm backdrop-blur-sm shadow-lg">
+                    Out of Stock
+                  </div>
+                )}
               </div>
             </div>
 
+            {/* Thumbnail Gallery */}
             {product.images.length > 1 && (
-              <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 sm:gap-3">
+              <div className="flex gap-3 overflow-x-auto pb-2">
                 {product.images.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`overflow-hidden rounded-lg sm:rounded-xl border-2 transition-all h-16 sm:h-20 lg:h-24 ${
+                    className={`flex-shrink-0 h-24 w-24 rounded-xl overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${
                       selectedImage === index 
-                        ? 'border-black shadow-lg scale-105' 
+                        ? 'border-black shadow-lg scale-105 ring-2 ring-black ring-offset-2' 
                         : 'border-gray-200 hover:border-gray-400'
                     }`}
                   >
@@ -142,57 +167,61 @@ const ProductDetail: React.FC = () => {
           </div>
 
           {/* Product Info */}
-          <div className="space-y-6 sm:space-y-8">
+          <div className="space-y-8">
+            {/* Header */}
             <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-5xl font-bold text-gray-900 leading-tight mb-2 sm:mb-4">{product.name}</h1>
-              <p className="text-sm sm:text-base lg:text-xl text-gray-600 leading-relaxed">{product.description}</p>
+              <div className="mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-sm font-medium">
+                <span className="w-2 h-2 rounded-full bg-black"></span>
+                {product.category}
+              </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-4">
+                {product.name}
+              </h1>
+              <p className="text-lg text-gray-600 leading-relaxed">
+                {product.description}
+              </p>
             </div>
 
             {/* Rating */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+            <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
               <div className="flex items-center gap-2">
                 <div className="flex gap-1">
                   {[...Array(5)].map((_, i) => (
-                    <span key={i} className={`text-lg sm:text-xl lg:text-2xl ${i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-300'}`}>
+                    <span key={i} className={`text-2xl ${i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-300'}`}>
                       ★
                     </span>
                   ))}
                 </div>
-                <span className="text-base sm:text-lg lg:text-lg text-gray-900 font-bold ml-2">{product.rating.toFixed(1)}</span>
-                <span className="text-xs sm:text-sm text-gray-600 font-semibold">({product.numReviews})</span>
-              </div>
-              <div className={`pill font-bold text-xs sm:text-sm lg:text-lg ${product.countInStock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                {product.countInStock > 0 ? `✓ ${product.countInStock} in stock` : '✗ Out of stock'}
+                <span className="text-lg font-bold text-gray-900">{product.rating.toFixed(1)}</span>
+                <span className="text-sm text-gray-600 font-medium">({product.numReviews} reviews)</span>
               </div>
             </div>
 
-            {/* Pricing */}
-            <div className="surface p-4 sm:p-6 lg:p-8 rounded-lg sm:rounded-2xl bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200">
-              <div className="flex items-baseline gap-2 sm:gap-4 flex-wrap">
-                <span className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">${product.price.toFixed(2)}</span>
-                {product.comparePrice && (
-                  <span className="text-lg sm:text-2xl text-red-600 line-through font-semibold">${product.comparePrice.toFixed(2)}</span>
-                )}
+            {/* Price Section */}
+            <div className="space-y-4 p-8 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
+              <div className="flex items-baseline gap-4 flex-wrap">
+                <span className="text-5xl sm:text-6xl font-bold text-gray-900">
+                  ${product.price.toFixed(2)}
+                </span>
               </div>
-              {product.comparePrice && (
-                <p className="text-green-600 font-bold mt-2 sm:mt-3 text-sm sm:text-base">
-                  Save ${(product.comparePrice - product.price).toFixed(2)} ({Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)}%)
-                </p>
-              )}
+              <div className="flex items-center gap-3 text-base text-green-600 font-semibold">
+                <FiCheck size={20} />
+                Free shipping on orders over $50
+              </div>
             </div>
 
-            {/* Add to Cart */}
+            {/* Add to Cart Section */}
             {product.countInStock > 0 && (
-              <div className="space-y-3 sm:space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-                  <label htmlFor="quantity" className="text-base sm:text-lg font-bold text-gray-900">
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <label htmlFor="quantity" className="text-base font-semibold text-gray-900 whitespace-nowrap">
                     Quantity:
                   </label>
                   <select
                     id="quantity"
                     value={quantity}
                     onChange={(e) => setQuantity(parseInt(e.target.value))}
-                    className="input rounded-lg sm:rounded-xl py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-lg font-semibold border-2 border-gray-300"
+                    className="px-4 py-3 text-base font-semibold border-2 border-gray-300 rounded-xl focus:border-black focus:outline-none transition-colors bg-white"
                   >
                     {[...Array(Math.min(product.countInStock, 10))].map((_, i) => (
                       <option key={i + 1} value={i + 1}>
@@ -204,23 +233,29 @@ const ProductDetail: React.FC = () => {
 
                 <button
                   onClick={handleAddToCart}
-                  className="w-full btn btn-primary rounded-lg sm:rounded-xl py-3 sm:py-4 text-base sm:text-lg lg:text-xl font-bold shadow-lg hover:shadow-xl transition-shadow"
+                  className="w-full py-4 px-6 text-lg font-semibold rounded-xl bg-black text-white hover:bg-gray-900 active:scale-95 transition-all duration-200 flex items-center justify-center gap-3 group shadow-lg hover:shadow-xl"
                 >
-                  + Add to Bag
+                  <FiShoppingBag size={22} />
+                  Add to Bag
+                  <FiArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
                 </button>
               </div>
             )}
 
-            {/* Product Details Box */}
-            <div className="surface p-4 sm:p-6 lg:p-8 rounded-lg sm:rounded-2xl border border-gray-200">
-              <div className="grid grid-cols-2 gap-4 sm:gap-8">
+            {/* Trust Badges */}
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+              <div className="flex items-start gap-3">
+                <FiTruck className="text-gray-900 flex-shrink-0 mt-1" size={24} />
                 <div>
-                  <p className="text-xs sm:text-sm text-gray-600 font-semibold uppercase tracking-widest">Category</p>
-                  <p className="text-sm sm:text-lg font-bold text-gray-900 mt-1 sm:mt-2">{product.category}</p>
+                  <p className="font-semibold text-gray-900">Fast Shipping</p>
+                  <p className="text-sm text-gray-600">2-3 business days</p>
                 </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <FiCheck className="text-gray-900 flex-shrink-0 mt-1" size={24} />
                 <div>
-                  <p className="text-xs sm:text-sm text-gray-600 font-semibold uppercase tracking-widest">SKU</p>
-                  <p className="text-sm sm:text-lg font-bold text-gray-900 mt-1 sm:mt-2">{product.sku}</p>
+                  <p className="font-semibold text-gray-900">Quality Guaranteed</p>
+                  <p className="text-sm text-gray-600">30-day returns</p>
                 </div>
               </div>
             </div>
@@ -228,7 +263,7 @@ const ProductDetail: React.FC = () => {
         </div>
 
         {/* Reviews Section */}
-        <div className="mt-12 sm:mt-16 lg:mt-20 surface p-6 sm:p-8 lg:p-12 rounded-lg sm:rounded-2xl border border-gray-200">
+        <div className="mt-20 pt-16 border-t border-gray-200">
           <Reviews
             productId={product._id}
             reviews={product.reviews}

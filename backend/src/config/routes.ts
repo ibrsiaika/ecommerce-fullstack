@@ -10,6 +10,8 @@ import orderRoutes from '../routes/orders';
 import uploadRoutes from '../routes/upload';
 import adminRoutes from '../routes/admin';
 import sellerRoutes from '../routes/seller';
+import customizationRoutes from '../routes/customization';
+import roleRoutes from '../routes/roles';
 
 // Middleware
 import { errorHandler } from '../middleware/errorHandler';
@@ -29,6 +31,9 @@ const routes: RouteConfig[] = [
   { path: '/api/products', router: productRoutes },
   { path: '/api/orders', router: orderRoutes },
   { path: '/api/upload', router: uploadRoutes },
+  // Specific admin routes must come BEFORE generic /api/admin route
+  { path: '/api/admin/customization', router: customizationRoutes },
+  { path: '/api/admin/roles', router: roleRoutes },
   { path: '/api/admin', router: adminRoutes },
   { path: '/api/seller', router: sellerRoutes },
 ];

@@ -13,6 +13,9 @@ import { Layout } from './components/Layout';
 // Loading components
 import { PageLoader, LoadingFallback } from './components/Loading';
 
+// Customization Provider
+import { CustomizationProvider } from './context/CustomizationContext';
+
 // Route configuration and guards
 import {
   publicRoutes,
@@ -153,12 +156,14 @@ function AppContent() {
 }
 
 /**
- * Main App component - provides Redux store
+ * Main App component - provides Redux store and Customization Provider
  */
 function App() {
   return (
     <Provider store={store}>
-      <AppContent />
+      <CustomizationProvider>
+        <AppContent />
+      </CustomizationProvider>
     </Provider>
   );
 }

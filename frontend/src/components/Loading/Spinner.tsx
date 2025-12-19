@@ -14,12 +14,12 @@ export const Spinner: React.FC<SpinnerProps> = ({
   const sizeClasses = {
     sm: 'w-6 h-6',
     md: 'w-10 h-10',
-    lg: 'w-16 h-16',
-    xl: 'w-24 h-24',
+    lg: 'w-16 h-16 sm:w-20 sm:h-20',
+    xl: 'w-20 h-20 sm:w-24 sm:h-24',
   };
 
   const spinner = (
-    <div className="flex flex-col items-center justify-center gap-4">
+    <div className="flex flex-col items-center justify-center gap-4 px-4">
       <div className="relative">
         {/* Outer ring */}
         <div className={`${sizeClasses[size]} rounded-full border-2 border-gray-200 opacity-50`} />
@@ -38,22 +38,12 @@ export const Spinner: React.FC<SpinnerProps> = ({
 
       {message && (
         <div className="text-center">
-          <p className="text-sm font-medium text-gray-900">{message}</p>
-          <p className="text-xs text-gray-600 mt-1">Please wait...</p>
+          <p className="text-sm sm:text-base font-semibold text-gray-900">{message}</p>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">Please wait...</p>
         </div>
       )}
     </div>
   );
-
-  if (fullScreen) {
-    return (
-      <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
-        {spinner}
-      </div>
-    );
-  }
-
-  return spinner;
 };
 
 export default Spinner;

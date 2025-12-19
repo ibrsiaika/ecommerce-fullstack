@@ -10,8 +10,8 @@ const PageLoader: React.FC<PageLoaderProps> = ({ isLoading, message = 'Loading..
   if (!isLoading) return null;
 
   return (
-    <div className="fixed inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-[9999]">
-      <Spinner size="xl" message={message} />
+    <div className="fixed inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-[9999] px-4">
+      <Spinner size="lg" message={message} />
     </div>
   );
 };

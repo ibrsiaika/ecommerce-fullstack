@@ -84,6 +84,10 @@ A clean, minimal full-stack e-commerce platform built with modern technologies:
 - ✅ Sales analytics & reports
 - ✅ Inventory tracking
 - ✅ Discount & coupon system
+- ✅ **Customizable Widget Dashboard** (drag-drop, toggle widgets)
+- ✅ **Custom Report Builder** (save & manage custom reports)
+- ✅ **Role & Permission Management** (granular access control)
+- ✅ **Custom Views & Filters** (save and reuse filter configurations)
 
 ### 🏪 Marketplace
 - ✅ Seller store creation
@@ -603,7 +607,108 @@ Response:
 
 ---
 
-## 🤝 Contributing
+## 🎨 Admin Customization Features (NEW)
+
+### Dashboard Customization
+- **Drag-and-Drop Widgets**: Rearrange widgets to customize your dashboard layout
+- **Widget Toggle**: Enable/disable specific widgets for a tailored experience
+- **Auto-Refresh Settings**: Control data refresh intervals (5s - 300s)
+- **Theme Settings**: Choose between light and dark themes
+- **Personalized Views**: Save and load custom dashboard configurations
+
+### Custom Reports
+- **Report Builder**: Create custom reports with selected metrics
+- **Date Range Selection**: Daily, weekly, monthly, or custom date ranges
+- **Metric Selection**: Choose from 14+ available metrics
+- **Report Export**: Export reports as JSON for external analysis
+- **Saved Reports**: Store and manage multiple report templates
+
+### Role & Permission Management
+- **Custom Roles**: Create roles with granular permissions
+- **Resource-Based Access**: Control access to orders, products, users, sellers, payments, reports, settings, and dashboard
+- **Action-Level Control**: Grant/revoke specific actions (view, create, edit, delete, manage)
+- **System Role Protection**: Prevent deletion of system roles (admin, seller, user)
+- **User Role Assignment**: Assign custom roles to users dynamically
+
+### Custom Views & Filters
+- **Save Filter Sets**: Create and save filter combinations for quick access
+- **Multiple Data Types**: Create custom views for orders, products, users, and sellers
+- **Default Filter**: Set a default filter to load automatically
+- **Filter Templates**: Pre-configured filters for common scenarios
+- **Dynamic Filtering**: Filter by status, price, date, category, ratings, and more
+
+### Notification Preferences
+- **Event-Based Alerts**: Configure notifications for 7 event types:
+  - New Orders
+  - Payment Failures
+  - Low Stock Alerts
+  - Seller Verification
+  - New Reviews
+  - Order Shipments
+  - Refund Processing
+- **Multi-Channel Support**: Email, in-app, and push notifications
+- **Granular Control**: Enable/disable notifications per event and channel
+
+---
+
+## 📋 Customization API Endpoints
+
+### Preferences Management
+```
+GET  /api/admin/customization/preferences
+PUT  /api/admin/customization/preferences/widgets
+PUT  /api/admin/customization/preferences/widgets/:widgetId/toggle
+PUT  /api/admin/customization/preferences/widgets/rearrange
+PUT  /api/admin/customization/preferences/notifications
+PUT  /api/admin/customization/preferences/refresh-interval
+PUT  /api/admin/customization/preferences/settings
+```
+
+### Reports
+```
+POST   /api/admin/customization/preferences/reports
+DELETE /api/admin/customization/preferences/reports/:reportName
+```
+
+### Filters & Views
+```
+POST   /api/admin/customization/filters
+GET    /api/admin/customization/filters/:type
+PUT    /api/admin/customization/filters/:filterId
+DELETE /api/admin/customization/filters/:filterId
+PUT    /api/admin/customization/filters/:filterId/set-default
+```
+
+### Role Management
+```
+GET    /api/admin/roles
+GET    /api/admin/roles/:roleId
+POST   /api/admin/roles
+PUT    /api/admin/roles/:roleId
+DELETE /api/admin/roles/:roleId
+POST   /api/admin/roles/:roleId/permissions
+DELETE /api/admin/roles/:roleId/permissions/:resource
+GET    /api/admin/roles/resources/all
+GET    /api/admin/roles/resources/:resource
+```
+
+---
+
+## 💾 Database Models
+
+### New Models Added
+1. **Role Model**: Manage custom roles with permissions
+2. **AdminPreferences Model**: Store user dashboard customizations
+3. **SavedFilter Model**: Persist custom filter configurations
+
+### Schema Details
+- **Role**: Contains name, description, permissions array, and system flag
+- **AdminPreferences**: Stores widgets config, notifications, refresh intervals, and user settings
+- **SavedFilter**: Saves filter configs with admin reference and type
+
+---
+
+
 
 We welcome contributions! 
 
