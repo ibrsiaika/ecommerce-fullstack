@@ -242,15 +242,23 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
     savedFilters: []
   });
 
-  // Fetch public config on mount
+  // Fetch public config on mount (with error suppression for initial load)
   useEffect(() => {
-    fetchPublicConfig();
+    const loadConfig = async () => {
+      try {
+        await fetchPublicConfig();
+      } catch {
+        // Suppress initial load errors - use defaults
+        setState(prev => ({ ...prev, loading: false }));
+      }
+    };
+    loadConfig();
   }, []);
 
   const fetchPublicConfig = async () => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
-      const response = await api.get('/config/public');
+      const response = await api.get('/api/config/public');
       const config = response.data.data;
       
       setState(prev => ({
@@ -271,7 +279,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
   const fetchAdminConfig = async () => {
     try {
       setState(prev => ({ ...prev, loading: true }));
-      const response = await api.get('/config');
+      const response = await api.get('/api/config');
       const config = response.data.data;
       
       setState(prev => ({
@@ -292,7 +300,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
   const updateTheme = async (theme: Partial<IThemeConfig>) => {
     try {
       setState(prev => ({ ...prev, loading: true }));
-      const response = await api.put('/config/theme', theme);
+      const response = await api.put('/api/config/theme', theme);
       setState(prev => ({
         ...prev,
         theme: { ...prev.theme, ...response.data.data.theme },
@@ -306,7 +314,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
   const updateBranding = async (branding: Partial<IBrandingConfig>) => {
     try {
       setState(prev => ({ ...prev, loading: true }));
-      const response = await api.put('/config/branding', branding);
+      const response = await api.put('/api/config/branding', branding);
       setState(prev => ({
         ...prev,
         branding: { ...prev.branding, ...response.data.data.branding },
@@ -320,7 +328,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
   const updateLayout = async (layout: Partial<ILayoutConfig>) => {
     try {
       setState(prev => ({ ...prev, loading: true }));
-      const response = await api.put('/config/layout', layout);
+      const response = await api.put('/api/config/layout', layout);
       setState(prev => ({
         ...prev,
         layout: { ...prev.layout, ...response.data.data.layout },
@@ -334,7 +342,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
   const updateFeatures = async (features: Partial<IFeatureFlags>) => {
     try {
       setState(prev => ({ ...prev, loading: true }));
-      const response = await api.put('/config/features', features);
+      const response = await api.put('/api/config/features', features);
       setState(prev => ({
         ...prev,
         features: { ...prev.features, ...response.data.data.features },
@@ -348,7 +356,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
   const updateNotifications = async (notifications: Partial<INotificationConfig>) => {
     try {
       setState(prev => ({ ...prev, loading: true }));
-      const response = await api.put('/config/notifications', notifications);
+      const response = await api.put('/api/config/notifications', notifications);
       setState(prev => ({
         ...prev,
         notifications: response.data.data.notifications,
@@ -373,7 +381,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
 
   const toggleMaintenanceMode = async (enabled: boolean, message?: string) => {
     try {
-      const response = await api.post('/config/maintenance', { enabled, message });
+      const response = await api.post('/api/config/maintenance', { enabled, message });
       setState(prev => ({
         ...prev,
         maintenanceMode: enabled,
@@ -387,7 +395,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
   // ADMIN PREFERENCES
   const fetchAdminPreferences = async () => {
     try {
-      const response = await api.get('/config/admin/preferences');
+      const response = await api.get('/api/config/admin/preferences');
       const prefs = response.data.data;
       setState(prev => ({
         ...prev,
@@ -404,7 +412,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
 
   const updateAdminPreferences = async (updates: any) => {
     try {
-      await api.put('/config/admin/preferences', updates);
+      await api.put('/api/config/admin/preferences', updates);
       await fetchAdminPreferences();
     } catch (error: any) {
       setState(prev => ({ ...prev, error: error.message }));
@@ -422,7 +430,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
 
   const rearrangeAdminWidgets = async (widgets: any[]) => {
     try {
-      await api.put('/config/admin/preferences/widgets/rearrange', { widgets });
+      await api.put('/api/config/admin/preferences/widgets/rearrange', { widgets });
       setState(prev => ({ ...prev, adminWidgets: widgets }));
     } catch (error: any) {
       setState(prev => ({ ...prev, error: error.message }));
@@ -431,7 +439,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
 
   const saveAdminFilter = async (name: string, type: string, filters: any) => {
     try {
-      await api.post('/config/admin/preferences/filters', { name, type, filters });
+      await api.post('/api/config/admin/preferences/filters', { name, type, filters });
       await fetchAdminPreferences();
     } catch (error: any) {
       setState(prev => ({ ...prev, error: error.message }));
