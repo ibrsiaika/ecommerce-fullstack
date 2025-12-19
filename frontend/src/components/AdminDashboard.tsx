@@ -9,7 +9,6 @@ import {
 } from 'react-icons/fi';
 import api from '../services/api';
 import { DashboardLoader } from './Loading';
-import AdminSettings from './AdminSettings';
 
 type AdminTab = 'overview' | 'products' | 'orders' | 'users' | 'settings' | 'customization';
 
@@ -588,13 +587,6 @@ const AdminDashboard: React.FC = () => {
                   >
                     Save Changes
                   </button>
-                </div>
-              )}
-
-              {/* Customization Tab */}
-              {activeTab === 'customization' && (
-                <div className="animate-fadeIn">
-                  <AdminSettings />
                 </div>
               )}
             </>
