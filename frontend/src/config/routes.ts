@@ -8,7 +8,6 @@ const Cart = lazy(() => import('../components/Cart'));
 const Checkout = lazy(() => import('../components/Checkout'));
 const OrderHistory = lazy(() => import('../components/OrderHistory'));
 const OrderDetail = lazy(() => import('../components/OrderDetail'));
-const AdminDashboard = lazy(() => import('../components/AdminDashboard'));
 const AdminConfig = lazy(() => import('../components/AdminConfig'));
 const SellerRegistration = lazy(() => import('../pages/SellerRegistration'));
 
@@ -56,7 +55,7 @@ export const protectedRoutes: RouteConfig[] = [
  * Admin routes - require admin role
  */
 export const adminRoutes: RouteConfig[] = [
-  { path: '/admin', component: AdminDashboard, adminOnly: true },
+  { path: '/admin', component: AdminConfig, adminOnly: true },
   { path: '/admin/config', component: AdminConfig, adminOnly: true }
 ];
 
