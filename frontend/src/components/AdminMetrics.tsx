@@ -15,7 +15,7 @@ const AdminMetrics: React.FC = () => {
   const fetchMetrics = async () => {
     try {
       const [statsRes, revenueRes] = await Promise.all([
-        api.get('/api/admin/dashboard'),
+        api.get('/api/admin/stats'),
         api.get('/api/admin/revenue-trends?days=30')
       ]);
 

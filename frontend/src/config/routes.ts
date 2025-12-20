@@ -57,7 +57,6 @@ export const protectedRoutes: RouteConfig[] = [
  */
 export const adminRoutes: RouteConfig[] = [
   { path: '/admin', component: AdminDashboard, adminOnly: true },
-  { path: '/admin/dashboard', component: AdminDashboard, adminOnly: true },
   { path: '/admin/config', component: AdminConfig, adminOnly: true }
 ];
 
