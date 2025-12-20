@@ -22,7 +22,7 @@ const Header: React.FC = () => {
   const navItems = [
     { label: 'Collections', href: '/products' },
     ...(isAuthenticated ? [{ label: 'Orders', href: '/orders' }] : []),
-    ...(isAuthenticated && user?.role === 'admin' ? [{ label: 'Control Panel', href: '/admin/dashboard' }] : []),
+    ...(isAuthenticated && user?.role === 'admin' ? [{ label: 'Control Panel', href: '/admin/config' }] : []),
   ];
 
   return (
