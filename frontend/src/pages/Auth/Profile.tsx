@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
-import { getCurrentUser } from '../../store/slices/authSlice';
-import { FiUser, FiMail, FiCalendar, FiSave, FiLock, FiArrowRight, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { getCurrentUser, updateProfile, clearError } from '../../store/slices/authSlice';
+import { FiUser, FiMail, FiCalendar, FiSave, FiLock, FiEdit2, FiTrash2, FiAlertCircle, FiCheck } from 'react-icons/fi';
 
 const Profile: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { user, isLoading } = useAppSelector((state) => state.auth);
+  const { user, isLoading, error } = useAppSelector((state) => state.auth);
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -24,6 +26,21 @@ const Profile: React.FC = () => {
     }
   }, [user, dispatch]);
 
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (saveSuccess) {
+      const timer = setTimeout(() => setSaveSuccess(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [saveSuccess]);
+
+  // Clear error when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
@@ -33,9 +50,19 @@ const Profile: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement profile update API call
-    console.log('Update profile:', formData);
-    setIsEditing(false);
+    setIsSaving(true);
+    setSaveSuccess(false);
+    
+    try {
+      await dispatch(updateProfile(formData)).unwrap();
+      setSaveSuccess(true);
+      setIsEditing(false);
+    } catch (err) {
+      // Error is handled by the slice
+      console.error('Profile update failed:', err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -46,6 +73,7 @@ const Profile: React.FC = () => {
       });
     }
     setIsEditing(false);
+    dispatch(clearError());
   };
 
   if (isLoading) {
@@ -92,6 +120,22 @@ const Profile: React.FC = () => {
 
           {/* Main Profile Card */}
           <div className="p-6 sm:p-8 lg:p-12 rounded-2xl lg:rounded-3xl shadow-lg border border-gray-200 mb-8 bg-white">
+            {/* Success Message */}
+            {saveSuccess && (
+              <div className="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 flex items-center gap-3">
+                <FiCheck className="text-green-600 flex-shrink-0" size={20} />
+                <p className="text-green-800 font-medium">Profile updated successfully!</p>
+              </div>
+            )}
+
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-center gap-3">
+                <FiAlertCircle className="text-red-600 flex-shrink-0" size={20} />
+                <p className="text-red-800 font-medium">{error}</p>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 lg:gap-12">
               {/* Avatar Section */}
               <div className="md:col-span-1">
@@ -206,15 +250,26 @@ const Profile: React.FC = () => {
                         <>
                           <button
                             type="submit"
-                            className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base bg-black text-white hover:bg-gray-900 active:scale-95 transition-all duration-200 shadow-lg hover:shadow-xl group"
+                            disabled={isSaving}
+                            className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base bg-black text-white hover:bg-gray-900 active:scale-95 transition-all duration-200 shadow-lg hover:shadow-xl group disabled:opacity-60 disabled:cursor-not-allowed"
                           >
-                            <FiSave size={20} />
-                            Save Changes
+                            {isSaving ? (
+                              <>
+                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                <FiSave size={20} />
+                                Save Changes
+                              </>
+                            )}
                           </button>
                           <button
                             type="button"
                             onClick={handleCancel}
-                            className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base bg-white border-2 border-gray-300 text-gray-900 hover:border-gray-400 active:scale-95 transition-all duration-200"
+                            disabled={isSaving}
+                            className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base bg-white border-2 border-gray-300 text-gray-900 hover:border-gray-400 active:scale-95 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
                           >
                             Cancel
                           </button>

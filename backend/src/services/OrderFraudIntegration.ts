@@ -4,7 +4,7 @@ import { FraudDetectionService } from './FraudDetectionService';
 import { RiskScoreService } from './RiskScoreService';
 import { BehaviorAnalysisService } from './BehaviorAnalysisService';
 import { DeviceRiskProfile } from '../models/DeviceRiskProfile';
-import { FraudAlert, FraudRiskLevel } from '../models/FraudAlert';
+import { FraudAlert, FraudAlertType, FraudRiskLevel } from '../models/FraudAlert';
 
 /**
  * OrderFraudIntegration
@@ -176,8 +176,8 @@ export class OrderFraudIntegration {
 
     // If refund fraud risk is detected, create fraud alert
     if (refundAnalysis.riskLevel === 'high' || refundAnalysis.riskLevel === 'critical') {
-      const alert = await FraudAlert.createAlert(
-        'refund_fraud' as any, // TODO: Add REFUND_FRAUD to FraudAlertType enum
+      await FraudAlert.createAlert(
+        FraudAlertType.REFUND_FRAUD,
         userId,
         'unknown@example.com',
         refundAnalysis.riskLevel === 'critical' ? 85 : 65,

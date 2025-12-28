@@ -35,6 +35,7 @@ export enum FraudAlertType {
   REFUND_RATE_HIGH = 'REFUND_RATE_HIGH', // >50% of orders refunded
   REFUND_VALUE_HIGH = 'REFUND_VALUE_HIGH', // Requesting very high refund
   REFUND_PATTERN = 'REFUND_PATTERN', // Pattern: buy → refund → repeat
+  REFUND_FRAUD = 'REFUND_FRAUD', // High risk refund fraud detected
 
   // Payment issues
   PAYMENT_DECLINED = 'PAYMENT_DECLINED', // Multiple failed payments
