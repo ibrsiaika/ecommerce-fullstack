@@ -70,7 +70,9 @@ router.post(
           accountNumber: bankAccountNumber,
           ifscCode,
           bankName,
-          accountName: req.user.getFullName ? req.user.getFullName() : `${req.user.firstName} ${req.user.lastName}`,
+          accountName: req.user.getFullName 
+            ? req.user.getFullName() 
+            : `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
         },
       };
 

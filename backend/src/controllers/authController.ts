@@ -31,7 +31,7 @@ export const register = async (
     // Parse name into firstName and lastName
     const nameParts = name.trim().split(' ');
     const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
 
     // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
