@@ -3,7 +3,9 @@ import mongoose from 'mongoose';
 import { ApprovalRequest, ApprovalActionType, ApprovalStatus, IApprovalRequest } from '../models/ApprovalRequest';
 import { AuditLogService } from './AuditLogService';
 import { AuditActionType as AuditActionEnum, ResourceType } from '../models/AuditLog';
-import { User } from '../models/User';
+import User from '../models/User';
+import { NotificationService } from './NotificationService';
+import { NotificationType, NotificationChannel } from '../models/Notification';
 
 /**
  * ApprovalService
@@ -169,10 +171,57 @@ export class ApprovalService {
       }
     );
 
-    // TODO: Send notification to admins (Phase 3 - Notifications)
-    // await NotificationService.notifyAdminsNewApproval(approval);
+    // Send notification to admins about new approval request
+    try {
+      await this.notifyAdminsNewApproval(approval);
+    } catch (notificationError) {
+      console.error('Failed to send admin notification for approval:', notificationError);
+      // Don't fail the approval creation if notification fails
+    }
 
     return approval;
+  }
+
+  /**
+   * Notify admins of new approval request
+   */
+  private static async notifyAdminsNewApproval(approval: IApprovalRequest): Promise<void> {
+    // Find all admin users
+    const admins = await User.find({
+      role: { $in: ['admin', 'super_admin'] },
+      status: 'active',
+      deletedAt: null,
+    }).select('_id email').lean();
+
+    const priorityEmoji: Record<string, string> = {
+      critical: '🚨',
+      high: '⚠️',
+      normal: '📋',
+      low: '📝',
+    };
+
+    // Send notification to each admin
+    for (const admin of admins) {
+      try {
+        await NotificationService.createAndSend({
+          userId: admin._id as mongoose.Types.ObjectId,
+          type: NotificationType.SYSTEM_ALERT,
+          channels: [NotificationChannel.EMAIL, NotificationChannel.IN_APP],
+          title: `${priorityEmoji[approval.priority] || '📋'} New ${approval.priority} Approval Request`,
+          body: `A new ${approval.action} approval request requires your attention. Resource: ${approval.resourceType}`,
+          subject: `[${approval.priority.toUpperCase()}] Approval Request: ${approval.action}`,
+          actionUrl: `/admin/approvals/${approval._id}`,
+          actionText: 'Review Request',
+          priority: approval.priority as 'low' | 'normal' | 'high' | 'critical',
+          relatedResource: {
+            type: 'approval',
+            id: approval._id as mongoose.Types.ObjectId,
+          },
+        });
+      } catch (err) {
+        console.error(`Failed to notify admin ${admin.email}:`, err);
+      }
+    }
   }
 
   /**
@@ -243,15 +292,28 @@ export class ApprovalService {
       }
     );
 
-    // TODO: If approved, execute the action (Phase 3)
-    // if (approval.status === ApprovalStatus.APPROVED) {
-    //   await this.executeApprovedAction(approval);
-    // }
-
-    // TODO: Send notification (Phase 3)
-    // if (approval.status === ApprovalStatus.APPROVED) {
-    //   await NotificationService.notifyRequesterApproved(approval);
-    // }
+    // If approved, send notification to requester
+    if (approval.status === ApprovalStatus.APPROVED) {
+      try {
+        await NotificationService.createAndSend({
+          userId: approval.requestedBy,
+          type: NotificationType.SYSTEM_ALERT,
+          channels: [NotificationChannel.EMAIL, NotificationChannel.IN_APP],
+          title: '✅ Approval Request Granted',
+          body: `Your ${approval.action} request has been approved. You can now proceed with the action.`,
+          subject: `Approved: ${approval.action} Request`,
+          actionUrl: `/approvals/${approval._id}`,
+          actionText: 'View Details',
+          priority: 'normal',
+          relatedResource: {
+            type: 'approval',
+            id: approval._id as mongoose.Types.ObjectId,
+          },
+        });
+      } catch (notificationError) {
+        console.error('Failed to send approval notification:', notificationError);
+      }
+    }
 
     return approval;
   }
@@ -326,8 +388,26 @@ export class ApprovalService {
       }
     );
 
-    // TODO: Send notification to requester (Phase 3)
-    // await NotificationService.notifyRequesterRejected(approval, reason);
+    // Send rejection notification to requester
+    try {
+      await NotificationService.createAndSend({
+        userId: approval.requestedBy,
+        type: NotificationType.SYSTEM_ALERT,
+        channels: [NotificationChannel.EMAIL, NotificationChannel.IN_APP],
+        title: '❌ Approval Request Denied',
+        body: `Your ${approval.action} request has been denied. Reason: ${reason}`,
+        subject: `Denied: ${approval.action} Request`,
+        actionUrl: `/approvals/${approval._id}`,
+        actionText: 'View Details',
+        priority: 'high',
+        relatedResource: {
+          type: 'approval',
+          id: approval._id as mongoose.Types.ObjectId,
+        },
+      });
+    } catch (notificationError) {
+      console.error('Failed to send rejection notification:', notificationError);
+    }
 
     return approval;
   }
