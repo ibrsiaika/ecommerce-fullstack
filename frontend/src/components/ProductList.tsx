@@ -3,7 +3,10 @@ import { Link } from 'react-router-dom';
 import { useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import api from '../services/api';
-import { FiArrowRight, FiCheck, FiSearch, FiFilter } from 'react-icons/fi';
+import { FiArrowRight, FiCheck, FiPlus, FiSearch } from 'react-icons/fi';
+
+// Default fallback image for products without images
+const FALLBACK_PRODUCT_IMAGE = 'FALLBACK_PRODUCT_IMAGE';
 
 interface Product {
   _id: string;
@@ -73,7 +76,7 @@ const ProductList: React.FC = () => {
       setError(null);
     } catch (err: any) {
       setStatus('error');
-      setError(err.response?.data?.error || 'We could not load products just now.');
+      setError(err.response?.data?.error || 'Unable to load products');
     }
   };
 
@@ -82,7 +85,7 @@ const ProductList: React.FC = () => {
       const response = await api.getCategories();
       setCategories(response.data.data || response.data);
     } catch (err) {
-      // keep quiet, categories are additive
+      // Silent fail for categories
     }
   };
 
@@ -98,242 +101,243 @@ const ProductList: React.FC = () => {
         id: product._id || product.id,
         name: product.name,
         price: product.price,
-        image: product.images?.[0] || 'https://picsum.photos/400',
+        image: product.images?.[0] || 'FALLBACK_PRODUCT_IMAGE',
         quantity: 1,
         countInStock: product.countInStock,
       })
     );
   };
 
-  const renderCards = () => {
+  const renderProducts = () => {
+    // Loading State
     if (status === 'loading' && products.length === 0) {
       return (
-        <>
-          {Array.from({ length: 6 }).map((_, index) => (
-            <div key={`placeholder-${index}`} className="surface p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl animate-pulse">
-              <div className="h-40 sm:h-56 lg:h-72 rounded-lg bg-gray-300 mb-3 sm:mb-4" />
-              <div className="h-4 bg-gray-300 rounded mb-2" />
-              <div className="h-3 bg-gray-300 rounded w-3/4" />
-            </div>
-          ))}
-        </>
-      );
-    }
-
-    if (products.length === 0) {
-      return (
-        <div className="col-span-full surface p-6 sm:p-12 text-center rounded-lg sm:rounded-2xl">
-          <div className="text-4xl sm:text-6xl mb-4 sm:mb-6">📭</div>
-          <p className="text-lg sm:text-3xl font-bold mb-2 sm:mb-3 text-gray-900">No products found.</p>
-          <p className="text-sm sm:text-lg text-gray-600 mb-6 sm:mb-10 max-w-2xl mx-auto">
-            Try adjusting your search or filters to find what you're looking for.
-          </p>
-          <div className="flex justify-center gap-3 sm:gap-4 flex-wrap">
-            <button
-              className="btn btn-primary py-2 sm:py-3 px-6 sm:px-10 text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl"
-              onClick={() => {
-                setFilters({ ...filters, search: '', category: '' });
-                setPage(1);
-              }}
-            >
-              Reset Filters
-            </button>
-            <Link to="/" className="btn btn-outline py-2 sm:py-3 px-6 sm:px-10 text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl">
-              Go to Home
-            </Link>
-          </div>
-        </div>
-      );
-    }
-
-    return products.map((product) => (
-      <div
-        key={product._id}
-        className="group relative overflow-hidden rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-300 hover:shadow-xl"
-      >
-        {/* Image Container */}
-        <div className="relative overflow-hidden bg-gray-100 h-48 sm:h-64 lg:h-72 flex items-center justify-center">
-          <img
-            src={product.images?.[0] || 'https://picsum.photos/400'}
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          
-          {/* Category Badge */}
-          <div className="absolute top-4 left-4">
-            <span className="inline-block bg-white/95 backdrop-blur text-gray-900 text-xs sm:text-sm px-3 py-1.5 rounded-full font-semibold">
-              {product.category}
-            </span>
-          </div>
-          
-          {/* Stock Badge */}
-          {product.countInStock > 0 ? (
-            <div className="absolute top-4 right-4">
-              <div className="flex items-center gap-1.5 bg-green-500/90 backdrop-blur text-white text-xs sm:text-sm px-3 py-1.5 rounded-full font-semibold">
-                <FiCheck size={16} />
-                In Stock
+        <div className="masonry-grid">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="card p-0 overflow-hidden">
+              <div className="skeleton aspect-[4/5]" />
+              <div className="p-5 space-y-3">
+                <div className="skeleton h-4 w-3/4" />
+                <div className="skeleton h-4 w-1/2" />
+                <div className="skeleton h-6 w-1/3 mt-2" />
               </div>
             </div>
-          ) : (
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              <span className="text-white font-bold text-lg">Out of Stock</span>
-            </div>
-          )}
+          ))}
         </div>
+      );
+    }
 
-        {/* Content Container */}
-        <div className="flex flex-col flex-1 p-4 sm:p-5 lg:p-6">
-          {/* Product Title */}
-          <h3 className="text-sm sm:text-base font-bold text-gray-900 leading-snug line-clamp-2 mb-2 group-hover:line-clamp-1 transition-all">
-            {product.name}
-          </h3>
-
-          {/* Description - Hide on mobile */}
-          <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-3 hidden sm:block font-light">
-            {product.description}
+    // Empty State
+    if (products.length === 0) {
+      return (
+        <div className="text-center py-20">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 rounded-full mb-6">
+            <FiSearch className="w-7 h-7 text-neutral-400" />
+          </div>
+          <h3 className="text-xl font-semibold text-neutral-900 mb-2">No products found</h3>
+          <p className="text-neutral-500 mb-8 max-w-md mx-auto">
+            Try adjusting your search or filters to find what you're looking for.
           </p>
-
-          {/* Rating */}
-          <div className="flex items-center gap-2 mb-4 text-xs">
-            <div className="flex gap-1">
-              {[...Array(5)].map((_, i) => (
-                <span
-                  key={i}
-                  className={`${
-                    i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-300'
-                  }`}
-                >
-                  ★
-                </span>
-              ))}
-            </div>
-            <span className="text-gray-600 font-medium">({product.numReviews})</span>
-          </div>
-
-          {/* Price Section */}
-          <div className="mb-4 sm:mb-5">
-            <div className="flex items-baseline gap-2">
-              <span className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
-                ${product.price.toFixed(2)}
-              </span>
-              {product.comparePrice && (
-                <span className="text-xs sm:text-sm text-gray-400 line-through font-medium">
-                  ${product.comparePrice.toFixed(2)}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-2 mt-auto pt-3 sm:pt-4">
-            <Link
-              to={`/products/${product._id}`}
-              className="flex-1 py-2.5 sm:py-3 px-3 sm:px-4 border-2 border-gray-900 bg-white text-gray-900 rounded-lg font-semibold text-xs sm:text-sm hover:bg-gray-900 hover:text-white transition-all duration-300 text-center flex items-center justify-center gap-1"
-            >
-              View
-              <FiArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <button
-              onClick={() => handleAddToCart(product)}
-              disabled={product.countInStock === 0}
-              className={`flex-1 py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-1 ${
-                product.countInStock > 0
-                  ? 'bg-black text-white hover:bg-gray-800 hover:shadow-lg active:scale-95'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              <FiCheck size={16} />
-              {product.countInStock > 0 ? 'Add' : 'Out'}
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              setFilters({ ...filters, search: '', category: '' });
+              setPage(1);
+            }}
+            className="btn btn-secondary"
+          >
+            Clear Filters
+          </button>
         </div>
+      );
+    }
+
+    // Products Grid - Masonry style
+    return (
+      <div className="masonry-grid">
+        {products.map((product) => (
+          <div
+            key={product._id}
+            className="card card-interactive p-0 overflow-hidden group"
+          >
+            {/* Image */}
+            <Link to={`/products/${product._id}`} className="block">
+              <div className="relative aspect-[4/5] bg-neutral-100 overflow-hidden">
+                <img
+                  src={product.images?.[0] || 'FALLBACK_PRODUCT_IMAGE'}
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                
+                {/* Category */}
+                <div className="absolute top-3 left-3">
+                  <span className="pill bg-white/90 backdrop-blur-sm text-neutral-700 text-xs">
+                    {product.category}
+                  </span>
+                </div>
+                
+                {/* Stock Status */}
+                {product.countInStock > 0 ? (
+                  <div className="absolute top-3 right-3">
+                    <span className="pill bg-green-600/90 text-white text-xs">
+                      <FiCheck className="w-3 h-3" />
+                      In Stock
+                    </span>
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 bg-neutral-950/60 flex items-center justify-center">
+                    <span className="text-white font-medium">Out of Stock</span>
+                  </div>
+                )}
+              </div>
+            </Link>
+
+            {/* Content */}
+            <div className="p-4 sm:p-5">
+              <Link to={`/products/${product._id}`}>
+                <h3 className="font-medium text-neutral-900 mb-1 line-clamp-2 group-hover:text-neutral-600 transition-colors">
+                  {product.name}
+                </h3>
+              </Link>
+
+              {/* Rating */}
+              <div className="flex items-center gap-1.5 mb-3">
+                <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                    <span
+                      key={i}
+                      className={`text-xs ${
+                        i < Math.floor(product.rating)
+                          ? 'text-amber-400'
+                          : 'text-neutral-300'
+                      }`}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+                <span className="text-xs text-neutral-500">({product.numReviews})</span>
+              </div>
+
+              {/* Price */}
+              <div className="flex items-baseline gap-2 mb-4">
+                <span className="text-lg font-semibold text-neutral-950">
+                  ${product.price.toFixed(2)}
+                </span>
+                {product.comparePrice && product.comparePrice > product.price && (
+                  <span className="text-sm text-neutral-400 line-through">
+                    ${product.comparePrice.toFixed(2)}
+                  </span>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2">
+                <Link
+                  to={`/products/${product._id}`}
+                  className="flex-1 btn btn-secondary py-2.5 text-sm justify-center"
+                >
+                  View
+                  <FiArrowRight className="w-4 h-4 ml-1" />
+                </Link>
+                <button
+                  onClick={() => handleAddToCart(product)}
+                  disabled={product.countInStock === 0}
+                  className="flex-1 btn btn-primary py-2.5 text-sm justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <FiPlus className="w-4 h-4 mr-1" />
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
-    ));
+    );
   };
 
   return (
     <div className="bg-white min-h-screen">
-      <div className="container px-2 sm:px-4 lg:px-8">
-        {/* Header Section */}
-        <div className="py-3 sm:py-6 lg:py-12">
-          <div className="space-y-3 sm:space-y-4 lg:space-y-6">
-            <div>
-              <h1 className="text-xl sm:text-3xl lg:text-5xl font-bold text-gray-900">Shop</h1>
-              <p className="text-xs sm:text-base lg:text-lg text-gray-600 mt-1 sm:mt-2">Discover our collection</p>
-            </div>
-
-            {/* Search and Filter */}
-            <div className="space-y-2 sm:space-y-0 sm:flex sm:gap-2 lg:gap-4">
-              <form onSubmit={handleSearchSubmit} className="relative flex-1">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={filters.search}
-                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                  className="w-full input pr-8 sm:pr-10 lg:pr-14 rounded-md sm:rounded-lg lg:rounded-xl py-1.5 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-1 sm:right-1.5 top-1/2 -translate-y-1/2 rounded text-xs bg-black text-white px-1.5 sm:px-3 py-1 font-bold hover:bg-gray-800 transition-colors flex-shrink-0"
-                >
-                  🔍
-                </button>
-              </form>
-              <select
-                value={filters.category}
-                onChange={(e) => {
-                  setFilters({ ...filters, category: e.target.value });
-                  setPage(1);
-                }}
-                className="input rounded-md sm:rounded-lg lg:rounded-xl py-1.5 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base font-medium w-full sm:w-auto min-w-[130px] sm:min-w-[160px]"
-              >
-                <option value="">All</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Results Info */}
-          <div className="mt-2 sm:mt-4 lg:mt-6 flex flex-wrap items-center gap-1 text-xs sm:text-sm font-semibold">
-            <span className="pill">Results</span>
-            <span className="text-gray-700 text-xs">
-              {visibleRange.start}–{visibleRange.end} of {pagination.total}
-            </span>
-            {status === 'error' && <span className="text-red-600 text-xs">Error: {error}</span>}
-          </div>
+      <div className="container section">
+        {/* Header */}
+        <div className="mb-8">
+          <p className="text-meta text-neutral-500 mb-2">COLLECTION</p>
+          <h1 className="text-headline text-neutral-950 mb-2">Shop</h1>
+          <p className="text-body">Browse our curated selection of quality products</p>
         </div>
 
-        {/* Products Grid */}
-        <div className="grid gap-3 sm:gap-4 lg:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-6 sm:mb-8 lg:mb-12">
-          {renderCards()}
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-8">
+          <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md">
+            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              className="input pl-10"
+            />
+          </form>
+          <select
+            value={filters.category}
+            onChange={(e) => {
+              setFilters({ ...filters, category: e.target.value });
+              setPage(1);
+            }}
+            className="input w-full sm:w-48"
+          >
+            <option value="">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
         </div>
+
+        {/* Results Info */}
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-sm text-neutral-500">
+            {pagination.total > 0 ? (
+              <>Showing {visibleRange.start}–{visibleRange.end} of {pagination.total} products</>
+            ) : (
+              'No products found'
+            )}
+          </p>
+          {status === 'loading' && products.length > 0 && (
+            <span className="text-sm text-neutral-500">Loading...</span>
+          )}
+        </div>
+
+        {/* Error State */}
+        {status === 'error' && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
+
+        {/* Products */}
+        {renderProducts()}
 
         {/* Pagination */}
         {pagination.pages > 1 && (
-          <div className="flex justify-center mb-4 sm:mb-6 lg:mb-10">
-            <div className="surface flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 lg:gap-4 px-2 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-5 rounded-md sm:rounded-lg lg:rounded-xl shadow-lg border border-gray-200">
+          <div className="flex justify-center mt-12">
+            <div className="flex items-center gap-2 bg-neutral-50 rounded-lg p-1.5">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="rounded px-1.5 sm:px-3 lg:px-5 py-1 sm:py-1.5 lg:py-2 text-xs sm:text-sm lg:text-base font-bold text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-white rounded-md disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                ←
+                Previous
               </button>
-              <span className="text-gray-900 font-bold text-xs sm:text-sm lg:text-base">
-                {page}/{pagination.pages}
+              <span className="px-4 py-2 text-sm font-medium text-neutral-900">
+                {page} / {pagination.pages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
                 disabled={page === pagination.pages}
-                className="rounded px-1.5 sm:px-3 lg:px-5 py-1 sm:py-1.5 lg:py-2 text-xs sm:text-sm lg:text-base font-bold text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-white rounded-md disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                →
+                Next
               </button>
             </div>
           </div>

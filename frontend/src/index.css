@@ -1,77 +1,394 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
+
+/* 
+ * LUXURY MINIMAL DESIGN SYSTEM
+ * ============================
+ * Inspired by: Stripe, Amazon, Vercel
+ * Philosophy: Spacing discipline, typographic hierarchy, restraint
+ */
 
 @layer base {
   :root {
-    --ink: #ffffff;
-    --midnight: #f9fafb;
-    --slate: #f3f4f6;
-    --fog: #e5e7eb;
-    --accent: #000000;
-    --accent-strong: #1f2937;
-    --emerald: #10b981;
+    /* Neutral palette - no decorative colors */
+    --ink-100: #fafafa;
+    --ink-200: #f5f5f5;
+    --ink-300: #e5e5e5;
+    --ink-400: #d4d4d4;
+    --ink-500: #a3a3a3;
+    --ink-600: #737373;
+    --ink-700: #525252;
+    --ink-800: #262626;
+    --ink-900: #171717;
+    --ink-950: #0a0a0a;
+    
+    /* Single accent - used sparingly */
+    --accent: #0a0a0a;
+    --accent-hover: #262626;
+    
+    /* Semantic colors - only for status */
+    --success: #22c55e;
+    --error: #ef4444;
+    --warning: #f59e0b;
+    
+    /* Spacing rhythm - 4px base */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+    --space-16: 64px;
+    --space-20: 80px;
+    --space-24: 96px;
+    
+    /* Typography scale */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
+    --text-5xl: 3rem;
+    --text-6xl: 3.75rem;
+    
+    /* Line heights */
+    --leading-tight: 1.1;
+    --leading-snug: 1.25;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.625;
+    
+    /* Letter spacing */
+    --tracking-tight: -0.025em;
+    --tracking-normal: 0;
+    --tracking-wide: 0.025em;
+    --tracking-wider: 0.05em;
+    --tracking-widest: 0.1em;
   }
 
   * {
     box-sizing: border-box;
-  }
-  
-  body {
-    font-family: 'Inter', 'Manrope', system-ui, -apple-system, sans-serif;
-    line-height: 1.5;
-    color: #1f2937;
-    background: #ffffff;
     margin: 0;
     padding: 0;
   }
-
+  
   html {
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    color: var(--ink-800);
+    background: #ffffff;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+  
+  /* Typography classes */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-tight);
+    color: var(--ink-950);
+  }
+  
+  p {
+    color: var(--ink-600);
+  }
+  
+  /* Focus states - accessible but minimal */
+  :focus-visible {
+    outline: 2px solid var(--ink-950);
+    outline-offset: 2px;
+  }
+  
+  /* Selection */
+  ::selection {
+    background: var(--ink-950);
+    color: white;
   }
 }
 
 @layer components {
+  /* Surface - subtle elevation through color, not shadow */
   .surface {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
+    background: var(--ink-100);
     border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .surface-elevated {
+    background: white;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   }
 
+  /* Pills - metadata indicators */
   .pill {
-    @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium;
-    letter-spacing: 0.03em;
-    background: #f3f4f6;
-    color: #4b5563;
-    border: 1px solid #e5e7eb;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+    background: var(--ink-100);
+    color: var(--ink-700);
+    letter-spacing: 0.01em;
+  }
+  
+  .pill-outlined {
+    background: transparent;
+    border: 1px solid var(--ink-300);
   }
 
+  /* Buttons - clear hierarchy */
   .btn {
-    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:pointer-events-none disabled:opacity-50 px-4 py-2;
+    @apply inline-flex items-center justify-center font-medium transition-all duration-150;
+    border-radius: 8px;
+    font-size: var(--text-sm);
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+  
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
   
   .btn-primary {
-    @apply bg-black text-white hover:bg-gray-800 focus:ring-gray-400 shadow-sm;
+    background: var(--ink-950);
+    color: white;
+  }
+  
+  .btn-primary:hover:not(:disabled) {
+    background: var(--ink-800);
+  }
+  
+  .btn-primary:active:not(:disabled) {
+    transform: scale(0.98);
   }
   
   .btn-secondary {
-    @apply bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-300 border border-gray-200;
+    background: var(--ink-100);
+    color: var(--ink-900);
   }
   
-  .btn-outline {
-    @apply border border-gray-300 bg-transparent hover:bg-gray-50 text-gray-900;
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--ink-200);
   }
   
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink-700);
+  }
+  
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--ink-100);
+    color: var(--ink-900);
+  }
+  
+  /* Cards - content containers */
   .card {
-    @apply rounded-xl border border-gray-200 bg-white text-gray-900 shadow-sm p-6;
+    background: white;
+    border: 1px solid var(--ink-200);
+    border-radius: 12px;
   }
   
+  .card-interactive {
+    transition: all 200ms ease;
+  }
+  
+  .card-interactive:hover {
+    border-color: var(--ink-300);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  }
+  
+  /* Inputs - clean and functional */
   .input {
-    @apply flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50;
+    @apply w-full px-4 py-3 text-sm;
+    background: white;
+    border: 1px solid var(--ink-300);
+    border-radius: 8px;
+    color: var(--ink-900);
+    transition: border-color 150ms ease, box-shadow 150ms ease;
   }
   
+  .input::placeholder {
+    color: var(--ink-500);
+  }
+  
+  .input:focus {
+    outline: none;
+    border-color: var(--ink-950);
+    box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.08);
+  }
+  
+  /* Container - consistent max-width */
   .container {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    @apply mx-auto px-4 sm:px-6 lg:px-8;
+    max-width: 1280px;
+  }
+  
+  .container-narrow {
+    max-width: 768px;
+  }
+  
+  .container-wide {
+    max-width: 1536px;
+  }
+
+  /* Section spacing rhythm */
+  .section {
+    padding-top: var(--space-16);
+    padding-bottom: var(--space-16);
+  }
+  
+  @media (min-width: 768px) {
+    .section {
+      padding-top: var(--space-20);
+      padding-bottom: var(--space-20);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .section {
+      padding-top: var(--space-24);
+      padding-bottom: var(--space-24);
+    }
+  }
+
+  /* Masonry grid system */
+  .masonry-grid {
+    display: grid;
+    gap: var(--space-4);
+    grid-template-columns: repeat(1, 1fr);
+  }
+  
+  @media (min-width: 640px) {
+    .masonry-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-5);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .masonry-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-6);
+    }
+  }
+  
+  @media (min-width: 1280px) {
+    .masonry-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  /* Divider - spacing not lines */
+  .divider {
+    height: 1px;
+    background: var(--ink-200);
+    border: none;
+    margin: var(--space-8) 0;
+  }
+
+  /* Text utilities */
+  .text-display {
+    font-size: var(--text-5xl);
+    font-weight: 600;
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-tight);
+  }
+  
+  @media (min-width: 768px) {
+    .text-display {
+      font-size: var(--text-6xl);
+    }
+  }
+  
+  .text-headline {
+    font-size: var(--text-3xl);
+    font-weight: 600;
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-snug);
+  }
+  
+  @media (min-width: 768px) {
+    .text-headline {
+      font-size: var(--text-4xl);
+    }
+  }
+  
+  .text-title {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-snug);
+  }
+  
+  .text-body {
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    color: var(--ink-600);
+  }
+  
+  .text-caption {
+    font-size: var(--text-sm);
+    color: var(--ink-500);
+  }
+  
+  .text-meta {
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    color: var(--ink-500);
+  }
+
+  /* Subtle animations */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from { 
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 300ms ease;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 400ms ease;
+  }
+
+  /* Loading states - optimized for performance */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--ink-100) 0%,
+      var(--ink-200) 50%,
+      var(--ink-100) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton 1.5s ease infinite;
+    border-radius: 8px;
+    will-change: background-position;
+  }
+  
+  @keyframes skeleton {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
   }
 }
