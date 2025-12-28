@@ -6,7 +6,7 @@ import api from '../services/api';
 import { FiArrowRight, FiCheck, FiPlus, FiSearch } from 'react-icons/fi';
 
 // Default fallback image for products without images
-const FALLBACK_PRODUCT_IMAGE = 'FALLBACK_PRODUCT_IMAGE';
+const FALLBACK_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
 
 interface Product {
   _id: string;
