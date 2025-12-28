@@ -101,7 +101,7 @@ const ProductList: React.FC = () => {
         id: product._id || product.id,
         name: product.name,
         price: product.price,
-        image: product.images?.[0] || 'FALLBACK_PRODUCT_IMAGE',
+        image: product.images?.[0] || FALLBACK_PRODUCT_IMAGE,
         quantity: 1,
         countInStock: product.countInStock,
       })
@@ -163,8 +163,9 @@ const ProductList: React.FC = () => {
             <Link to={`/products/${product._id}`} className="block">
               <div className="relative aspect-[4/5] bg-neutral-100 overflow-hidden">
                 <img
-                  src={product.images?.[0] || 'FALLBACK_PRODUCT_IMAGE'}
+                  src={product.images?.[0] || FALLBACK_PRODUCT_IMAGE}
                   alt={product.name}
+                  loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 
