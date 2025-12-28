@@ -1,4 +1,4 @@
-import { User, IUser } from '../models/User';
+import User, { IUser } from '../models/User';
 
 /**
  * PermissionService
@@ -225,10 +225,15 @@ export class PermissionService {
     // Add user-specific capability grants (from admin assignments)
     if (user.capabilities && Array.isArray(user.capabilities)) {
       user.capabilities.forEach((cap) => {
-        // Only add if not revoked and not expired
-        if (!cap.revokedAt) {
-          const capability = cap.name as Capability;
-          capabilities.add(capability);
+        // capabilities is string[], add directly
+        if (typeof cap === 'string') {
+          capabilities.add(cap as Capability);
+        } else if (typeof cap === 'object' && cap !== null) {
+          // Handle legacy object format with revokedAt check
+          const capObj = cap as { name?: string; revokedAt?: Date };
+          if (!capObj.revokedAt && capObj.name) {
+            capabilities.add(capObj.name as Capability);
+          }
         }
       });
     }
