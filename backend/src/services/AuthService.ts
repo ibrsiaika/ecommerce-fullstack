@@ -225,7 +225,7 @@ export class AuthService {
     
     return {
       user: {
-        id: user._id.toString(),
+        id: user._id?.toString() ?? '',
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -236,7 +236,7 @@ export class AuthService {
       session: {
         sessionId,
         deviceId,
-        requiresReauth: session.requiresReauth
+        requiresReauth: session.requiresReauth ?? false
       }
     };
   }
@@ -278,8 +278,9 @@ export class AuthService {
     userId: string,
     reason: ISession['revokedReason'] = 'user_logout'
   ): Promise<void> {
+    const mongoose = await import('mongoose');
     await Session.revokeAllUserSessions(
-      { _id: userId },
+      new mongoose.Types.ObjectId(userId),
       reason
     );
   }
@@ -493,7 +494,7 @@ export class AuthService {
     const now = Math.floor(Date.now() / 1000);
     
     const payload: AuthTokenPayload = {
-      userId: user._id.toString(),
+      userId: user._id?.toString() ?? '',
       email: user.email,
       role: user.role,
       sessionId,
@@ -626,7 +627,7 @@ export class AuthService {
     await user.save();
     
     // Revoke all sessions (force re-login with new password)
-    await this.logoutAllDevices(user._id.toString(), 'password_reset');
+    await this.logoutAllDevices(user._id?.toString() ?? '', 'password_reset');
   }
 
   /**

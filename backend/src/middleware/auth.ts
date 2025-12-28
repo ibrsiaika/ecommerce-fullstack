@@ -83,19 +83,20 @@ export async function authenticate(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): Promise<void> {
   try {
     // Extract token
     const token = extractToken(req);
     
     if (!token) {
-      return res.status(401).json({
+      res.status(401).json({
         status: 'error',
         error: {
           code: 'MISSING_TOKEN',
           message: 'Authentication token required'
         }
       });
+      return;
     }
     
     // Verify JWT
@@ -105,26 +106,28 @@ export async function authenticate(
     try {
       payload = await authService.verifyAccessToken(token);
     } catch (error) {
-      return res.status(401).json({
+      res.status(401).json({
         status: 'error',
         error: {
           code: 'INVALID_TOKEN',
           message: 'Invalid or expired token'
         }
       });
+      return;
     }
     
     // Lookup session (verify it still exists + is active)
     const session = await Session.findBySessionId(payload.sessionId);
     
     if (!session || !session.isActive()) {
-      return res.status(401).json({
+      res.status(401).json({
         status: 'error',
         error: {
           code: 'SESSION_INVALID',
           message: 'Session expired or revoked. Please login again.'
         }
       });
+      return;
     }
     
     // Verify user still exists and is active
@@ -135,24 +138,26 @@ export async function authenticate(
       session.revoke('account_suspended');
       await session.save();
       
-      return res.status(401).json({
+      res.status(401).json({
         status: 'error',
         error: {
           code: 'USER_INACTIVE',
           message: 'Account is no longer active'
         }
       });
+      return;
     }
     
     // Check if session requires re-authentication
     if (session.requiresReauth) {
-      return res.status(401).json({
+      res.status(401).json({
         status: 'error',
         error: {
           code: 'REAUTH_REQUIRED',
           message: 'Please re-authenticate from this device'
         }
       });
+      return;
     }
     
     // Verify device hasn't changed
@@ -161,13 +166,14 @@ export async function authenticate(
       session.suspiciousActivityDetected = true;
       await session.save();
       
-      return res.status(401).json({
+      res.status(401).json({
         status: 'error',
         error: {
           code: 'DEVICE_MISMATCH',
           message: 'Device verification failed'
         }
       });
+      return;
     }
     
     // Optional: Check IP hasn't changed too dramatically
@@ -249,25 +255,27 @@ export async function optionalAuth(
  * Usage: app.get('/seller/route', authenticate, requireRole('seller'), handler)
  */
 export function requireRole(...roles: string[]) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         status: 'error',
         error: {
           code: 'NOT_AUTHENTICATED',
           message: 'Authentication required'
         }
       });
+      return;
     }
     
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({
+      res.status(403).json({
         status: 'error',
         error: {
           code: 'INSUFFICIENT_PERMISSIONS',
           message: `This action requires one of: ${roles.join(', ')}`
         }
       });
+      return;
     }
     
     next();
@@ -281,15 +289,16 @@ export function requireRole(...roles: string[]) {
  * Usage: app.post('/orders/:id/refund', authenticate, requireCapability('orders:refund'), handler)
  */
 export function requireCapability(...capabilities: string[]) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         status: 'error',
         error: {
           code: 'NOT_AUTHENTICATED',
           message: 'Authentication required'
         }
       });
+      return;
     }
     
     const userCapabilities = req.user.capabilities || [];
@@ -298,13 +307,14 @@ export function requireCapability(...capabilities: string[]) {
     );
     
     if (!hasCapability) {
-      return res.status(403).json({
+      res.status(403).json({
         status: 'error',
         error: {
           code: 'CAPABILITY_DENIED',
           message: 'You do not have permission for this action'
         }
       });
+      return;
     }
     
     next();
@@ -321,35 +331,38 @@ export function requireVerifiedSeller(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): void {
   if (!req.user) {
-    return res.status(401).json({
+    res.status(401).json({
       status: 'error',
       error: {
         code: 'NOT_AUTHENTICATED',
         message: 'Authentication required'
       }
     });
+    return;
   }
   
   if (req.user.role !== 'seller') {
-    return res.status(403).json({
+    res.status(403).json({
       status: 'error',
       error: {
         code: 'NOT_A_SELLER',
         message: 'Only sellers can access this resource'
       }
     });
+    return;
   }
   
   if (!req.user.seller || req.user.seller.verificationStatus !== 'verified') {
-    return res.status(403).json({
+    res.status(403).json({
       status: 'error',
       error: {
         code: 'SELLER_NOT_VERIFIED',
         message: 'Your seller account is not verified'
       }
     });
+    return;
   }
   
   next();
@@ -363,25 +376,27 @@ export function requireAdmin(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): void {
   if (!req.user) {
-    return res.status(401).json({
+    res.status(401).json({
       status: 'error',
       error: {
         code: 'NOT_AUTHENTICATED',
         message: 'Authentication required'
       }
     });
+    return;
   }
   
   if (!['admin', 'super_admin'].includes(req.user.role)) {
-    return res.status(403).json({
+    res.status(403).json({
       status: 'error',
       error: {
         code: 'ADMIN_REQUIRED',
         message: 'Admin access required'
       }
     });
+    return;
   }
   
   next();
@@ -395,25 +410,27 @@ export function requireSuperAdmin(
   req: Request,
   res: Response,
   next: NextFunction
-) {
+): void {
   if (!req.user) {
-    return res.status(401).json({
+    res.status(401).json({
       status: 'error',
       error: {
         code: 'NOT_AUTHENTICATED',
         message: 'Authentication required'
       }
     });
+    return;
   }
   
   if (req.user.role !== 'super_admin') {
-    return res.status(403).json({
+    res.status(403).json({
       status: 'error',
       error: {
         code: 'SUPER_ADMIN_REQUIRED',
         message: 'Super admin access required'
       }
     });
+    return;
   }
   
   next();

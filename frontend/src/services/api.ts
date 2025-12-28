@@ -142,7 +142,7 @@ class ApiClient {
   }
 
   async getUserOrders(page: number = 1, limit: number = 10) {
-    return this.client.get('/api/orders/my-orders', {
+    return this.client.get('/api/orders/myorders', {
       params: { page, limit }
     });
   }

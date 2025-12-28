@@ -7,6 +7,7 @@ import {
   getOrders,
   updateOrderToDelivered,
   updateOrderStatus,
+  cancelOrder,
   orderValidation
 } from '../controllers/orderController';
 import { protect, authorize } from '../middleware/auth';
@@ -47,5 +48,10 @@ router.put('/:id/deliver', protect, authorize('admin'), updateOrderToDelivered);
 // @desc    Update order status (Admin only)
 // @access  Private/Admin
 router.put('/:id/status', protect, authorize('admin'), updateOrderStatus);
+
+// @route   PUT /api/orders/:id/cancel
+// @desc    Cancel order
+// @access  Private
+router.put('/:id/cancel', protect, cancelOrder);
 
 export default router;
