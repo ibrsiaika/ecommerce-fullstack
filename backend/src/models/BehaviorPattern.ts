@@ -92,7 +92,7 @@ export interface LoginPattern {
   failureRate: number; // failed logins / total attempts
 }
 
-export interface IB ehaviorPattern extends Document {
+export interface IBehaviorPattern extends Document {
   // Identity
   _id: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
@@ -126,7 +126,7 @@ export interface IB ehaviorPattern extends Document {
   hasConfidentBaseline(): boolean; // Do we have enough data?
 }
 
-const behaviorPatternSchema = new Schema<IB ehaviorPattern>(
+const behaviorPatternSchema = new Schema<IBehaviorPattern>(
   {
     userId: {
       type: Schema.Types.ObjectId,
@@ -420,7 +420,7 @@ behaviorPatternSchema.methods.hasConfidentBaseline = function (): boolean {
 
 behaviorPatternSchema.statics.findOrCreateByUserId = async function (
   userId: mongoose.Types.ObjectId
-): Promise<IB ehaviorPattern> {
+): Promise<IBehaviorPattern> {
   let pattern = await this.findOne({ userId });
   if (!pattern) {
     pattern = await this.create({ userId });
@@ -434,7 +434,7 @@ behaviorPatternSchema.statics.findOrCreateByUserId = async function (
 behaviorPatternSchema.statics.findAnomalousUsers = async function (
   minScore: number = 30,
   limit: number = 100
-): Promise<IB ehaviorPattern[]> {
+): Promise<IBehaviorPattern[]> {
   return this.find({
     isAnomaly: true,
     anomalyScore: { $gte: minScore },
@@ -451,7 +451,7 @@ behaviorPatternSchema.statics.findAnomalousUsers = async function (
 behaviorPatternSchema.statics.findHighRefundRate = async function (
   minRate: number = 0.5,
   limit: number = 100
-): Promise<IB ehaviorPattern[]> {
+): Promise<IBehaviorPattern[]> {
   return this.find({
     'refunds.rate': { $gte: minRate },
     orderCount: { $gte: 5 },
@@ -461,7 +461,7 @@ behaviorPatternSchema.statics.findHighRefundRate = async function (
     .populate('userId', 'email firstName lastName');
 };
 
-export const BehaviorPattern: Model<IB ehaviorPattern> = mongoose.model<IB ehaviorPattern>(
+export const BehaviorPattern: Model<IBehaviorPattern> = mongoose.model<IBehaviorPattern>(
   'BehaviorPattern',
   behaviorPatternSchema
 );

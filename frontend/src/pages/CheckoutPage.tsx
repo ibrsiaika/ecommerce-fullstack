@@ -198,7 +198,7 @@ export const CheckoutPage: React.FC = () => {
       );
 
       setOrderConfirmation(response.data);
-      setCartItems([]; // Clear cart
+      setCartItems([]); // Clear cart
     } catch (err: any) {
       setError(err.response?.data?.message || 'Payment failed');
     } finally {

@@ -167,19 +167,18 @@ router.post('/alerts/:id/block', authenticate, requireFraudAnalyst, auditLog, as
       return res.status(404).json({ error: 'Fraud alert not found' });
     }
 
-    // Block the user
-    await alert.block(req.user?.id || new mongoose.Types.ObjectId(), reason);
+    const analystId = req.user?.id || new mongoose.Types.ObjectId();
 
-    // TODO: Suspend user account
-    // TODO: Invalidate user sessions
-    // TODO: Notify user of account suspension
+    // Block the alert and suspend user using FraudDetectionService
+    // This handles: suspending account, invalidating sessions, and sending notification
+    await FraudDetectionService.blockAlert(alert._id, analystId, reason);
 
     // Log block action
     await AuditLogService.log(
       AuditActionType.BLOCKED,
       ResourceType.FRAUD_ALERT,
       alert._id,
-      req.user?.id || new mongoose.Types.ObjectId(),
+      analystId,
       req,
       { reason, userId: alert.userId, status: alert.status }
     );
