@@ -1,12 +1,16 @@
 import mongoose from 'mongoose';
 import { Request } from 'express';
-import { FraudAlert, FraudAlertType, FraudRiskLevel, FraudActionType } from '../models/FraudAlert';
+import { FraudAlert, FraudAlertType, FraudRiskLevel } from '../models/FraudAlert';
 import { DeviceRiskProfile } from '../models/DeviceRiskProfile';
 import { BehaviorPattern } from '../models/BehaviorPattern';
-import { User } from '../models/User';
-import { Order } from '../models/Order'; // Assuming Order model exists
+import User from '../models/User';
+import Order from '../models/Order';
+import { PaymentMethod } from '../models/PaymentMethod';
 import { AuditLogService } from './AuditLogService';
 import { AuditActionType as AuditActionEnum, ResourceType } from '../models/AuditLog';
+import Session from '../models/Session';
+import { NotificationService } from './NotificationService';
+import { NotificationType, NotificationChannel } from '../models/Notification';
 
 /**
  * FraudDetectionService
@@ -203,8 +207,11 @@ export class FraudDetectionService {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     if (context.contextType === 'order') {
-      // Check for order velocity
-      const recentOrders = []; // TODO: Query Order model
+      // Query Order model for recent orders from this user
+      const recentOrders = await Order.find({
+        user: context.userId,
+        createdAt: { $gte: oneDayAgo }
+      }).select('_id').lean();
       const orderCount24h = recentOrders.length;
 
       if (orderCount24h > 10) {
@@ -225,8 +232,13 @@ export class FraudDetectionService {
     }
 
     if (context.contextType === 'refund') {
-      // Check for refund velocity
-      const recentRefunds = []; // TODO: Query refund records
+      // Query orders that have been refunded/cancelled in the last 24h
+      const recentRefunds = await Order.find({
+        user: context.userId,
+        orderStatus: 'cancelled',
+        updatedAt: { $gte: oneDayAgo }
+      }).select('_id').lean();
+      
       if (recentRefunds.length > 3) {
         signals.push({
           type: 'velocity_refunds',
@@ -280,8 +292,34 @@ export class FraudDetectionService {
       }
     }
 
-    // Check if same payment method is used by other accounts
-    // TODO: Check payment method cross-account usage
+    // Check if same payment method (card fingerprint) is used by other accounts
+    if (context.contextType === 'payment' && context.contextData.cardFingerprint) {
+      const cardFingerprint = context.contextData.cardFingerprint;
+      const paymentMethodsWithSameCard = await PaymentMethod.find({
+        'card.fingerprint': cardFingerprint,
+        user: { $ne: context.userId },
+        deletedAt: null,
+      }).select('user').lean();
+
+      if (paymentMethodsWithSameCard.length > 0) {
+        const uniqueUsers = new Set(paymentMethodsWithSameCard.map((pm: any) => pm.user.toString()));
+        if (uniqueUsers.size >= 3) {
+          signals.push({
+            type: 'payment_method_shared',
+            severity: 'critical' as const,
+            score: 45,
+            details: { sharedWithAccounts: uniqueUsers.size, cardFingerprint },
+          });
+        } else if (uniqueUsers.size >= 1) {
+          signals.push({
+            type: 'payment_method_shared',
+            severity: 'high' as const,
+            score: 30,
+            details: { sharedWithAccounts: uniqueUsers.size, cardFingerprint },
+          });
+        }
+      }
+    }
 
     return signals;
   }
@@ -477,6 +515,7 @@ export class FraudDetectionService {
 
   /**
    * Block a user due to fraud alert
+   * Suspends account, invalidates all sessions, and sends notification
    */
   static async blockAlert(
     alertId: mongoose.Types.ObjectId,
@@ -484,9 +523,86 @@ export class FraudDetectionService {
     reason: string
   ): Promise<void> {
     const alert = await FraudAlert.findById(alertId);
-    if (alert) {
-      await alert.block(analystId, reason);
-      // TODO: Suspend user account
+    if (!alert) {
+      throw new Error('Fraud alert not found');
     }
+
+    // Block the alert first
+    await alert.block(analystId, reason);
+
+    // Suspend user account
+    await this.suspendUserAccount(alert.userId, reason, analystId, alertId);
+  }
+
+  /**
+   * Suspend user account due to fraud
+   * - Updates user status to 'suspended'
+   * - Invalidates all active sessions
+   * - Sends notification to user
+   */
+  static async suspendUserAccount(
+    userId: mongoose.Types.ObjectId,
+    reason: string,
+    suspendedBy: mongoose.Types.ObjectId,
+    fraudAlertId?: mongoose.Types.ObjectId
+  ): Promise<void> {
+    // Update user status to suspended
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Set account status to suspended
+    await User.findByIdAndUpdate(userId, {
+      status: 'suspended',
+      suspensionReason: 'payment_fraud',
+      suspendedAt: new Date(),
+      suspendedBy: suspendedBy,
+      suspicious: true,
+    });
+
+    // Invalidate all user sessions (force logout from all devices)
+    await Session.updateMany(
+      { userId, revokedAt: null },
+      {
+        revokedAt: new Date(),
+        revokedReason: 'account_suspended'
+      }
+    );
+
+    // Send notification to user about account suspension
+    try {
+      await NotificationService.createAndSend({
+        userId,
+        type: NotificationType.FRAUD_ALERT,
+        channels: [NotificationChannel.EMAIL, NotificationChannel.IN_APP],
+        title: '🚫 Account Suspended',
+        body: `Your account has been suspended due to suspicious activity: ${reason}. If you believe this is an error, please contact our support team immediately to resolve this issue.`,
+        subject: 'Account Suspended - Action Required',
+        actionUrl: '/support/appeal',
+        actionText: 'Contact Support',
+        priority: 'critical',
+        relatedResource: fraudAlertId ? {
+          type: 'fraud_alert',
+          id: fraudAlertId,
+        } : undefined,
+      });
+    } catch (notificationError) {
+      console.error('Failed to send suspension notification:', notificationError);
+      // Don't fail the suspension if notification fails
+    }
+
+    // Log the suspension in audit
+    await AuditLogService.log(
+      AuditActionEnum.USER_SUSPENDED,
+      ResourceType.USER,
+      userId,
+      suspendedBy,
+      null,
+      {
+        reason,
+        fraudAlertId,
+      }
+    );
   }
 }
