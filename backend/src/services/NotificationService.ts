@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import nodemailer from 'nodemailer';
-import { Notification, NotificationType, NotificationChannel, NotificationStatus } from '../models/Notification';
-import { User } from '../models/User';
+import { Notification, NotificationType, NotificationChannel, NotificationStatus, INotification } from '../models/Notification';
+import User from '../models/User';
 
 /**
  * NotificationService
@@ -55,7 +55,7 @@ export class NotificationService {
    * Create and send notification(s) to user
    * Creates separate notifications per channel
    */
-  static async createAndSend(request: CreateNotificationRequest): Promise<Notification[]> {
+  static async createAndSend(request: CreateNotificationRequest): Promise<INotification[]> {
     const { userId, type, channels, title, body, subject, actionUrl, actionText, templateId, variables, priority, relatedResource } = request;
 
     // Get user
@@ -64,7 +64,7 @@ export class NotificationService {
       throw new Error('User not found');
     }
 
-    const notifications: Notification[] = [];
+    const notifications: INotification[] = [];
 
     // Create notification per channel
     for (const channel of channels) {
@@ -74,10 +74,10 @@ export class NotificationService {
       if (channel === NotificationChannel.EMAIL) {
         recipient = user.email;
       } else if (channel === NotificationChannel.SMS) {
-        if (!user.phoneNumber) {
+        if (!user.phone) {
           continue; // Skip SMS if no phone number
         }
-        recipient = user.phoneNumber;
+        recipient = user.phone;
       } else if (channel === NotificationChannel.PUSH) {
         // TODO: Get push token from user profile
         recipient = 'push_token_placeholder';
@@ -122,7 +122,7 @@ export class NotificationService {
    * Send a single notification
    * Routes to appropriate channel handler
    */
-  static async sendNotification(notification: Notification): Promise<void> {
+  static async sendNotification(notification: INotification): Promise<void> {
     try {
       switch (notification.channel) {
         case NotificationChannel.EMAIL:
@@ -150,7 +150,7 @@ export class NotificationService {
   /**
    * Send email notification
    */
-  private static async sendEmail(notification: Notification): Promise<void> {
+  private static async sendEmail(notification: INotification): Promise<void> {
     const htmlContent = this.renderEmailTemplate(notification);
 
     await emailTransporter.sendMail({
@@ -167,7 +167,7 @@ export class NotificationService {
   /**
    * Send SMS notification (using Twilio)
    */
-  private static async sendSMS(notification: Notification): Promise<void> {
+  private static async sendSMS(notification: INotification): Promise<void> {
     // TODO: Implement Twilio integration
     // For now, just mark as sent
     console.log(`SMS to ${notification.recipient}: ${notification.body}`);
@@ -177,7 +177,7 @@ export class NotificationService {
   /**
    * Send push notification
    */
-  private static async sendPushNotification(notification: Notification): Promise<void> {
+  private static async sendPushNotification(notification: INotification): Promise<void> {
     // TODO: Implement Firebase Cloud Messaging (FCM) or similar
     console.log(`Push notification: ${notification.title}`);
     await notification.markAsSent();
@@ -186,7 +186,7 @@ export class NotificationService {
   /**
    * Send webhook notification (for 3rd party integrations)
    */
-  private static async sendWebhook(notification: Notification): Promise<void> {
+  private static async sendWebhook(notification: INotification): Promise<void> {
     // TODO: Implement webhook delivery
     console.log(`Webhook: ${notification.title}`);
     await notification.markAsSent();
@@ -195,7 +195,7 @@ export class NotificationService {
   /**
    * Render email template
    */
-  private static renderEmailTemplate(notification: Notification): string {
+  private static renderEmailTemplate(notification: INotification): string {
     const { title, body, actionUrl, actionText, variables } = notification;
 
     // Replace variables in body
@@ -303,7 +303,7 @@ export class NotificationService {
   /**
    * Get user's notification history
    */
-  static async getUserNotifications(userId: mongoose.Types.ObjectId, limit: number = 50): Promise<Notification[]> {
+  static async getUserNotifications(userId: mongoose.Types.ObjectId, limit: number = 50): Promise<INotification[]> {
     return Notification.findUserNotifications(userId, limit);
   }
 
@@ -326,7 +326,7 @@ export class NotificationService {
     fraudLevel: string,
     reason: string,
     fraudAlertId: mongoose.Types.ObjectId
-  ): Promise<Notification[]> {
+  ): Promise<INotification[]> {
     return this.createAndSend({
       userId,
       type: NotificationType.FRAUD_ALERT,
@@ -347,7 +347,7 @@ export class NotificationService {
   /**
    * Send payment failed notification
    */
-  static async sendPaymentFailed(userId: mongoose.Types.ObjectId, reason: string, orderId: mongoose.Types.ObjectId): Promise<Notification[]> {
+  static async sendPaymentFailed(userId: mongoose.Types.ObjectId, reason: string, orderId: mongoose.Types.ObjectId): Promise<INotification[]> {
     return this.createAndSend({
       userId,
       type: NotificationType.PAYMENT_FAILED,
@@ -368,7 +368,7 @@ export class NotificationService {
   /**
    * Send order status notification
    */
-  static async sendOrderUpdate(userId: mongoose.Types.ObjectId, orderId: mongoose.Types.ObjectId, status: string, details: string): Promise<Notification[]> {
+  static async sendOrderUpdate(userId: mongoose.Types.ObjectId, orderId: mongoose.Types.ObjectId, status: string, details: string): Promise<INotification[]> {
     const statusEmojis: Record<string, string> = {
       pending: '⏳',
       processing: '⚙️',
