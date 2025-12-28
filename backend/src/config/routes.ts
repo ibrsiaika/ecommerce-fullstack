@@ -11,6 +11,10 @@ import uploadRoutes from '../routes/upload';
 import adminRoutes from '../routes/admin';
 import sellerRoutes from '../routes/seller';
 import configRoutes from '../routes/config';
+import approvalRoutes from '../routes/approvalRoutes';
+import auditRoutes from '../routes/auditRoutes';
+import fraudRoutes from '../routes/fraudRoutes';
+import phase4Routes from '../routes/phase4Routes';
 
 // Middleware
 import { errorHandler } from '../middleware/errorHandler';
@@ -33,6 +37,10 @@ const routes: RouteConfig[] = [
   { path: '/api/config', router: configRoutes },
   { path: '/api/admin', router: adminRoutes },
   { path: '/api/seller', router: sellerRoutes },
+  { path: '/api/admin/approvals', router: approvalRoutes },
+  { path: '/api/audit', router: auditRoutes },
+  { path: '/api/admin/fraud', router: fraudRoutes },
+  { path: '/api/phase4', router: phase4Routes },
 ];
 
 /**
