@@ -25,6 +25,7 @@
  */
 
 import mongoose, { Document, Schema } from 'mongoose';
+import { hashPassword, verifyPassword } from '../utils/crypto';
 
 export interface ITrustedDevice {
   deviceId: string;        // SHA256(userAgent + IP + timezone)
@@ -73,7 +74,6 @@ export interface IUser extends Document {
   emailVerifiedAt?: Date;
   
   // Password Security
-  passwordHash: string;
   passwordChangedAt?: Date;
   passwordHistory: string[];          // Last 5 hashes (prevent reuse)
   passwordResetToken?: string;
@@ -115,6 +115,11 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date;                    // Soft delete for GDPR
+
+  // Instance Methods
+  matchPassword(password: string): Promise<boolean>;
+  getFullName(): string;
+  setPassword(password: string): Promise<void>;
 }
 
 const userSchema: Schema = new Schema(
@@ -458,6 +463,21 @@ userSchema.index({ lastFailedLoginAt: 1 }, { sparse: true });
  */
 userSchema.methods.getFullName = function (this: IUser): string {
   return `${this.firstName} ${this.lastName}`.trim();
+};
+
+/**
+ * Match user entered password to hashed password in database
+ */
+userSchema.methods.matchPassword = async function (this: IUser, enteredPassword: string): Promise<boolean> {
+  return await verifyPassword(enteredPassword, this.passwordHash);
+};
+
+/**
+ * Set password (hash it before storing)
+ */
+userSchema.methods.setPassword = async function (this: IUser, password: string): Promise<void> {
+  this.passwordHash = await hashPassword(password);
+  this.passwordChangedAt = new Date();
 };
 
 /**
