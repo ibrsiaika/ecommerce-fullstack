@@ -63,6 +63,11 @@ export const sendTokenResponse = (
     sameSite: 'strict' as const,
   };
 
+  // Get full name - prefer getFullName method, fallback to firstName/lastName
+  const name = user.getFullName 
+    ? user.getFullName() 
+    : `${user.firstName || ''} ${user.lastName || ''}`.trim();
+
   res
     .status(statusCode)
     .cookie('token', token, options)
@@ -71,7 +76,7 @@ export const sendTokenResponse = (
       token,
       data: {
         id: user._id,
-        name: user.name,
+        name,
         email: user.email,
         role: user.role,
         avatar: user.avatar,

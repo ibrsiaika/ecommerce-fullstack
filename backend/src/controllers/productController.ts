@@ -131,7 +131,7 @@ export const addProductReview = asyncHandler(async (req: Request, res: Response)
   const product = await productService.addReview(
     req.params.id,
     user.id,
-    user.name,
+    user.getFullName(),
     Number(req.body.rating),
     req.body.comment
   );
