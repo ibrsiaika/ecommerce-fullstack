@@ -28,6 +28,11 @@ export const register = async (
 
     const { name, email, password } = req.body;
 
+    // Parse name into firstName and lastName
+    const nameParts = name.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
+
     // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
@@ -38,11 +43,16 @@ export const register = async (
       return;
     }
 
+    // Hash password using Argon2id
+    const { hashPassword } = await import('../utils/crypto');
+    const passwordHash = await hashPassword(password);
+
     // Create user
     const user = await User.create({
-      name: name.trim(),
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
       email: email.toLowerCase(),
-      password,
+      passwordHash,
       emailVerificationToken: crypto.randomBytes(20).toString('hex')
     });
 
@@ -53,7 +63,7 @@ export const register = async (
 
     // Send welcome email
     try {
-      await emailService.sendWelcomeEmail(user.email, user.name);
+      await emailService.sendWelcomeEmail(user.email, user.getFullName());
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
       // Don't fail the registration if email fails
@@ -88,8 +98,8 @@ export const login = async (
 
     const { email, password } = req.body;
 
-    // Check for user
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    // Check for user - select passwordHash for verification
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
 
     if (!user) {
       res.status(401).json({
@@ -200,7 +210,7 @@ export const updatePassword = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = await User.findById(req.user!.id).select('+password');
+    const user = await User.findById(req.user!.id).select('+passwordHash');
 
     if (!user) {
       res.status(404).json({
@@ -219,7 +229,7 @@ export const updatePassword = async (
       return;
     }
 
-    user.password = req.body.newPassword;
+    await user.setPassword(req.body.newPassword);
     await user.save();
 
     sendTokenResponse(user, 200, res);

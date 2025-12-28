@@ -82,7 +82,7 @@ export const createOrder = async (req: Request, res: Response) => {
       if (user?.email) {
         await emailService.sendOrderConfirmation(
           user.email,
-          user.name,
+          user.getFullName(),
           (createdOrder as any).orderNumber,
           createdOrder.totalPrice
         );
