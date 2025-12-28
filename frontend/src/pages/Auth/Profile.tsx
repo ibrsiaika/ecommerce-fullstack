@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { getCurrentUser, updateProfile, clearError } from '../../store/slices/authSlice';
-import { FiUser, FiMail, FiCalendar, FiSave, FiLock, FiArrowRight, FiEdit2, FiTrash2, FiAlertCircle, FiCheck } from 'react-icons/fi';
+import { FiUser, FiMail, FiCalendar, FiSave, FiLock, FiEdit2, FiTrash2, FiAlertCircle, FiCheck } from 'react-icons/fi';
 
 const Profile: React.FC = () => {
   const dispatch = useAppDispatch();
