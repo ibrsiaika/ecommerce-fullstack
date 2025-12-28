@@ -63,9 +63,10 @@ export const sendTokenResponse = (
     sameSite: 'strict' as const,
   };
 
-  // Get full name from firstName/lastName or name property
-  const name = user.getFullName ? user.getFullName() : 
-               (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name);
+  // Get full name - prefer getFullName method, fallback to firstName/lastName
+  const name = user.getFullName 
+    ? user.getFullName() 
+    : `${user.firstName || ''} ${user.lastName || ''}`.trim();
 
   res
     .status(statusCode)
@@ -75,7 +76,7 @@ export const sendTokenResponse = (
       token,
       data: {
         id: user._id,
-        name: name,
+        name,
         email: user.email,
         role: user.role,
         avatar: user.avatar,
