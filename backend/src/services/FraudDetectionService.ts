@@ -232,7 +232,9 @@ export class FraudDetectionService {
     }
 
     if (context.contextType === 'refund') {
-      // Query orders that have been refunded/cancelled in the last 24h
+      // Query orders that have been cancelled in the last 24h
+      // Note: In a complete implementation, this should query a dedicated Refund collection
+      // or orders with refund-specific flags. Currently using 'cancelled' as a proxy for refunds.
       const recentRefunds = await Order.find({
         user: context.userId,
         orderStatus: 'cancelled',
@@ -552,10 +554,16 @@ export class FraudDetectionService {
       throw new Error('User not found');
     }
 
+    // Map the reason to valid suspension reason enum values
+    // Use 'payment_fraud' for fraud-related suspensions, 'security_incident' for other security issues
+    const suspensionReasonType = reason.toLowerCase().includes('fraud') 
+      ? 'payment_fraud' 
+      : 'security_incident';
+
     // Set account status to suspended
     await User.findByIdAndUpdate(userId, {
       status: 'suspended',
-      suspensionReason: 'payment_fraud',
+      suspensionReason: suspensionReasonType,
       suspendedAt: new Date(),
       suspendedBy: suspendedBy,
       suspicious: true,
