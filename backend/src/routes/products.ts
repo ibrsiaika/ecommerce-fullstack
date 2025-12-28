@@ -6,6 +6,8 @@ import {
   updateProduct,
   deleteProduct,
   getCategories,
+  getBrands,
+  searchProducts,
   getFeaturedProducts,
   addProductReview,
   productValidation,
@@ -18,6 +20,8 @@ const router = express.Router();
 // Public routes
 router.get('/', getProducts);
 router.get('/categories', getCategories);
+router.get('/brands', getBrands);
+router.get('/search', searchProducts);
 router.get('/featured', getFeaturedProducts);
 router.get('/:id', getProduct);
 
