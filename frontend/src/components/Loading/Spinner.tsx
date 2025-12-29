@@ -42,6 +42,16 @@ export const Spinner: React.FC<SpinnerProps> = ({
           <p className="text-xs sm:text-sm text-gray-600 mt-1">Please wait...</p>
         </div>
       )}
+
+      {/* Developer Credit */}
+      <div className="mt-6 text-center animate-pulse">
+        <p className="text-xs sm:text-sm font-medium text-gray-500 tracking-wide">
+          Made with <span className="text-red-500 animate-bounce inline-block">❤</span> by{' '}
+          <span className="font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            IBR
+          </span>
+        </p>
+      </div>
     </div>
   );
 

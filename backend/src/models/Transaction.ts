@@ -87,6 +87,20 @@ export interface ITransaction extends Document {
   
   createdAt: Date;
   updatedAt: Date;
+
+  // Instance methods
+  updateStatus(newStatus: TransactionStatus, processor?: IProcessor): Promise<ITransaction>;
+  recordDecline(declineCode: string, declineMessage: string, retryable: boolean): Promise<ITransaction>;
+}
+
+// Static methods interface
+export interface ITransactionModel extends mongoose.Model<ITransaction> {
+  createRefund(originalTransaction: ITransaction, refundAmount: number, processorInfo: IProcessor): Promise<ITransaction>;
+  findPending(limit?: number): Promise<ITransaction[]>;
+  findNeedingRetry(): Promise<ITransaction[]>;
+  findUserTransactions(userId: mongoose.Types.ObjectId, limit?: number): Promise<ITransaction[]>;
+  findFailed(hours?: number): Promise<ITransaction[]>;
+  findHighRisk(minScore?: number): Promise<ITransaction[]>;
 }
 
 const processorSchema = new Schema<IProcessor>({
@@ -342,4 +356,4 @@ transactionSchema.statics.findHighRisk = function (minScore: number = 70) {
   }).sort({ fraudScore: -1 });
 };
 
-export const Transaction = mongoose.model<ITransaction>('Transaction', transactionSchema);
+export const Transaction = mongoose.model<ITransaction, ITransactionModel>('Transaction', transactionSchema);

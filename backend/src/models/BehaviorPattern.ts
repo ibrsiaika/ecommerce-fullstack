@@ -264,7 +264,7 @@ behaviorPatternSchema.methods.recordOrder = async function (
   }
 
   // Track product categories
-  const existingCategory = this.products.preferredCategories.find((c) => c.category === category);
+  const existingCategory = this.products.preferredCategories.find((c: { category: string; count: number; avgValue: number }) => c.category === category);
   if (existingCategory) {
     existingCategory.count++;
     existingCategory.avgValue = (existingCategory.avgValue + amount) / 2;
@@ -273,7 +273,7 @@ behaviorPatternSchema.methods.recordOrder = async function (
   }
 
   // Track shipping destinations
-  const existingAddress = this.shipping.preferredAddresses.find((a) => a.country === shippingCountry);
+  const existingAddress = this.shipping.preferredAddresses.find((a: { address: string; city: string; country: string; count: number }) => a.country === shippingCountry);
   if (existingAddress) {
     existingAddress.count++;
   } else {
@@ -298,7 +298,7 @@ behaviorPatternSchema.methods.recordRefund = async function (amount: number, rea
   this.refunds.lastRefundAt = new Date();
 
   // Track refund reasons
-  const existingReason = this.refunds.topReasons.find((r) => r.reason === reason);
+  const existingReason = this.refunds.topReasons.find((r: { reason: string; count: number }) => r.reason === reason);
   if (existingReason) {
     existingReason.count++;
   } else {
@@ -306,7 +306,7 @@ behaviorPatternSchema.methods.recordRefund = async function (amount: number, rea
   }
 
   // Sort by count
-  this.refunds.topReasons.sort((a, b) => b.count - a.count);
+  this.refunds.topReasons.sort((a: { reason: string; count: number }, b: { reason: string; count: number }) => b.count - a.count);
 
   this.lastUpdatedAt = new Date();
   this.anomalyScore = this.calculateAnomalyScore();
@@ -314,7 +314,7 @@ behaviorPatternSchema.methods.recordRefund = async function (amount: number, rea
 };
 
 behaviorPatternSchema.methods.recordPayment = async function (method: string, success: boolean): Promise<void> {
-  const existing = this.payments.preferredPaymentMethods.find((p) => p.method === method);
+  const existing = this.payments.preferredPaymentMethods.find((p: { method: string; cardBrand?: string; count: number; successRate: number }) => p.method === method);
   if (existing) {
     existing.count++;
     existing.successRate = success ? (existing.successRate + 1) / 2 : existing.successRate * 0.9;
@@ -343,7 +343,7 @@ behaviorPatternSchema.methods.recordLogin = async function (
   country: string,
   timezone: string
 ): Promise<void> {
-  const existing = this.logins.preferredDevices.find((d) => d.deviceId === deviceId);
+  const existing = this.logins.preferredDevices.find((d: { deviceId: string; count: number }) => d.deviceId === deviceId);
   if (existing) {
     existing.count++;
   } else {

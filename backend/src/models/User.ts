@@ -35,6 +35,17 @@ export interface ITrustedDevice {
   createdAt: Date;         // When device was first registered
 }
 
+export interface ICapabilityGrant {
+  name: string;            // Capability name (e.g., 'admin:view-logs')
+  grantedAt: Date;         // When the capability was granted
+  grantedBy: string;       // User ID who granted
+  reason?: string;         // Why this capability was granted
+  expiresAt?: Date;        // Optional: auto-revoke after this date
+  revokedAt?: Date;        // When revoked (if revoked)
+  revokedBy?: string;      // User ID who revoked
+  revokedReason?: string;  // Why it was revoked
+}
+
 export interface ISellerProfile {
   businessName: string;
   businessLicense: string;
@@ -66,7 +77,7 @@ export interface IUser extends Document {
   
   // Role & Permissions
   role: 'buyer' | 'seller' | 'admin' | 'super_admin' | 'system';
-  capabilities: string[];  // Fine-grained permissions (e.g., 'orders:refund')
+  capabilities: ICapabilityGrant[];  // Fine-grained permissions with tracking
   
   // Email Verification
   isEmailVerified: boolean;
@@ -179,9 +190,18 @@ const userSchema: Schema = new Schema(
     },
 
     capabilities: {
-      type: [String],
+      type: [{
+        name: { type: String, required: true, index: true },
+        grantedAt: { type: Date, default: Date.now },
+        grantedBy: { type: String, required: true },
+        reason: { type: String },
+        expiresAt: { type: Date, index: true, sparse: true },
+        revokedAt: { type: Date, index: true, sparse: true },
+        revokedBy: { type: String },
+        revokedReason: { type: String }
+      }],
       default: [],
-      description: 'Fine-grained permission flags (backend-enforced only)'
+      description: 'Fine-grained permission grants with tracking'
     },
 
     // Email Verification

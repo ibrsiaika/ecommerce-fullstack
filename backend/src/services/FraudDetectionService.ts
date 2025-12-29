@@ -179,13 +179,18 @@ export class FraudDetectionService {
       await AuditLogService.log(
         totalScore >= 70 ? AuditActionEnum.FRAUD_ALERT : AuditActionEnum.SUSPICIOUS_ACTIVITY_DETECTED,
         ResourceType.USER,
-        context.userId,
-        context.userId,
+        String(context.userId),
+        String(context.userId),
         context.req || null,
         {
-          fraudAlertId: alert._id,
-          riskScore: totalScore,
-          riskLevel,
+          detection: {
+            from: null,
+            to: {
+              fraudAlertId: String(alert._id),
+              riskScore: totalScore,
+              riskLevel,
+            }
+          }
         }
       );
     }
@@ -329,8 +334,18 @@ export class FraudDetectionService {
   /**
    * Check for behavioral anomalies (deviation from baseline)
    */
-  private static async checkBehaviorAnomalies(context: DetectionContext) {
-    const signals = [];
+  private static async checkBehaviorAnomalies(context: DetectionContext): Promise<Array<{
+    type: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    score: number;
+    details: Record<string, any>;
+  }>> {
+    const signals: Array<{
+      type: string;
+      severity: 'low' | 'medium' | 'high' | 'critical';
+      score: number;
+      details: Record<string, any>;
+    }> = [];
 
     const behaviorProfile = await BehaviorPattern.findOrCreateByUserId(context.userId);
 
@@ -408,8 +423,18 @@ export class FraudDetectionService {
   /**
    * Check for device risk signals
    */
-  private static async checkDeviceRisk(context: DetectionContext) {
-    const signals = [];
+  private static async checkDeviceRisk(context: DetectionContext): Promise<Array<{
+    type: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    score: number;
+    details: Record<string, any>;
+  }>> {
+    const signals: Array<{
+      type: string;
+      severity: 'low' | 'medium' | 'high' | 'critical';
+      score: number;
+      details: Record<string, any>;
+    }> = [];
 
     if (!context.deviceId) return signals;
 
@@ -604,12 +629,17 @@ export class FraudDetectionService {
     await AuditLogService.log(
       AuditActionEnum.USER_SUSPENDED,
       ResourceType.USER,
-      userId,
-      suspendedBy,
+      String(userId),
+      String(suspendedBy),
       null,
       {
-        reason,
-        fraudAlertId,
+        suspension: {
+          from: null,
+          to: {
+            reason,
+            fraudAlertId: String(fraudAlertId),
+          }
+        }
       }
     );
   }
