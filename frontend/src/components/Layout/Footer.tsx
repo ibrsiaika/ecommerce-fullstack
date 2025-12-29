@@ -85,7 +85,11 @@ const Footer: React.FC = () => {
           <p className="text-sm text-neutral-500">
             © {new Date().getFullYear()} E-Shop. All rights reserved.
           </p>
-          <div className="flex gap-6">
+          <div className="flex items-center gap-6">
+            <span className="text-sm text-neutral-500">
+              Made with <span className="text-red-500">❤</span> by{' '}
+              <span className="font-semibold bg-gradient-to-r from-neutral-900 to-neutral-600 bg-clip-text text-transparent">IBR</span>
+            </span>
             <a href="#" className="text-sm text-neutral-500 hover:text-neutral-950 transition-colors">
               Privacy
             </a>
