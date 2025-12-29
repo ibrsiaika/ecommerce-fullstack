@@ -205,10 +205,10 @@ export class PayPalService {
         await AuditLogService.log(
           AuditActionType.PAYMENT_PROCESSED,
           ResourceType.TRANSACTION,
-          transaction._id,
-          transaction.user,
+          String(transaction._id),
+          String(transaction.user),
           null,
-          { amount: transaction.amount, currency: transaction.currency }
+          { payment: { from: null, to: { amount: transaction.amount, currency: transaction.currency } } }
         );
       } else {
         await transaction.updateStatus(TransactionStatus.FAILED);
