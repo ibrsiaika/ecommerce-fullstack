@@ -94,8 +94,8 @@ router.post('/register', [
     .normalizeEmail()
     .withMessage('Please provide a valid email'),
   body('password')
-    .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters long')
+    .isLength({ min: 12 })
+    .withMessage('Password must be at least 12 characters long')
 ], register);
 
 /**

@@ -11,7 +11,7 @@ export const seedAdmin = async () => {
     if (existingAdmin) {
       console.log('✅ Admin user already exists');
       console.log('Email: admin@example.com');
-      console.log('Password: admin123');
+      console.log('Password: admin1234567890');
       mongoose.connection.close();
       return;
     }
@@ -20,7 +20,7 @@ export const seedAdmin = async () => {
     const adminUser = new User({
       name: 'Admin User',
       email: 'admin@example.com',
-      password: 'admin123', // User model will hash this in pre-save hook
+      password: 'admin1234567890', // User model will hash this in pre-save hook
       phone: '+1234567890',
       role: 'admin',
       isEmailVerified: true,
@@ -30,7 +30,7 @@ export const seedAdmin = async () => {
     await adminUser.save();
     console.log('✅ Admin user created successfully!');
     console.log('Email: admin@example.com');
-    console.log('Password: admin123');
+    console.log('Password: admin1234567890');
     
   } catch (error) {
     console.error('❌ Error creating admin user:', error);
