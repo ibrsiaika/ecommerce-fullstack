@@ -45,7 +45,7 @@ const Login: React.FC = () => {
       await dispatch(login({ email, password })).unwrap();
       const from = (location.state as any)?.from?.pathname || '/';
       navigate(from, { replace: true });
-    } catch (err) {
+    } catch {
       // Error is handled by the slice
     }
   };

@@ -44,6 +44,16 @@ export const Spinner: React.FC<SpinnerProps> = ({
       )}
     </div>
   );
+
+  if (fullScreen) {
+    return (
+      <div className="fixed inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-50">
+        {spinner}
+      </div>
+    );
+  }
+
+  return spinner;
 };
 
 export default Spinner;

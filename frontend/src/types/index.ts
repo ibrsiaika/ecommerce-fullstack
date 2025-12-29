@@ -34,6 +34,7 @@ export interface AuthResponse {
 // Product types
 export interface Review {
   id: string;
+  _id?: string;
   user: User;
   rating: number;
   comment: string;
@@ -43,6 +44,7 @@ export interface Review {
 
 export interface Product {
   id: string;
+  _id?: string;
   name: string;
   slug: string;
   description: string;
