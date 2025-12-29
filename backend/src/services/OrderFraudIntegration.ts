@@ -201,7 +201,11 @@ export class OrderFraudIntegration {
       );
     }
 
-    return refundAnalysis;
+    // Map riskLevel to refundRiskLevel for return type
+    return {
+      refundRiskLevel: refundAnalysis.riskLevel,
+      indicators: refundAnalysis.indicators
+    };
   }
 
   /**

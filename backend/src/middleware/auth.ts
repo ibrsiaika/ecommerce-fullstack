@@ -302,8 +302,14 @@ export function requireCapability(...capabilities: string[]) {
     }
     
     const userCapabilities = req.user.capabilities || [];
+    // Check if user has any of the required capabilities (active and not expired)
+    const now = new Date();
     const hasCapability = capabilities.some(cap => 
-      userCapabilities.includes(cap)
+      userCapabilities.some(userCap => 
+        userCap.name === cap && 
+        !userCap.revokedAt && 
+        (!userCap.expiresAt || new Date(userCap.expiresAt) > now)
+      )
     );
     
     if (!hasCapability) {

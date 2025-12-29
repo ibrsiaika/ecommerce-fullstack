@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import User from '../models/User';
+import User, { ICapabilityGrant } from '../models/User';
 import { AuditLogService } from './AuditLogService';
 import { PermissionService } from './PermissionService';
 import { ResourceType, AuditActionType } from '../models/AuditLog';
@@ -31,16 +31,8 @@ import { ResourceType, AuditActionType } from '../models/AuditLog';
  * 5. Middleware picks up new capability on next request
  */
 
-export interface CapabilityGrant {
-  name: string;
-  grantedAt: Date;
-  grantedBy: string; // User ID
-  reason?: string; // Why was this granted
-  expiresAt?: Date; // Optional: auto-revoke after this date
-  revokedAt?: Date;
-  revokedBy?: string; // User ID
-  revokedReason?: string;
-}
+// Re-export for backward compatibility
+export type CapabilityGrant = ICapabilityGrant;
 
 export class CapabilityService {
   /**
