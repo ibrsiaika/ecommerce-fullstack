@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { User } from '../models/User';
+import User from '../models/User';
 import { AuditLogService } from './AuditLogService';
 import { PermissionService } from './PermissionService';
 import { ResourceType, AuditActionType } from '../models/AuditLog';

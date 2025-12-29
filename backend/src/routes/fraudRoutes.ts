@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { authenticate, authorize } from '../middleware/auth';
 // import { auditLog } from '../middleware/auditLog'; // TODO: Create middleware or use AuditLogService directly
 import { FraudAlert, FraudAlertStatus } from '../models/FraudAlert';
-import { DeviceRiskProfile } from '../models/DeviceRiskProfile';
+import { DeviceRiskProfile, DeviceRiskLevel } from '../models/DeviceRiskProfile';
 import { BehaviorPattern } from '../models/BehaviorPattern';
 import { FraudDetectionService } from '../services/FraudDetectionService';
 import { RiskScoreService } from '../services/RiskScoreService';
@@ -95,6 +95,7 @@ router.get('/alerts/:id', authenticate, requireFraudAnalyst, async (req: Request
 
     if (!alert) {
       res.status(404).json({ error: 'Fraud alert not found' });
+      return;
     }
 
     // Log view action
@@ -102,7 +103,7 @@ router.get('/alerts/:id', authenticate, requireFraudAnalyst, async (req: Request
       AuditActionType.VIEWED,
       ResourceType.FRAUD_ALERT,
       alert._id.toString(),
-      req.user?.id || new mongoose.Types.ObjectId(),
+      String(req.user?.id || ''),
       req
     );
 
@@ -123,11 +124,13 @@ router.post('/alerts/:id/approve', authenticate, requireFraudAnalyst, async (req
 
     if (!reason || reason.trim().length === 0) {
       res.status(400).json({ error: 'Reason is required' });
+      return;
     }
 
     const alert = await FraudAlert.findById(req.params.id);
     if (!alert) {
       res.status(404).json({ error: 'Fraud alert not found' });
+      return;
     }
 
     // Approve the alert
@@ -138,7 +141,7 @@ router.post('/alerts/:id/approve', authenticate, requireFraudAnalyst, async (req
       AuditActionType.APPROVED,
       ResourceType.FRAUD_ALERT,
       alert._id.toString(),
-      req.user?.id || new mongoose.Types.ObjectId(),
+      String(req.user?.id || ''),
       req,
       undefined
     );
@@ -160,11 +163,13 @@ router.post('/alerts/:id/block', authenticate, requireFraudAnalyst, async (req: 
 
     if (!reason || reason.trim().length === 0) {
       res.status(400).json({ error: 'Reason is required' });
+      return;
     }
 
     const alert = await FraudAlert.findById(req.params.id);
     if (!alert) {
       res.status(404).json({ error: 'Fraud alert not found' });
+      return;
     }
 
     const analystId = req.user?.id || new mongoose.Types.ObjectId();
@@ -178,7 +183,7 @@ router.post('/alerts/:id/block', authenticate, requireFraudAnalyst, async (req: 
       AuditActionType.BLOCKED,
       ResourceType.FRAUD_ALERT,
       alert._id.toString(),
-      analystId,
+      String(analystId),
       req,
       undefined
     );
@@ -200,15 +205,18 @@ router.post('/alerts/:id/escalate', authenticate, requireFraudAnalyst, async (re
 
     if (!escalateTo || !['law_enforcement', 'payment_processor', 'chargeback_team'].includes(escalateTo)) {
       res.status(400).json({ error: 'Invalid escalation target' });
+      return;
     }
 
     if (!reason || reason.trim().length === 0) {
       res.status(400).json({ error: 'Reason is required' });
+      return;
     }
 
     const alert = await FraudAlert.findById(req.params.id);
     if (!alert) {
       res.status(404).json({ error: 'Fraud alert not found' });
+      return;
     }
 
     // Escalate the alert
@@ -219,9 +227,9 @@ router.post('/alerts/:id/escalate', authenticate, requireFraudAnalyst, async (re
       AuditActionType.ESCALATED,
       ResourceType.FRAUD_ALERT,
       alert._id.toString(),
-      req.user?.id || new mongoose.Types.ObjectId(),
+      String(req.user?.id || ''),
       req,
-      { escalateTo, reason, userId: alert.userId }
+      { escalation: { from: null, to: { escalateTo, reason, userId: String(alert.userId) } } }
     );
 
     res.json({ message: `Fraud alert escalated to ${escalateTo}`, alert });
@@ -246,8 +254,11 @@ router.get('/devices', authenticate, requireFraudAnalyst, async (req: Request, r
     const riskLevel = (req.query.riskLevel as string) || undefined;
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
 
+    // Cast riskLevel to the proper enum type if provided
+    const riskLevelEnum = riskLevel as DeviceRiskLevel | undefined;
+
     // Get risky devices
-    const riskyDevices = await DeviceRiskProfile.findRiskyDevices(riskLevel, limit);
+    const riskyDevices = await DeviceRiskProfile.findRiskyDevices(riskLevelEnum, limit);
 
     // Get account farm devices
     const accountFarms = await DeviceRiskProfile.findAccountFarms(5, limit);
@@ -259,10 +270,10 @@ router.get('/devices', authenticate, requireFraudAnalyst, async (req: Request, r
     await AuditLogService.log(
       AuditActionType.VIEWED,
       ResourceType.DEVICE,
-      null as any,
-      req.user?.id || new mongoose.Types.ObjectId(),
+      'dashboard',
+      String(req.user?.id || ''),
       req,
-      { riskyCount: riskyDevices.length, farmCount: accountFarms.length, travelCount: impossibleTravel.length }
+      { deviceStats: { from: null, to: { riskyCount: riskyDevices.length, farmCount: accountFarms.length, travelCount: impossibleTravel.length } } }
     );
 
     res.json({
@@ -299,10 +310,10 @@ router.get('/users', authenticate, requireFraudAnalyst, async (req: Request, res
     await AuditLogService.log(
       AuditActionType.VIEWED,
       ResourceType.USER,
-      null as any,
-      req.user?.id || new mongoose.Types.ObjectId(),
+      'dashboard',
+      String(req.user?.id || ''),
       req,
-      { anomalousCount: anomalousUsers.length, refundCount: highRefundUsers.length }
+      { userStats: { from: null, to: { anomalousCount: anomalousUsers.length, refundCount: highRefundUsers.length } } }
     );
 
     res.json({
@@ -329,10 +340,10 @@ router.get('/users/:userId/behavior', authenticate, requireFraudAnalyst, async (
     await AuditLogService.log(
       AuditActionType.VIEWED,
       ResourceType.USER,
-      userId,
-      req.user?.id || new mongoose.Types.ObjectId(),
+      String(userId),
+      String(req.user?.id || ''),
       req,
-      { hasBaseline: patterns.hasConfidentBaseline }
+      { behavior: { from: null, to: { hasBaseline: patterns.hasConfidentBaseline } } }
     );
 
     res.json({
@@ -357,6 +368,7 @@ router.post('/detect', authenticate, requireFraudAnalyst, async (req: Request, r
 
     if (!userId || !contextType) {
       res.status(400).json({ error: 'userId and contextType are required' });
+      return;
     }
 
     const result = await FraudDetectionService.detectFraud({
@@ -373,10 +385,10 @@ router.post('/detect', authenticate, requireFraudAnalyst, async (req: Request, r
     await AuditLogService.log(
       AuditActionType.FRAUD_ALERT,
       ResourceType.USER,
-      new mongoose.Types.ObjectId(userId),
-      req.user?.id || new mongoose.Types.ObjectId(),
+      userId,
+      String(req.user?.id || ''),
       req,
-      { riskScore: result.riskScore, riskLevel: result.riskLevel }
+      { detection: { from: null, to: { riskScore: result.riskScore, riskLevel: result.riskLevel } } }
     );
 
     res.json(result);
@@ -421,10 +433,10 @@ router.get('/device/:deviceId', authenticate, requireFraudAnalyst, async (req: R
     await AuditLogService.log(
       AuditActionType.VIEWED,
       ResourceType.DEVICE,
-      null as any,
-      req.user?.id || new mongoose.Types.ObjectId(),
+      req.params.deviceId,
+      String(req.user?.id || ''),
       req,
-      { deviceId: req.params.deviceId, riskScore: device.riskScore }
+      { device: { from: null, to: { deviceId: req.params.deviceId, riskScore: device.riskScore } } }
     );
 
     res.json(device);
@@ -444,6 +456,7 @@ router.post('/device/:deviceId/flag', authenticate, requireFraudAnalyst, async (
 
     if (!reason || reason.trim().length === 0) {
       res.status(400).json({ error: 'Reason is required' });
+      return;
     }
 
     const device = await DeviceRiskProfile.findOrCreateByDeviceId(req.params.deviceId);
@@ -453,10 +466,10 @@ router.post('/device/:deviceId/flag', authenticate, requireFraudAnalyst, async (
     await AuditLogService.log(
       AuditActionType.FLAGGED,
       ResourceType.DEVICE,
-      null as any,
-      req.user?.id || new mongoose.Types.ObjectId(),
+      req.params.deviceId,
+      String(req.user?.id || ''),
       req,
-      { deviceId: req.params.deviceId, reason }
+      { flagged: { from: null, to: { deviceId: req.params.deviceId, reason } } }
     );
 
     res.json({ message: 'Device flagged', device });
@@ -476,6 +489,7 @@ router.post('/device/:deviceId/block', authenticate, requireFraudAnalyst, async 
 
     if (!reason || reason.trim().length === 0) {
       res.status(400).json({ error: 'Reason is required' });
+      return;
     }
 
     const device = await DeviceRiskProfile.findOrCreateByDeviceId(req.params.deviceId);
@@ -485,10 +499,10 @@ router.post('/device/:deviceId/block', authenticate, requireFraudAnalyst, async 
     await AuditLogService.log(
       AuditActionType.BLOCKED,
       ResourceType.DEVICE,
-      null as any,
-      req.user?.id || new mongoose.Types.ObjectId(),
+      req.params.deviceId,
+      String(req.user?.id || ''),
       req,
-      { deviceId: req.params.deviceId, reason }
+      { blocked: { from: null, to: { deviceId: req.params.deviceId, reason } } }
     );
 
     res.json({ message: 'Device blocked', device });
@@ -511,10 +525,10 @@ router.post('/device/:deviceId/unblock', authenticate, requireFraudAnalyst, asyn
     await AuditLogService.log(
       AuditActionType.UNBLOCKED,
       ResourceType.DEVICE,
-      null as any,
-      req.user?.id || new mongoose.Types.ObjectId(),
+      req.params.deviceId,
+      String(req.user?.id || ''),
       req,
-      { deviceId: req.params.deviceId }
+      { unblocked: { from: null, to: { deviceId: req.params.deviceId } } }
     );
 
     res.json({ message: 'Device unblocked', device });
