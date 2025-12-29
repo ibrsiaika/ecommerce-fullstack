@@ -145,6 +145,28 @@ export interface IApprovalRequest extends Document {
   hasExpired(): boolean;
 }
 
+// Interface for static methods on ApprovalRequest model
+export interface IApprovalRequestModel extends Model<IApprovalRequest> {
+  createRequest(
+    action: ApprovalActionType,
+    requestedBy: mongoose.Types.ObjectId,
+    requestData: Record<string, any>,
+    resourceType: string,
+    resourceId: mongoose.Types.ObjectId,
+    priority: 'low' | 'normal' | 'high' | 'critical',
+    requiredApprovals: number,
+    requestMetadata: RequestMetadata
+  ): Promise<IApprovalRequest>;
+  findPending(filters?: {
+    action?: ApprovalActionType;
+    priority?: string;
+    limit?: number;
+  }): Promise<IApprovalRequest[]>;
+  findByResource(resourceType: string, resourceId: mongoose.Types.ObjectId): Promise<IApprovalRequest[]>;
+  findByRequester(userId: mongoose.Types.ObjectId, limit?: number): Promise<IApprovalRequest[]>;
+  expireOldRequests(): Promise<number>;
+}
+
 const approvalRequestSchema = new Schema<IApprovalRequest>(
   {
     requestId: {
@@ -571,7 +593,7 @@ approvalRequestSchema.statics.expireOldRequests = async function (): Promise<num
   return result.modifiedCount;
 };
 
-export const ApprovalRequest: Model<IApprovalRequest> = mongoose.model<IApprovalRequest>(
+export const ApprovalRequest = mongoose.model<IApprovalRequest, IApprovalRequestModel>(
   'ApprovalRequest',
   approvalRequestSchema
 );

@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Model } from 'mongoose';
 
 /**
  * Notification
@@ -77,6 +77,19 @@ export interface INotification extends Document {
   
   createdAt: Date;
   updatedAt: Date;
+
+  // Instance methods
+  markAsSent(): Promise<INotification>;
+  markAsDelivered(): Promise<INotification>;
+  markAsRead(): Promise<INotification>;
+  recordFailure(reason: string): Promise<INotification>;
+}
+
+// Interface for static methods on Notification model
+export interface INotificationModel extends Model<INotification> {
+  findPending(limit?: number): Promise<INotification[]>;
+  findUserNotifications(userId: mongoose.Types.ObjectId, limit?: number): Promise<INotification[]>;
+  findFailed(hours?: number): Promise<INotification[]>;
 }
 
 const relatedResourceSchema = new Schema({
@@ -241,4 +254,4 @@ notificationSchema.statics.findFailed = function (hours: number = 24) {
   }).sort({ createdAt: -1 });
 };
 
-export const Notification = mongoose.model<INotification>('Notification', notificationSchema);
+export const Notification = mongoose.model<INotification, INotificationModel>('Notification', notificationSchema);

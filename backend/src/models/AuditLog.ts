@@ -140,6 +140,16 @@ export interface IAuditLog extends Document {
   approvalRequestId?: string;
 }
 
+// Interface for static methods on AuditLog model
+export interface IAuditLogModel extends Model<IAuditLog> {
+  findByUser(userId: string, limit?: number, skip?: number): Promise<IAuditLog[]>;
+  findByResource(resourceType: ResourceType, resourceId: string, limit?: number, skip?: number): Promise<IAuditLog[]>;
+  findByAction(action: AuditActionType, limit?: number, skip?: number): Promise<IAuditLog[]>;
+  findRecent(hours?: number, limit?: number, skip?: number): Promise<IAuditLog[]>;
+  findSuspiciousActivity(limit?: number): Promise<IAuditLog[]>;
+  findUserActivity(userId: string, actionTypes?: AuditActionType[], limit?: number): Promise<IAuditLog[]>;
+}
+
 const auditLogSchema = new Schema<IAuditLog>(
   {
     action: {
@@ -315,14 +325,28 @@ auditLogSchema.statics.findUserActivity = async function(
  * Prevent updates and deletes
  * This is a safeguard to ensure immutability even if someone calls updateOne/deleteOne
  */
-auditLogSchema.pre(['update', 'updateOne', 'updateMany'], function(next) {
+auditLogSchema.pre('updateOne', function(next: (err?: Error) => void) {
   const error = new Error(
     'AuditLog is immutable. Cannot update records. Create new records only.'
   );
   next(error);
 });
 
-auditLogSchema.pre(['deleteOne', 'deleteMany'], function(next) {
+auditLogSchema.pre('updateMany', function(next: (err?: Error) => void) {
+  const error = new Error(
+    'AuditLog is immutable. Cannot update records. Create new records only.'
+  );
+  next(error);
+});
+
+auditLogSchema.pre('deleteOne', function(next: (err?: Error) => void) {
+  const error = new Error(
+    'AuditLog is immutable. Cannot delete records. Audit trail must be preserved forever.'
+  );
+  next(error);
+});
+
+auditLogSchema.pre('deleteMany', function(next: (err?: Error) => void) {
   const error = new Error(
     'AuditLog is immutable. Cannot delete records. Audit trail must be preserved forever.'
   );
@@ -330,7 +354,7 @@ auditLogSchema.pre(['deleteOne', 'deleteMany'], function(next) {
 });
 
 // Export the model
-export const AuditLog: Model<IAuditLog> = mongoose.model<IAuditLog>(
+export const AuditLog = mongoose.model<IAuditLog, IAuditLogModel>(
   'AuditLog',
   auditLogSchema
 );

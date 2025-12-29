@@ -31,7 +31,7 @@
  * - Session TTL = refresh token TTL (7 days typical)
  */
 
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Model, Query } from 'mongoose';
 
 export interface ISession extends Document {
   // Identifiers
@@ -60,6 +60,20 @@ export interface ISession extends Document {
   requiresReauth?: boolean;             // Force user to re-enter password
   suspiciousActivityDetected?: boolean; // Unusual login pattern
   ipAddressChanged?: boolean;           // IP different from creation
+
+  // Instance methods
+  isActive(): boolean;
+  isExpired(): boolean;
+  revoke(reason: ISession['revokedReason']): void;
+  updateLastActivity(): Promise<void>;
+}
+
+// Interface for static methods on Session model
+export interface ISessionModel extends Model<ISession> {
+  findActiveSessions(userId: mongoose.Types.ObjectId): Query<ISession[], ISession>;
+  findBySessionId(sessionId: string): Query<ISession | null, ISession>;
+  revokeAllUserSessions(userId: mongoose.Types.ObjectId, reason: ISession['revokedReason']): Promise<any>;
+  deleteExpiredSessions(): Promise<any>;
 }
 
 const sessionSchema: Schema = new Schema(
@@ -351,6 +365,6 @@ sessionSchema.index(
   { expireAfterSeconds: 86400 }  // 24 hours after expiry
 );
 
-const Session = mongoose.model<ISession>('Session', sessionSchema);
+const Session = mongoose.model<ISession, ISessionModel>('Session', sessionSchema);
 
 export default Session;

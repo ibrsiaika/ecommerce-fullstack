@@ -31,15 +31,17 @@ const requireApprovalPermission = (
   req: Request & { user?: any; userId?: string },
   res: Response,
   next: NextFunction
-) => {
+): void => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
+    res.status(401).json({ error: 'Authentication required' });
+    return;
   }
 
   if (!PermissionService.hasCapability(req.user, 'admin:approve-actions')) {
-    return res.status(403).json({
+    res.status(403).json({
       error: 'Permission denied: requires admin:approve-actions capability',
     });
+    return;
   }
 
   next();
@@ -67,7 +69,7 @@ router.get(
   authenticate,
   requireRole('admin', 'super_admin'),
   requireApprovalPermission,
-  async (req: Request & { user?: any }, res: Response) => {
+  async (req: Request & { user?: any }, res: Response): Promise<void> => {
     try {
       const {
         action,
@@ -78,7 +80,8 @@ router.get(
       // Validate limit
       const limitNum = Math.min(parseInt(limit as string) || 50, 500);
       if (limitNum < 1) {
-        return res.status(400).json({ error: 'Invalid limit' });
+        res.status(400).json({ error: 'Invalid limit' });
+        return;
       }
 
       // Get pending approvals with optional filters
@@ -133,18 +136,20 @@ router.get(
   authenticate,
   requireRole('admin', 'super_admin'),
   requireApprovalPermission,
-  async (req: Request & { user?: any }, res: Response) => {
+  async (req: Request & { user?: any }, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
 
       // Validate ObjectId format
       if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ error: 'Invalid approval ID format' });
+        res.status(400).json({ error: 'Invalid approval ID format' });
+        return;
       }
 
       const approval = await ApprovalService.getApprovalById(id);
       if (!approval) {
-        return res.status(404).json({ error: 'Approval request not found' });
+        res.status(404).json({ error: 'Approval request not found' });
+        return;
       }
 
       res.json(approval);
@@ -186,19 +191,21 @@ router.post(
   authenticate,
   requireRole('admin', 'super_admin'),
   requireApprovalPermission,
-  async (req: Request & { user?: any }, res: Response) => {
+  async (req: Request & { user?: any }, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
       const { reason = 'Approved' } = req.body;
 
       // Validate ObjectId format
       if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ error: 'Invalid approval ID format' });
+        res.status(400).json({ error: 'Invalid approval ID format' });
+        return;
       }
 
       // Validate reason
       if (typeof reason !== 'string' || reason.trim() === '') {
-        return res.status(400).json({ error: 'Reason must be a non-empty string' });
+        res.status(400).json({ error: 'Reason must be a non-empty string' });
+        return;
       }
 
       // Approve the request
@@ -218,10 +225,12 @@ router.post(
 
       // Handle specific error types
       if (error.message.includes('not found')) {
-        return res.status(404).json({ error: error.message });
+        res.status(404).json({ error: error.message });
+        return;
       }
       if (error.message.includes('Cannot approve')) {
-        return res.status(400).json({ error: error.message });
+        res.status(400).json({ error: error.message });
+        return;
       }
 
       res.status(500).json({ error: error.message || 'Failed to approve request' });
@@ -258,21 +267,23 @@ router.post(
   authenticate,
   requireRole('admin', 'super_admin'),
   requireApprovalPermission,
-  async (req: Request & { user?: any }, res: Response) => {
+  async (req: Request & { user?: any }, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
       const { reason } = req.body;
 
       // Validate ObjectId format
       if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ error: 'Invalid approval ID format' });
+        res.status(400).json({ error: 'Invalid approval ID format' });
+        return;
       }
 
       // Validate reason is provided
       if (!reason || typeof reason !== 'string' || reason.trim() === '') {
-        return res.status(400).json({
+        res.status(400).json({
           error: 'Rejection reason is required and must be a non-empty string',
         });
+        return;
       }
 
       // Reject the request
@@ -292,10 +303,12 @@ router.post(
 
       // Handle specific error types
       if (error.message.includes('not found')) {
-        return res.status(404).json({ error: error.message });
+        res.status(404).json({ error: error.message });
+        return;
       }
       if (error.message.includes('Cannot reject')) {
-        return res.status(400).json({ error: error.message });
+        res.status(400).json({ error: error.message });
+        return;
       }
 
       res.status(500).json({ error: error.message || 'Failed to reject request' });
@@ -324,20 +337,22 @@ router.get(
   authenticate,
   requireRole('admin', 'super_admin'),
   requireApprovalPermission,
-  async (req: Request & { user?: any }, res: Response) => {
+  async (req: Request & { user?: any }, res: Response): Promise<void> => {
     try {
       const { userId } = req.params;
       const { limit = '50' } = req.query;
 
       // Validate userId format
       if (!mongoose.Types.ObjectId.isValid(userId)) {
-        return res.status(400).json({ error: 'Invalid user ID format' });
+        res.status(400).json({ error: 'Invalid user ID format' });
+        return;
       }
 
       // Validate limit
       const limitNum = Math.min(parseInt(limit as string) || 50, 500);
       if (limitNum < 1) {
-        return res.status(400).json({ error: 'Invalid limit' });
+        res.status(400).json({ error: 'Invalid limit' });
+        return;
       }
 
       const approvals = await ApprovalService.getUserApprovals(userId, limitNum);
@@ -378,19 +393,21 @@ router.post(
   '/:id/cancel',
   authenticate,
   requireRole('super_admin'), // Only super_admin can cancel
-  async (req: Request & { user?: any }, res: Response) => {
+  async (req: Request & { user?: any }, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
       const { reason } = req.body;
 
       // Validate ObjectId format
       if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ error: 'Invalid approval ID format' });
+        res.status(400).json({ error: 'Invalid approval ID format' });
+        return;
       }
 
       // Validate reason
       if (!reason || typeof reason !== 'string' || reason.trim() === '') {
-        return res.status(400).json({ error: 'Cancellation reason is required' });
+        res.status(400).json({ error: 'Cancellation reason is required' });
+        return;
       }
 
       const updated = await ApprovalService.cancelApprovalRequest(
@@ -408,10 +425,12 @@ router.post(
       console.error('Error cancelling request:', error);
 
       if (error.message.includes('not found')) {
-        return res.status(404).json({ error: error.message });
+        res.status(404).json({ error: error.message });
+        return;
       }
       if (error.message.includes('Cannot cancel')) {
-        return res.status(400).json({ error: error.message });
+        res.status(400).json({ error: error.message });
+        return;
       }
 
       res.status(500).json({ error: error.message || 'Failed to cancel request' });
