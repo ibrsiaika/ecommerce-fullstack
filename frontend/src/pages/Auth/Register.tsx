@@ -79,7 +79,7 @@ const Register: React.FC = () => {
     try {
       await dispatch(register({ name, email, password })).unwrap();
       navigate('/', { replace: true });
-    } catch (err) {
+    } catch {
       // Error is handled by the slice
     }
   };

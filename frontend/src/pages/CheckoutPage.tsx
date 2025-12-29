@@ -461,7 +461,7 @@ export const CheckoutPage: React.FC = () => {
                       value={cardDetails.cardNumber}
                       onChange={(e) => setCardDetails({ ...cardDetails, cardNumber: e.target.value })}
                       placeholder="4242 4242 4242 4242"
-                      maxLength="16"
+                      maxLength={16}
                     />
                   </div>
 
@@ -473,7 +473,7 @@ export const CheckoutPage: React.FC = () => {
                         value={cardDetails.expiryDate}
                         onChange={(e) => setCardDetails({ ...cardDetails, expiryDate: e.target.value })}
                         placeholder="MM/YY"
-                        maxLength="5"
+                        maxLength={5}
                       />
                     </div>
                     <div className="form-group">
@@ -483,7 +483,7 @@ export const CheckoutPage: React.FC = () => {
                         value={cardDetails.cvc}
                         onChange={(e) => setCardDetails({ ...cardDetails, cvc: e.target.value })}
                         placeholder="123"
-                        maxLength="4"
+                        maxLength={4}
                       />
                     </div>
                   </div>

@@ -4,10 +4,12 @@ import { useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import Reviews from './Reviews';
 import api from '../services/api';
-import { FiShoppingBag, FiCheck, FiTruck, FiArrowLeft, FiArrowRight } from 'react-icons/fi';
+import { FiShoppingBag, FiCheck, FiTruck, FiArrowRight } from 'react-icons/fi';
 
-interface Product {
+// Product interface for API response (includes MongoDB _id)
+interface ProductResponse {
   _id: string;
+  id?: string;
   name: string;
   description: string;
   price: number;
@@ -18,10 +20,10 @@ interface Product {
   numReviews: number;
   sku: string;
   slug: string;
-  reviews: Review[];
+  reviews: ReviewResponse[];
 }
 
-interface Review {
+interface ReviewResponse {
   _id: string;
   user: string;
   name: string;
@@ -33,7 +35,7 @@ interface Review {
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const dispatch = useAppDispatch();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ProductResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -49,7 +51,7 @@ const ProductDetail: React.FC = () => {
     try {
       setLoading(true);
       const response = await api.getProduct(id!);
-      const payload = response.data.data || response.data;
+      const payload = response.data.data as unknown as ProductResponse;
       setProduct(payload);
       setError(null);
     } catch (err) {
