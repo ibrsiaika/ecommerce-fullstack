@@ -1,4 +1,12 @@
-import mongoose, { Document, Schema, Model } from 'mongoose';
+import mongoose, { Document, Schema, Model, Types } from 'mongoose';
+
+// Static methods interface for DeviceRiskProfile
+export interface IDeviceRiskProfileModel extends Model<IDeviceRiskProfile> {
+  findOrCreateByDeviceId(deviceId: string): Promise<IDeviceRiskProfile>;
+  findRiskyDevices(riskLevel?: DeviceRiskLevel, limit?: number): Promise<IDeviceRiskProfile[]>;
+  findAccountFarms(minUsers?: number, limit?: number): Promise<IDeviceRiskProfile[]>;
+  findImpossibleTravel(maxSecondsBetweenCountries?: number, limit?: number): Promise<IDeviceRiskProfile[]>;
+}
 
 /**
  * DeviceRiskProfile Model
@@ -469,7 +477,7 @@ deviceRiskProfileSchema.statics.findImpossibleTravel = async function (
     .limit(limit);
 };
 
-export const DeviceRiskProfile: Model<IDeviceRiskProfile> = mongoose.model<IDeviceRiskProfile>(
+export const DeviceRiskProfile = mongoose.model<IDeviceRiskProfile, IDeviceRiskProfileModel>(
   'DeviceRiskProfile',
   deviceRiskProfileSchema
 );

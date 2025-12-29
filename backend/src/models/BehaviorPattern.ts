@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema, Model } from 'mongoose';
+import mongoose, { Document, Schema, Model, Types } from 'mongoose';
 
 /**
  * BehaviorPattern Model
@@ -29,6 +29,13 @@ import mongoose, { Document, Schema, Model } from 'mongoose';
  * - Time zone change = account takeover risk
  * - New payment method = flagged for verification
  */
+
+// Static methods interface
+export interface IBehaviorPatternModel extends Model<IBehaviorPattern> {
+  findOrCreateByUserId(userId: Types.ObjectId): Promise<IBehaviorPattern>;
+  findAnomalousUsers(minScore?: number, limit?: number): Promise<IBehaviorPattern[]>;
+  findHighRefundRate(minRate?: number, limit?: number): Promise<IBehaviorPattern[]>;
+}
 
 export interface OrderPattern {
   count: number; // Total orders
@@ -461,7 +468,7 @@ behaviorPatternSchema.statics.findHighRefundRate = async function (
     .populate('userId', 'email firstName lastName');
 };
 
-export const BehaviorPattern: Model<IBehaviorPattern> = mongoose.model<IBehaviorPattern>(
+export const BehaviorPattern = mongoose.model<IBehaviorPattern, IBehaviorPatternModel>(
   'BehaviorPattern',
   behaviorPatternSchema
 );
