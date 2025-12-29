@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import api from '../services/api';
-import { FiArrowRight, FiCheck, FiPlus, FiSearch } from 'react-icons/fi';
+import { FiArrowRight, FiCheck, FiPlus, FiSearch, FiRefreshCw, FiLoader } from 'react-icons/fi';
 
 // Default fallback image for products without images
 const FALLBACK_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
@@ -24,13 +24,52 @@ interface Product {
   comparePrice?: number;
 }
 
+// Lazy loaded image component with loading state
+const LazyImage: React.FC<{
+  src: string;
+  alt: string;
+  className?: string;
+}> = ({ src, alt, className = '' }) => {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img && img.complete) {
+      setLoaded(true);
+    }
+  }, []);
+
+  return (
+    <div className="relative w-full h-full">
+      {!loaded && !error && (
+        <div className="absolute inset-0 skeleton animate-pulse" />
+      )}
+      <img
+        ref={imgRef}
+        src={error ? FALLBACK_PRODUCT_IMAGE : src}
+        alt={alt}
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          setError(true);
+          setLoaded(true);
+        }}
+        className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+      />
+    </div>
+  );
+};
+
 const ProductList: React.FC = () => {
   const dispatch = useAppDispatch();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'loadingMore' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
     pages: 1,
@@ -42,26 +81,16 @@ const ProductList: React.FC = () => {
     category: '',
     limit: 12,
   });
+  const [addedToCart, setAddedToCart] = useState<string | null>(null);
+  
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const visibleRange = useMemo(() => {
-    const start = pagination.total ? (page - 1) * pagination.limit + 1 : 0;
-    const end = pagination.total ? Math.min(page * pagination.limit, pagination.total) : 0;
-    return { start, end };
-  }, [page, pagination.limit, pagination.total]);
-
-  useEffect(() => {
-    fetchProducts();
-  }, [page, filters.search, filters.category, filters.limit]);
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async (pageNum: number = 1, append: boolean = false) => {
     try {
-      setStatus('loading');
+      setStatus(append ? 'loadingMore' : 'loading');
       const response = await api.getProducts(
-        page,
+        pageNum,
         filters.limit,
         filters.category || undefined,
         undefined,
@@ -70,15 +99,68 @@ const ProductList: React.FC = () => {
       );
 
       const payload = response.data;
-      setProducts(payload.data || []);
-      setPagination(payload.pagination || { page: 1, pages: 1, total: payload.data?.length || 0, limit: filters.limit });
+      const newProducts = payload.data || [];
+      
+      if (append) {
+        setProducts(prev => [...prev, ...newProducts]);
+      } else {
+        setProducts(newProducts);
+      }
+      
+      const paginationData = payload.pagination || { 
+        page: pageNum, 
+        pages: 1, 
+        total: newProducts.length, 
+        limit: filters.limit 
+      };
+      
+      setPagination(paginationData);
+      setHasMore(pageNum < paginationData.pages);
       setStatus('idle');
       setError(null);
     } catch (err: any) {
       setStatus('error');
       setError(err.response?.data?.error || 'Unable to load products');
     }
-  };
+  }, [filters.limit, filters.category, filters.search]);
+
+  useEffect(() => {
+    setPage(1);
+    setProducts([]);
+    fetchProducts(1, false);
+  }, [filters.search, filters.category, filters.limit, fetchProducts]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && status === 'idle') {
+          const nextPage = page + 1;
+          setPage(nextPage);
+          fetchProducts(nextPage, true);
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, status, page, fetchProducts]);
 
   const fetchCategories = async () => {
     try {
@@ -92,7 +174,6 @@ const ProductList: React.FC = () => {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
-    fetchProducts();
   };
 
   const handleAddToCart = (product: Product) => {
@@ -106,20 +187,37 @@ const ProductList: React.FC = () => {
         countInStock: product.countInStock,
       })
     );
+    setAddedToCart(product._id);
+    setTimeout(() => setAddedToCart(null), 2000);
   };
 
   const renderProducts = () => {
-    // Loading State
+    // Initial Loading State
     if (status === 'loading' && products.length === 0) {
       return (
         <div className="masonry-grid">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="card p-0 overflow-hidden">
+            <div 
+              key={i} 
+              className="card p-0 overflow-hidden animate-fade-in"
+              style={{ animationDelay: `${i * 50}ms` }}
+            >
               <div className="skeleton aspect-[4/5]" />
               <div className="p-5 space-y-3">
                 <div className="skeleton h-4 w-3/4" />
                 <div className="skeleton h-4 w-1/2" />
+                <div className="flex gap-2 mt-4">
+                  <div className="skeleton h-3 w-3" />
+                  <div className="skeleton h-3 w-3" />
+                  <div className="skeleton h-3 w-3" />
+                  <div className="skeleton h-3 w-3" />
+                  <div className="skeleton h-3 w-3" />
+                </div>
                 <div className="skeleton h-6 w-1/3 mt-2" />
+                <div className="flex gap-2 mt-4">
+                  <div className="skeleton h-10 flex-1" />
+                  <div className="skeleton h-10 flex-1" />
+                </div>
               </div>
             </div>
           ))}
@@ -130,11 +228,11 @@ const ProductList: React.FC = () => {
     // Empty State
     if (products.length === 0) {
       return (
-        <div className="text-center py-20">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 rounded-full mb-6">
-            <FiSearch className="w-7 h-7 text-neutral-400" />
+        <div className="text-center py-20 animate-fade-in">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-neutral-100 rounded-full mb-6">
+            <FiSearch className="w-8 h-8 text-neutral-400" />
           </div>
-          <h3 className="text-xl font-semibold text-neutral-900 mb-2">No products found</h3>
+          <h3 className="text-2xl font-semibold text-neutral-900 mb-3">No products found</h3>
           <p className="text-neutral-500 mb-8 max-w-md mx-auto">
             Try adjusting your search or filters to find what you're looking for.
           </p>
@@ -143,116 +241,156 @@ const ProductList: React.FC = () => {
               setFilters({ ...filters, search: '', category: '' });
               setPage(1);
             }}
-            className="btn btn-secondary"
+            className="btn btn-secondary inline-flex items-center gap-2"
           >
+            <FiRefreshCw className="w-4 h-4" />
             Clear Filters
           </button>
         </div>
       );
     }
 
-    // Products Grid - Masonry style
+    // Products Grid - Masonry style with staggered animations
     return (
-      <div className="masonry-grid">
-        {products.map((product) => (
-          <div
-            key={product._id}
-            className="card card-interactive p-0 overflow-hidden group"
-          >
-            {/* Image */}
-            <Link to={`/products/${product._id}`} className="block">
-              <div className="relative aspect-[4/5] bg-neutral-100 overflow-hidden">
-                <img
-                  src={product.images?.[0] || FALLBACK_PRODUCT_IMAGE}
-                  alt={product.name}
-                  loading="lazy"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                
-                {/* Category */}
-                <div className="absolute top-3 left-3">
-                  <span className="pill bg-white/90 backdrop-blur-sm text-neutral-700 text-xs">
-                    {product.category}
-                  </span>
-                </div>
-                
-                {/* Stock Status */}
-                {product.countInStock > 0 ? (
-                  <div className="absolute top-3 right-3">
-                    <span className="pill bg-green-600/90 text-white text-xs">
-                      <FiCheck className="w-3 h-3" />
-                      In Stock
+      <>
+        <div className="masonry-grid">
+          {products.map((product, index) => (
+            <div
+              key={product._id}
+              className="card card-interactive p-0 overflow-hidden group animate-fade-in"
+              style={{ animationDelay: `${(index % 12) * 30}ms` }}
+            >
+              {/* Image */}
+              <Link to={`/products/${product._id}`} className="block">
+                <div className="relative aspect-[4/5] bg-neutral-100 overflow-hidden">
+                  <LazyImage
+                    src={product.images?.[0] || FALLBACK_PRODUCT_IMAGE}
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  
+                  {/* Category */}
+                  <div className="absolute top-3 left-3">
+                    <span className="pill bg-white/90 backdrop-blur-sm text-neutral-700 text-xs shadow-sm">
+                      {product.category}
                     </span>
                   </div>
-                ) : (
-                  <div className="absolute inset-0 bg-neutral-950/60 flex items-center justify-center">
-                    <span className="text-white font-medium">Out of Stock</span>
-                  </div>
-                )}
-              </div>
-            </Link>
-
-            {/* Content */}
-            <div className="p-4 sm:p-5">
-              <Link to={`/products/${product._id}`}>
-                <h3 className="font-medium text-neutral-900 mb-1 line-clamp-2 group-hover:text-neutral-600 transition-colors">
-                  {product.name}
-                </h3>
+                  
+                  {/* Stock Status */}
+                  {product.countInStock > 0 ? (
+                    <div className="absolute top-3 right-3">
+                      <span className="pill bg-green-600/90 text-white text-xs shadow-sm">
+                        <FiCheck className="w-3 h-3" />
+                        In Stock
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 bg-neutral-950/60 flex items-center justify-center backdrop-blur-sm">
+                      <span className="text-white font-semibold px-4 py-2 bg-neutral-900/80 rounded-full">Out of Stock</span>
+                    </div>
+                  )}
+                  
+                  {/* Discount Badge */}
+                  {product.comparePrice && product.comparePrice > product.price && (
+                    <div className="absolute bottom-3 left-3">
+                      <span className="pill bg-red-500/90 text-white text-xs shadow-sm">
+                        -{Math.round((1 - product.price / product.comparePrice) * 100)}%
+                      </span>
+                    </div>
+                  )}
+                </div>
               </Link>
 
-              {/* Rating */}
-              <div className="flex items-center gap-1.5 mb-3">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <span
-                      key={i}
-                      className={`text-xs ${
-                        i < Math.floor(product.rating)
-                          ? 'text-amber-400'
-                          : 'text-neutral-300'
-                      }`}
-                    >
-                      ★
-                    </span>
-                  ))}
-                </div>
-                <span className="text-xs text-neutral-500">({product.numReviews})</span>
-              </div>
-
-              {/* Price */}
-              <div className="flex items-baseline gap-2 mb-4">
-                <span className="text-lg font-semibold text-neutral-950">
-                  ${product.price.toFixed(2)}
-                </span>
-                {product.comparePrice && product.comparePrice > product.price && (
-                  <span className="text-sm text-neutral-400 line-through">
-                    ${product.comparePrice.toFixed(2)}
-                  </span>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2">
-                <Link
-                  to={`/products/${product._id}`}
-                  className="flex-1 btn btn-secondary py-2.5 text-sm justify-center"
-                >
-                  View
-                  <FiArrowRight className="w-4 h-4 ml-1" />
+              {/* Content */}
+              <div className="p-4 sm:p-5">
+                <Link to={`/products/${product._id}`}>
+                  <h3 className="font-semibold text-neutral-900 mb-1 line-clamp-2 group-hover:text-neutral-600 transition-colors">
+                    {product.name}
+                  </h3>
                 </Link>
-                <button
-                  onClick={() => handleAddToCart(product)}
-                  disabled={product.countInStock === 0}
-                  className="flex-1 btn btn-primary py-2.5 text-sm justify-center disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <FiPlus className="w-4 h-4 mr-1" />
-                  Add
-                </button>
+
+                {/* Rating */}
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex">
+                    {[...Array(5)].map((_, i) => (
+                      <span
+                        key={i}
+                        className={`text-sm ${
+                          i < Math.floor(product.rating)
+                            ? 'text-amber-400'
+                            : 'text-neutral-200'
+                        }`}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                  <span className="text-xs text-neutral-500 font-medium">
+                    {product.rating.toFixed(1)} ({product.numReviews})
+                  </span>
+                </div>
+
+                {/* Price */}
+                <div className="flex items-baseline gap-2 mb-4">
+                  <span className="text-xl font-bold text-neutral-950">
+                    ${product.price.toFixed(2)}
+                  </span>
+                  {product.comparePrice && product.comparePrice > product.price && (
+                    <span className="text-sm text-neutral-400 line-through">
+                      ${product.comparePrice.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2">
+                  <Link
+                    to={`/products/${product._id}`}
+                    className="flex-1 btn btn-secondary py-2.5 text-sm justify-center group/btn"
+                  >
+                    View
+                    <FiArrowRight className="w-4 h-4 ml-1 group-hover/btn:translate-x-0.5 transition-transform" />
+                  </Link>
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    disabled={product.countInStock === 0}
+                    className={`flex-1 btn py-2.5 text-sm justify-center transition-all duration-300 ${
+                      addedToCart === product._id
+                        ? 'btn-secondary bg-green-50 border-green-500 text-green-700'
+                        : 'btn-primary'
+                    } disabled:opacity-40 disabled:cursor-not-allowed`}
+                  >
+                    {addedToCart === product._id ? (
+                      <>
+                        <FiCheck className="w-4 h-4 mr-1" />
+                        Added!
+                      </>
+                    ) : (
+                      <>
+                        <FiPlus className="w-4 h-4 mr-1" />
+                        Add
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+        
+        {/* Infinite Scroll Loading Indicator */}
+        <div ref={loadMoreRef} className="h-20 flex items-center justify-center">
+          {status === 'loadingMore' && (
+            <div className="flex items-center gap-3 text-neutral-500">
+              <FiLoader className="w-5 h-5 animate-spin" />
+              <span className="text-sm font-medium">Loading more products...</span>
+            </div>
+          )}
+          {!hasMore && products.length > 0 && (
+            <p className="text-sm text-neutral-400">You've seen all products</p>
+          )}
+        </div>
+      </>
     );
   };
 
@@ -299,50 +437,34 @@ const ProductList: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm text-neutral-500">
             {pagination.total > 0 ? (
-              <>Showing {visibleRange.start}–{visibleRange.end} of {pagination.total} products</>
+              <>Showing {products.length} of {pagination.total} products</>
             ) : (
               'No products found'
             )}
           </p>
           {status === 'loading' && products.length > 0 && (
-            <span className="text-sm text-neutral-500">Loading...</span>
+            <span className="flex items-center gap-2 text-sm text-neutral-500">
+              <FiLoader className="w-4 h-4 animate-spin" />
+              Refreshing...
+            </span>
           )}
         </div>
 
         {/* Error State */}
         {status === 'error' && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 animate-fade-in">
             <p className="text-sm text-red-700">{error}</p>
+            <button
+              onClick={() => fetchProducts(1, false)}
+              className="mt-2 text-sm text-red-600 font-medium hover:text-red-800 underline underline-offset-2"
+            >
+              Try again
+            </button>
           </div>
         )}
 
         {/* Products */}
         {renderProducts()}
-
-        {/* Pagination */}
-        {pagination.pages > 1 && (
-          <div className="flex justify-center mt-12">
-            <div className="flex items-center gap-2 bg-neutral-50 rounded-lg p-1.5">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-white rounded-md disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Previous
-              </button>
-              <span className="px-4 py-2 text-sm font-medium text-neutral-900">
-                {page} / {pagination.pages}
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
-                disabled={page === pagination.pages}
-                className="px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-white rounded-md disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
