@@ -1,6 +1,6 @@
 import axios from 'axios';
-import type { AxiosInstance, AxiosError } from 'axios';
-import type { AuthResponse, Product, Order } from '../types';
+import type { AxiosInstance, AxiosError, AxiosResponse } from 'axios';
+import type { AuthResponse, Product, Order, ApiResponse } from '../types';
 
 class ApiClient {
   private client: AxiosInstance;
@@ -91,8 +91,8 @@ class ApiClient {
     return this.client.get('/api/products', { params });
   }
 
-  async getProduct(id: string) {
-    return this.client.get<Product>(`/api/products/${id}`);
+  async getProduct(id: string): Promise<AxiosResponse<ApiResponse<Product>>> {
+    return this.client.get<ApiResponse<Product>>(`/api/products/${id}`);
   }
 
   async searchProducts(query: string, limit: number = 10) {
