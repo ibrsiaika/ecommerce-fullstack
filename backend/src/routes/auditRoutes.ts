@@ -31,15 +31,17 @@ const requireAuditViewPermission = (
   req: Request & { user?: any },
   res: Response,
   next: Function
-) => {
+): void => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
+    res.status(401).json({ error: 'Authentication required' });
+    return;
   }
 
   if (!PermissionService.hasCapability(req.user, 'admin:view-logs')) {
-    return res.status(403).json({
+    res.status(403).json({
       error: 'Permission denied: requires admin:view-logs capability',
     });
+    return;
   }
 
   next();
@@ -74,7 +76,7 @@ router.get(
   authenticate,
   requireRole('admin', 'super_admin'),
   requireAuditViewPermission,
-  async (req: Request & { user?: any }, res: Response) => {
+  async (req: Request & { user?: any }, res: Response): Promise<void> => {
     try {
       const {
         userId,
@@ -94,7 +96,8 @@ router.get(
       const sortNum = sort === '1' ? 1 : -1;
 
       if (limitNum < 1) {
-        return res.status(400).json({ error: 'Invalid limit' });
+        res.status(400).json({ error: 'Invalid limit' });
+        return;
       }
 
       // Build MongoDB query
@@ -125,14 +128,16 @@ router.get(
           try {
             query.createdAt.$gte = new Date(startDate as string);
           } catch (e) {
-            return res.status(400).json({ error: 'Invalid startDate format' });
+            res.status(400).json({ error: 'Invalid startDate format' });
+        return;
           }
         }
         if (endDate) {
           try {
             query.createdAt.$lte = new Date(endDate as string);
           } catch (e) {
-            return res.status(400).json({ error: 'Invalid endDate format' });
+            res.status(400).json({ error: 'Invalid endDate format' });
+        return;
           }
         }
       }
@@ -179,13 +184,14 @@ router.get(
   authenticate,
   requireRole('admin', 'super_admin'),
   requireAuditViewPermission,
-  async (req: Request & { user?: any }, res: Response) => {
+  async (req: Request & { user?: any }, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
 
       // Validate ObjectId format
       if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ error: 'Invalid audit log ID format' });
+        res.status(400).json({ error: 'Invalid audit log ID format' });
+        return;
       }
 
       const log = await AuditLog.findById(id)
@@ -193,7 +199,8 @@ router.get(
         .lean();
 
       if (!log) {
-        return res.status(404).json({ error: 'Audit log entry not found' });
+        res.status(404).json({ error: 'Audit log entry not found' });
+        return;
       }
 
       res.json(log);
@@ -227,14 +234,15 @@ router.get(
   authenticate,
   requireRole('admin', 'super_admin'),
   requireAuditViewPermission,
-  async (req: Request & { user?: any }, res: Response) => {
+  async (req: Request & { user?: any }, res: Response): Promise<void> => {
     try {
       const { userId } = req.params;
       const { action, limit = '100', skip = '0' } = req.query;
 
       // Validate userId format
       if (!mongoose.Types.ObjectId.isValid(userId)) {
-        return res.status(400).json({ error: 'Invalid user ID format' });
+        res.status(400).json({ error: 'Invalid user ID format' });
+        return;
       }
 
       // Validate limit and skip
@@ -297,14 +305,15 @@ router.get(
   authenticate,
   requireRole('admin', 'super_admin'),
   requireAuditViewPermission,
-  async (req: Request & { user?: any }, res: Response) => {
+  async (req: Request & { user?: any }, res: Response): Promise<void> => {
     try {
       const { resourceType, resourceId } = req.params;
       const { limit = '100', skip = '0' } = req.query;
 
       // Validate resourceId format
       if (!mongoose.Types.ObjectId.isValid(resourceId)) {
-        return res.status(400).json({ error: 'Invalid resource ID format' });
+        res.status(400).json({ error: 'Invalid resource ID format' });
+        return;
       }
 
       // Validate limit and skip
@@ -366,7 +375,7 @@ router.get(
   authenticate,
   requireRole('admin', 'super_admin'),
   requireAuditViewPermission,
-  async (req: Request & { user?: any }, res: Response) => {
+  async (req: Request & { user?: any }, res: Response): Promise<void> => {
     try {
       const { action } = req.params;
       const { limit = '100', skip = '0', startDate, endDate } = req.query;
@@ -385,14 +394,16 @@ router.get(
           try {
             query.createdAt.$gte = new Date(startDate as string);
           } catch (e) {
-            return res.status(400).json({ error: 'Invalid startDate format' });
+            res.status(400).json({ error: 'Invalid startDate format' });
+        return;
           }
         }
         if (endDate) {
           try {
             query.createdAt.$lte = new Date(endDate as string);
           } catch (e) {
-            return res.status(400).json({ error: 'Invalid endDate format' });
+            res.status(400).json({ error: 'Invalid endDate format' });
+        return;
           }
         }
       }
@@ -441,7 +452,7 @@ router.get(
   authenticate,
   requireRole('admin', 'super_admin'),
   requireAuditViewPermission,
-  async (req: Request & { user?: any }, res: Response) => {
+  async (req: Request & { user?: any }, res: Response): Promise<void> => {
     try {
       const { limit = '50', skip = '0', hours = '24' } = req.query;
 

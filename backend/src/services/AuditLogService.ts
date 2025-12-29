@@ -1,6 +1,6 @@
 import { Request } from 'express';
 import { AuditLog, AuditActionType, ResourceType, IAuditLog, ChangeObject } from '../models/AuditLog';
-import { User } from '../models/User';
+import User from '../models/User';
 
 /**
  * AuditLogService
@@ -65,7 +65,7 @@ export class AuditLogService {
    * @param description - Human-readable description
    * @param reason - Why the action was performed
    */
-  private static async log(
+  static async log(
     action: AuditActionType,
     resourceType: ResourceType,
     resourceId: string,

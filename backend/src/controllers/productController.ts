@@ -105,6 +105,29 @@ export const getCategories = asyncHandler(async (_req: Request, res: Response) =
   return sendSuccess(res, 200, categories);
 });
 
+// @desc    Get product brands
+// @route   GET /api/products/brands
+// @access  Public
+export const getBrands = asyncHandler(async (_req: Request, res: Response) => {
+  const brands = await productService.getBrands();
+  return sendSuccess(res, 200, brands);
+});
+
+// @desc    Search products
+// @route   GET /api/products/search
+// @access  Public
+export const searchProducts = asyncHandler(async (req: Request, res: Response) => {
+  const query = req.query.q as string || '';
+  const limit = Math.min(parseInt(req.query.limit as string, 10) || 10, 50);
+  
+  if (!query.trim()) {
+    return sendSuccess(res, 200, []);
+  }
+  
+  const products = await productService.searchProducts(query, limit);
+  return sendSuccess(res, 200, products.map(mapProductPreview));
+});
+
 // @desc    Get featured products
 // @route   GET /api/products/featured
 // @access  Public
