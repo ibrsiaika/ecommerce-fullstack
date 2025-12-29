@@ -32,17 +32,22 @@ export interface AuthResponse {
 }
 
 // Product types
+// Note: Both 'id' and '_id' are supported because MongoDB returns '_id' 
+// while the frontend often normalizes to 'id'. Use the one available in your context.
 export interface Review {
   id: string;
-  user: User;
+  _id?: string;  // MongoDB identifier
+  user: User | string;
+  name?: string;
   rating: number;
   comment: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export interface Product {
   id: string;
+  _id?: string;  // MongoDB identifier
   name: string;
   slug: string;
   description: string;

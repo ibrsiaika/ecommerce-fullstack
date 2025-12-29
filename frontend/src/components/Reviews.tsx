@@ -3,10 +3,12 @@ import { useAppSelector } from '../store/hooks';
 import api from '../services/api';
 import { FiStar, FiUser, FiCalendar, FiEdit3, FiCheck, FiX, FiMessageCircle, FiThumbsUp } from 'react-icons/fi';
 
-interface Review {
-  _id: string;
-  user: string;
-  name: string;
+// Review interface for this component - flexible to handle both MongoDB and normalized formats
+interface ReviewItem {
+  _id?: string;
+  id?: string;
+  user: string | { name?: string };
+  name?: string;
   rating: number;
   comment: string;
   createdAt: string;
@@ -14,7 +16,7 @@ interface Review {
 
 interface ReviewsProps {
   productId: string;
-  reviews: Review[];
+  reviews: ReviewItem[];
   onReviewAdded: () => void;
 }
 
@@ -339,14 +341,14 @@ const Reviews: React.FC<ReviewsProps> = ({ productId, reviews = [], onReviewAdde
               <div className="flex items-start gap-4">
                 {/* Avatar */}
                 <div className="w-12 h-12 bg-gradient-to-br from-neutral-700 to-neutral-900 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm font-semibold text-white">{getInitials(review.name)}</span>
+                  <span className="text-sm font-semibold text-white">{getInitials(review.name || 'Anonymous')}</span>
                 </div>
                 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
                     <div>
-                      <h5 className="font-semibold text-neutral-900">{review.name}</h5>
+                      <h5 className="font-semibold text-neutral-900">{review.name || 'Anonymous'}</h5>
                       <div className="flex items-center gap-3 mt-1">
                         {renderStars(review.rating, false, undefined, 'text-sm')}
                         <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">

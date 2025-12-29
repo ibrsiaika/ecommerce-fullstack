@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useConfig } from '../../context/ConfigContext';
-import { FiSave, FiRotateCcw } from 'react-icons/fi';
+import { FiSave } from 'react-icons/fi';
 
 interface LayoutEditorProps {
   onSave: () => void;

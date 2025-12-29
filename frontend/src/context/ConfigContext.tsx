@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import api from '../services/api';
 
 /**
@@ -381,7 +382,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
 
   const toggleMaintenanceMode = async (enabled: boolean, message?: string) => {
     try {
-      const response = await api.post('/api/config/maintenance', { enabled, message });
+      await api.post('/api/config/maintenance', { enabled, message });
       setState(prev => ({
         ...prev,
         maintenanceMode: enabled,
