@@ -110,10 +110,13 @@ export class StripeService {
 
       // Handle based on payment intent status
       if (paymentIntent.status === 'succeeded') {
-        // Get latest charge info if available
-        const latestCharge = typeof paymentIntent.latest_charge === 'string' 
-          ? await stripe.charges.retrieve(paymentIntent.latest_charge)
-          : paymentIntent.latest_charge;
+        // Get latest charge info if available (can be null, string ID, or Charge object)
+        let latestCharge = null;
+        if (paymentIntent.latest_charge) {
+          latestCharge = typeof paymentIntent.latest_charge === 'string' 
+            ? await stripe.charges.retrieve(paymentIntent.latest_charge)
+            : paymentIntent.latest_charge;
+        }
 
         const processorUpdate: IProcessor = {
           name: 'stripe',
