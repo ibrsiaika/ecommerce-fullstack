@@ -2,11 +2,21 @@ import React, { useState, useMemo } from 'react';
 import { useAppSelector } from '../store/hooks';
 import api from '../services/api';
 import { FiStar, FiUser, FiCalendar, FiEdit3, FiCheck, FiX, FiMessageCircle, FiThumbsUp } from 'react-icons/fi';
-import type { Review } from '../types';
+
+// Review interface for this component - flexible to handle both MongoDB and normalized formats
+interface ReviewItem {
+  _id?: string;
+  id?: string;
+  user: string | { name?: string };
+  name?: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
 
 interface ReviewsProps {
   productId: string;
-  reviews: Review[];
+  reviews: ReviewItem[];
   onReviewAdded: () => void;
 }
 

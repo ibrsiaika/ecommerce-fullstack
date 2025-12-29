@@ -5,18 +5,35 @@ import { addToCart } from '../store/slices/cartSlice';
 import Reviews from './Reviews';
 import api from '../services/api';
 import { FiShoppingBag, FiCheck, FiTruck, FiArrowRight } from 'react-icons/fi';
-import type { Product } from '../types';
 
-// Extended product interface for API response (MongoDB uses _id)
-interface ProductWithId extends Omit<Product, 'id'> {
+// Product response from MongoDB API (uses _id)
+interface ProductApiResponse {
   _id: string;
-  id?: string;
+  name: string;
+  description: string;
+  price: number;
+  images: string[];
+  category: string;
+  countInStock: number;
+  rating: number;
+  numReviews: number;
+  sku: string;
+  slug: string;
+  reviews: Array<{
+    _id?: string;
+    id?: string;
+    user: string | { name: string };
+    name?: string;
+    rating: number;
+    comment: string;
+    createdAt: string;
+  }>;
 }
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const dispatch = useAppDispatch();
-  const [product, setProduct] = useState<ProductWithId | null>(null);
+  const [product, setProduct] = useState<ProductApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -33,8 +50,9 @@ const ProductDetail: React.FC = () => {
       setLoading(true);
       const response = await api.getProduct(id!);
       // API returns { success, data } where data is the product
-      if (response.data.data) {
-        setProduct(response.data.data as ProductWithId);
+      const productData = response.data.data;
+      if (productData && typeof productData === 'object' && '_id' in productData) {
+        setProduct(productData as ProductApiResponse);
       }
       setError(null);
     } catch (err) {
