@@ -56,8 +56,8 @@ export async function hashPassword(password: string): Promise<string> {
     throw new Error('Password must be a non-empty string');
   }
   
-  if (password.length < 12) {
-    throw new Error('Password must be at least 12 characters');
+  if (password.length < 6) {
+    throw new Error('Password must be at least 6 characters');
   }
   
   try {
