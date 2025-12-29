@@ -28,7 +28,7 @@ describe('Authentication Endpoints', () => {
       const userData = {
         name: 'Test User',
         email: 'test@example.com',
-        password: 'password123456'
+        password: 'password123'
       };
 
       const response = await request(app)
@@ -47,7 +47,7 @@ describe('Authentication Endpoints', () => {
       const userData = {
         name: 'Test User',
         email: 'invalid-email',
-        password: 'password123456'
+        password: 'password123'
       };
 
       const response = await request(app)
@@ -79,7 +79,7 @@ describe('Authentication Endpoints', () => {
       const userData = {
         name: 'Test User',
         email: 'test@example.com',
-        password: 'password123456'
+        password: 'password123'
       };
 
       // Register first user
@@ -105,7 +105,7 @@ describe('Authentication Endpoints', () => {
       const userData = {
         name: 'Test User',
         email: 'test@example.com',
-        password: 'password123456'
+        password: 'password123'
       };
 
       await request(app)
@@ -116,7 +116,7 @@ describe('Authentication Endpoints', () => {
     it('should login user with correct credentials', async () => {
       const loginData = {
         email: 'test@example.com',
-        password: 'password123456'
+        password: 'password123'
       };
 
       const response = await request(app)
@@ -133,7 +133,7 @@ describe('Authentication Endpoints', () => {
     it('should not login user with incorrect password', async () => {
       const loginData = {
         email: 'test@example.com',
-        password: 'wrongpassword1'
+        password: 'wrongpassword'
       };
 
       const response = await request(app)
@@ -148,7 +148,7 @@ describe('Authentication Endpoints', () => {
     it('should not login user with non-existent email', async () => {
       const loginData = {
         email: 'nonexistent@example.com',
-        password: 'password123456'
+        password: 'password123'
       };
 
       const response = await request(app)
@@ -169,7 +169,7 @@ describe('Authentication Endpoints', () => {
       const userData = {
         name: 'Test User',
         email: 'test@example.com',
-        password: 'password123456'
+        password: 'password123'
       };
 
       const registerResponse = await request(app)

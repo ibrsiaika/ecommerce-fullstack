@@ -55,8 +55,8 @@ const Register: React.FC = () => {
 
     if (!password) {
       errors.push('Password is required');
-    } else if (password.length < 12) {
-      errors.push('Password must be at least 12 characters');
+    } else if (password.length < 6) {
+      errors.push('Password must be at least 6 characters');
     }
 
     if (!confirmPassword) {
@@ -266,7 +266,7 @@ const Register: React.FC = () => {
             <ul className="space-y-3">
               <li className="flex items-center gap-3 text-sm text-gray-700">
                 <FiCheck className="text-green-600 flex-shrink-0" size={18} />
-                <span>At least 12 characters</span>
+                <span>At least 6 characters</span>
               </li>
               <li className="flex items-center gap-3 text-sm text-gray-700">
                 <FiCheck className="text-green-600 flex-shrink-0" size={18} />
