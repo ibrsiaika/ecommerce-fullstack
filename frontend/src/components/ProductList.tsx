@@ -173,7 +173,9 @@ const ProductList: React.FC = () => {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Reset to page 1 and clear products - useEffect will trigger fetch
     setPage(1);
+    setProducts([]);
   };
 
   const handleAddToCart = (product: Product) => {

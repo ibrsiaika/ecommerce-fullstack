@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAppSelector } from '../store/hooks';
 import api from '../services/api';
 import { FiStar, FiUser, FiCalendar, FiEdit3, FiCheck, FiX, FiMessageCircle, FiThumbsUp } from 'react-icons/fi';
@@ -97,17 +97,27 @@ const Reviews: React.FC<ReviewsProps> = ({ productId, reviews = [], onReviewAdde
     return labels[rating] || '';
   };
 
-  const averageRating = reviews.length > 0 
-    ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length 
-    : 0;
+  // Memoize average rating calculation
+  const averageRating = useMemo(() => {
+    if (reviews.length === 0) return 0;
+    return reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length;
+  }, [reviews]);
 
-  const ratingDistribution = [5, 4, 3, 2, 1].map(stars => ({
-    stars,
-    count: reviews.filter(r => r.rating === stars).length,
-    percentage: reviews.length > 0 
-      ? (reviews.filter(r => r.rating === stars).length / reviews.length) * 100 
-      : 0
-  }));
+  // Memoize rating distribution with efficient single-pass calculation
+  const ratingDistribution = useMemo(() => {
+    const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    reviews.forEach(r => {
+      if (counts[r.rating] !== undefined) {
+        counts[r.rating]++;
+      }
+    });
+    
+    return [5, 4, 3, 2, 1].map(stars => ({
+      stars,
+      count: counts[stars],
+      percentage: reviews.length > 0 ? (counts[stars] / reviews.length) * 100 : 0
+    }));
+  }, [reviews]);
 
   const renderStars = (rating: number, interactive = false, onStarClick?: (rating: number) => void, size = 'text-xl') => {
     const displayRating = interactive && hoverRating > 0 ? hoverRating : rating;
