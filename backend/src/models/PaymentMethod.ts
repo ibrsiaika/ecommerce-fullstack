@@ -95,6 +95,29 @@ export interface IPaymentMethod extends Document {
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date;
+
+  // Instance methods
+  getDisplayInfo(): any;
+  markAsUsed(): Promise<IPaymentMethod>;
+  recordDecline(reason: string): Promise<IPaymentMethod>;
+  flag(reason: string): Promise<IPaymentMethod>;
+  unflag(): Promise<IPaymentMethod>;
+  delete(): Promise<IPaymentMethod>;
+}
+
+// Static methods interface
+export interface IPaymentMethodModel extends mongoose.Model<IPaymentMethod> {
+  findDefault(userId: mongoose.Types.ObjectId): Promise<IPaymentMethod | null>;
+  findActive(userId: mongoose.Types.ObjectId): Promise<IPaymentMethod[]>;
+  findByCardFingerprint(fingerprint: string): Promise<IPaymentMethod[]>;
+  findRisky(minRiskScore?: number, limit?: number): Promise<IPaymentMethod[]>;
+  createPaymentMethod(
+    userId: mongoose.Types.ObjectId,
+    type: PaymentMethodType,
+    tokenId: string,
+    displayName: string,
+    details: any
+  ): Promise<IPaymentMethod>;
 }
 
 const cardSchema = new Schema<ICard>({
@@ -415,4 +438,4 @@ paymentMethodSchema.statics.createPaymentMethod = function (
   return this.create(method);
 };
 
-export const PaymentMethod = mongoose.model<IPaymentMethod>('PaymentMethod', paymentMethodSchema);
+export const PaymentMethod = mongoose.model<IPaymentMethod, IPaymentMethodModel>('PaymentMethod', paymentMethodSchema);

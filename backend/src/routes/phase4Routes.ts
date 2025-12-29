@@ -1,9 +1,19 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import { protect as authenticate } from '../middleware/auth';
 import Joi from 'joi';
+import { StripeService } from '../services/StripeService';
+import { PayPalService } from '../services/PayPalService';
+import { NotificationService } from '../services/NotificationService';
+import { GeoIntelligenceService } from '../services/GeoIntelligenceService';
+import { AuditLogService } from '../services/AuditLogService';
+import { FraudDetectionService } from '../services/FraudDetectionService';
+import { Transaction } from '../models/Transaction';
+import { NotificationType, NotificationChannel } from '../models/Notification';
+import { AuditActionType, ResourceType } from '../models/AuditLog';
 
 // Simple validation middleware
-const validate = (schema: { body?: Joi.ObjectSchema }) => {
+const validate = (schema: { body?: Joi.ObjectSchema; headers?: Joi.ObjectSchema }) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (schema.body) {
       const { error } = schema.body.validate(req.body);
@@ -14,18 +24,18 @@ const validate = (schema: { body?: Joi.ObjectSchema }) => {
         });
       }
     }
+    if (schema.headers) {
+      const { error } = schema.headers.validate(req.headers, { allowUnknown: true });
+      if (error) {
+        return res.status(400).json({
+          success: false,
+          error: error.details[0].message
+        });
+      }
+    }
     next();
   };
 };
-import { StripeService } from '../services/StripeService';
-import { PayPalService } from '../services/PayPalService';
-import { NotificationService } from '../services/NotificationService';
-import { GeoIntelligenceService } from '../services/GeoIntelligenceService';
-import { AuditLogService } from '../services/AuditLogService';
-import { FraudDetectionService } from '../services/FraudDetectionService';
-import { Transaction } from '../models/Transaction';
-import { Notification } from '../models/Notification';
-import Joi from 'joi';
 
 const router = Router();
 
@@ -67,30 +77,37 @@ router.post(
       const countryCode = billingAddress?.country || 'US';
       const geoRisk = await GeoIntelligenceService.assessGeoRisk(ipAddress, countryCode);
 
-      // Step 2: Perform fraud detection
-      const fraudAnalysis = await FraudDetectionService.analyzeTransaction({
-        userId,
-        orderId,
-        amount,
-        currency,
+      // Step 2: Perform fraud detection using the detectFraud method
+      const fraudAnalysis = await FraudDetectionService.detectFraud({
+        userId: new mongoose.Types.ObjectId(userId),
+        email: req.user!.email || 'unknown@example.com',
         ipAddress,
-        countryCode,
-        paymentMethodId,
-        geoRiskScore: geoRisk.geoRiskScore,
-        impossibleTravel: geoRisk.impossibleTravel,
-        vpnDetected: geoRisk.vpnDetected,
+        deviceId: req.headers['x-device-id'] as string || 'unknown',
+        contextType: 'payment',
+        contextData: {
+          orderId,
+          amount,
+          currency,
+          countryCode,
+          paymentMethodId,
+          geoRiskScore: geoRisk.geoRiskScore,
+          impossibleTravel: geoRisk.impossibleTravel,
+          vpnDetected: geoRisk.vpnDetected,
+        },
+        req,
       });
 
       // Step 3: Check geographic restrictions
       const shippingCheck = GeoIntelligenceService.canAcceptPayment(countryCode, amount);
       if (!shippingCheck.canAccept) {
-        await AuditLogService.log({
+        await AuditLogService.log(
+          AuditActionType.VIEWED,
+          ResourceType.ORDER,
+          orderId,
           userId,
-          action: 'PAYMENT_REJECTED_GEO',
-          resource: `payment:${orderId}`,
-          reason: shippingCheck.reason,
-          details: { countryCode, amount },
-        });
+          req,
+          { geoRestriction: { from: null, to: { countryCode, amount, reason: shippingCheck.reason } } }
+        );
 
         return res.status(400).json({
           success: false,
@@ -104,41 +121,40 @@ router.post(
 
       if (processor === 'stripe') {
         transaction = await StripeService.charge({
-          orderId,
-          userId,
-          paymentMethodId,
+          orderId: new mongoose.Types.ObjectId(orderId),
+          userId: new mongoose.Types.ObjectId(userId),
+          paymentMethodId: new mongoose.Types.ObjectId(paymentMethodId),
           amount,
           currency,
+          description: `Payment for order ${orderId}`,
           idempotencyKey: `${orderId}-${Date.now()}`,
+          fraudScore: fraudAnalysis.riskScore,
           metadata: {
-            geoRiskScore: geoRisk.geoRiskScore,
-            fraudScore: fraudAnalysis.fraudScore,
+            geoRiskScore: String(geoRisk.geoRiskScore),
+            fraudScore: String(fraudAnalysis.riskScore),
             ipAddress,
             countryCode,
           },
         });
       } else if (processor === 'paypal') {
         transaction = await PayPalService.charge({
-          orderId,
-          userId,
-          paymentMethodId,
+          orderId: new mongoose.Types.ObjectId(orderId),
+          userId: new mongoose.Types.ObjectId(userId),
+          paymentMethodId: new mongoose.Types.ObjectId(paymentMethodId),
           amount,
           currency,
-          metadata: {
-            geoRiskScore: geoRisk.geoRiskScore,
-            fraudScore: fraudAnalysis.fraudScore,
-            ipAddress,
-            countryCode,
-          },
+          description: `Payment for order ${orderId}`,
+          idempotencyKey: `${orderId}-${Date.now()}`,
+          fraudScore: fraudAnalysis.riskScore,
         });
       }
 
       // Step 5: Send payment confirmation notification
       await NotificationService.createAndSend({
-        userId,
-        type: 'payment_succeeded',
-        channels: ['email', 'in_app'],
-        subject: `Payment Confirmed - Order ${orderId}`,
+        userId: new mongoose.Types.ObjectId(userId),
+        type: NotificationType.ORDER_STATUS,
+        channels: [NotificationChannel.EMAIL, NotificationChannel.IN_APP],
+        title: `Payment Confirmed - Order ${orderId}`,
         body: `Your payment of ${amount} ${currency} has been processed successfully.`,
         templateId: 'payment_success',
         variables: {
@@ -150,18 +166,25 @@ router.post(
       });
 
       // Step 6: Log successful payment
-      await AuditLogService.log({
+      await AuditLogService.log(
+        AuditActionType.PAYMENT_PROCESSED,
+        ResourceType.TRANSACTION,
+        transaction?._id?.toString() || orderId,
         userId,
-        action: 'PAYMENT_PROCESSED',
-        resource: `payment:${transaction._id}`,
-        details: {
-          orderId,
-          amount,
-          processor,
-          geoRiskScore: geoRisk.geoRiskScore,
-          fraudScore: fraudAnalysis.fraudScore,
-        },
-      });
+        req,
+        {
+          payment: {
+            from: null,
+            to: {
+              orderId,
+              amount,
+              processor,
+              geoRiskScore: geoRisk.geoRiskScore,
+              fraudScore: fraudAnalysis.riskScore,
+            }
+          }
+        }
+      );
 
       res.json({
         success: true,
@@ -179,7 +202,7 @@ router.post(
           impossibleTravel: geoRisk.impossibleTravel,
         },
         fraudAnalysis: {
-          fraudScore: fraudAnalysis.fraudScore,
+          fraudScore: fraudAnalysis.riskScore,
           riskLevel: fraudAnalysis.riskLevel,
           signals: fraudAnalysis.signals,
         },
@@ -226,13 +249,13 @@ router.post(
 
       if (processor === 'stripe') {
         refundTransaction = await StripeService.refund({
-          originalTransactionId: transactionId,
+          transactionId: new mongoose.Types.ObjectId(transactionId),
           amount: amount || originalTransaction.amount,
           reason,
         });
       } else if (processor === 'paypal') {
         refundTransaction = await PayPalService.refund({
-          originalTransactionId: transactionId,
+          transactionId: new mongoose.Types.ObjectId(transactionId),
           amount: amount || originalTransaction.amount,
           reason,
         });
@@ -240,26 +263,28 @@ router.post(
 
       // Send refund notification
       await NotificationService.createAndSend({
-        userId,
-        type: 'refund_issued',
-        channels: ['email', 'in_app'],
-        subject: 'Refund Processed',
-        body: `A refund of ${refundTransaction.amount} has been initiated. It may take 3-5 business days to appear in your account.`,
+        userId: new mongoose.Types.ObjectId(userId),
+        type: NotificationType.REFUND_ISSUED,
+        channels: [NotificationChannel.EMAIL, NotificationChannel.IN_APP],
+        title: 'Refund Processed',
+        body: `A refund of ${refundTransaction?.amount || amount} has been initiated. It may take 3-5 business days to appear in your account.`,
         templateId: 'refund_notification',
         variables: {
-          amount: `${refundTransaction.amount}`,
+          amount: `${refundTransaction?.amount || amount}`,
           reason,
           estimatedDays: '3-5',
         },
       });
 
       // Log refund
-      await AuditLogService.log({
+      await AuditLogService.log(
+        AuditActionType.REFUND_APPROVED,
+        ResourceType.TRANSACTION,
+        transactionId,
         userId,
-        action: 'PAYMENT_REFUNDED',
-        resource: `transaction:${transactionId}`,
-        details: { amount: refundTransaction.amount, reason },
-      });
+        req,
+        { refund: { from: null, to: { amount: refundTransaction?.amount || amount, reason } } }
+      );
 
       res.json({
         success: true,
@@ -290,15 +315,17 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const signature = req.headers['stripe-signature'] as string;
-      const event = await StripeService.processWebhook(req.body, signature);
+      await StripeService.processWebhook(req.body, signature);
 
-      // Log webhook
-      await AuditLogService.log({
-        userId: 'system',
-        action: 'STRIPE_WEBHOOK_PROCESSED',
-        resource: `webhook:${event.id}`,
-        details: { type: event.type },
-      });
+      // Log webhook - StripeService.processWebhook returns void
+      await AuditLogService.log(
+        AuditActionType.VIEWED,
+        ResourceType.TRANSACTION,
+        'stripe-webhook',
+        null,
+        req,
+        { webhook: { from: null, to: { type: 'stripe_webhook_processed' } } }
+      );
 
       res.json({ success: true });
     } catch (error) {
@@ -315,21 +342,39 @@ router.post(
   '/payments/webhook/paypal',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const isValid = await PayPalService.verifyWebhookSignature(req.body, req.headers);
+      // PayPal webhook signature verification requires specific headers
+      const webhookId = process.env.PAYPAL_WEBHOOK_ID || '';
+      const transmissionId = req.headers['paypal-transmission-id'] as string || '';
+      const transmissionTime = req.headers['paypal-transmission-time'] as string || '';
+      const certUrl = req.headers['paypal-cert-url'] as string || '';
+      const authAlgo = req.headers['paypal-auth-algo'] as string || '';
+      const transmissionSig = req.headers['paypal-transmission-sig'] as string || '';
+
+      const isValid = await PayPalService.verifyWebhookSignature(
+        webhookId,
+        transmissionId,
+        transmissionTime,
+        certUrl,
+        authAlgo,
+        transmissionSig,
+        JSON.stringify(req.body)
+      );
 
       if (!isValid) {
         return res.status(401).json({ success: false, error: 'Invalid webhook signature' });
       }
 
-      const event = await PayPalService.processWebhook(req.body);
+      await PayPalService.processWebhook(req.body);
 
       // Log webhook
-      await AuditLogService.log({
-        userId: 'system',
-        action: 'PAYPAL_WEBHOOK_PROCESSED',
-        resource: `webhook:${req.body.id}`,
-        details: { type: req.body.event_type },
-      });
+      await AuditLogService.log(
+        AuditActionType.VIEWED,
+        ResourceType.TRANSACTION,
+        req.body.id || 'paypal-webhook',
+        null,
+        req,
+        { webhook: { from: null, to: { type: req.body.event_type } } }
+      );
 
       res.json({ success: true });
     } catch (error) {
@@ -352,22 +397,27 @@ router.post(
   validate({
     body: Joi.object({
       userId: Joi.string().required(),
-      type: Joi.string().required(),
-      channels: Joi.array().items(Joi.string()),
-      subject: Joi.string(),
+      type: Joi.string().valid(...Object.values(NotificationType)).required(),
+      channels: Joi.array().items(Joi.string().valid(...Object.values(NotificationChannel))),
+      title: Joi.string().required(),
       body: Joi.string().required(),
       actionUrl: Joi.string().uri(),
     }),
   }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { userId, type, channels, subject, body, actionUrl } = req.body;
+      const { userId, type, channels, title, body, actionUrl } = req.body;
+
+      // Map string channels to NotificationChannel enums
+      const channelEnums = (channels || [NotificationChannel.EMAIL]).map((ch: string) => {
+        return ch as NotificationChannel;
+      });
 
       const notifications = await NotificationService.createAndSend({
-        userId,
-        type,
-        channels,
-        subject,
+        userId: new mongoose.Types.ObjectId(userId),
+        type: type as NotificationType,
+        channels: channelEnums,
+        title,
         body,
         actionUrl,
       });
@@ -398,8 +448,8 @@ router.get(
       const userId = req.user!.id;
       const limit = parseInt(req.query.limit as string) || 20;
 
-      const notifications = await NotificationService.getUserNotifications(userId, limit);
-      const unreadCount = await NotificationService.getUnreadCount(userId);
+      const notifications = await NotificationService.getUserNotifications(new mongoose.Types.ObjectId(userId), limit);
+      const unreadCount = await NotificationService.getUnreadCount(new mongoose.Types.ObjectId(userId));
 
       res.json({
         success: true,
@@ -407,7 +457,7 @@ router.get(
           id: n._id,
           type: n.type,
           channel: n.channel,
-          subject: n.subject,
+          title: n.title,
           body: n.body,
           status: n.status,
           readAt: n.readAt,
@@ -433,7 +483,7 @@ router.put(
       const { id } = req.params;
       const userId = req.user!.id;
 
-      await NotificationService.markAsRead(id, userId);
+      await NotificationService.markAsRead(new mongoose.Types.ObjectId(id), new mongoose.Types.ObjectId(userId));
 
       res.json({ success: true });
     } catch (error) {
