@@ -5,11 +5,14 @@ import { addToCart } from '../store/slices/cartSlice';
 import api from '../services/api';
 import { FiArrowRight, FiShoppingBag, FiStar, FiCheck } from 'react-icons/fi';
 
+// Import local hero image
+import homepageItemImage from '../assets/homepageitem.png';
+
 // Default fallback image for products without images
 const FALLBACK_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
 
-// Hero product showcase image - matching reference design
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=80';
+// Hero product showcase image - using local asset
+const HERO_IMAGE = homepageItemImage;
 
 interface Product {
   _id: string;
