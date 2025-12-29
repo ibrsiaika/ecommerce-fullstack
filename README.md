@@ -22,8 +22,6 @@
 
 ![E-Shop Home Page](https://github.com/user-attachments/assets/10dfbc41-5145-415f-923b-6c7410cf27dd)
 
-*Luxury minimal design with Stripe/Amazon-level aesthetics*
-
 </div>
 
 ---
