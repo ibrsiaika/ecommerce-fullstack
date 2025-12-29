@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
+import rateLimit from 'express-rate-limit';
 import { protect as authenticate } from '../middleware/auth';
 import Joi from 'joi';
 import { StripeService } from '../services/StripeService';
@@ -11,6 +12,15 @@ import { FraudDetectionService } from '../services/FraudDetectionService';
 import { Transaction } from '../models/Transaction';
 import { NotificationType, NotificationChannel } from '../models/Notification';
 import { AuditActionType, ResourceType } from '../models/AuditLog';
+
+// Rate limiter for webhook endpoints (stricter than default)
+const webhookRateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Too many webhook requests' }
+});
 
 // Simple validation middleware
 const validate = (schema: { body?: Joi.ObjectSchema; headers?: Joi.ObjectSchema }) => {
@@ -307,6 +317,7 @@ router.post(
  */
 router.post(
   '/payments/webhook/stripe',
+  webhookRateLimiter,
   validate({
     headers: Joi.object({
       'stripe-signature': Joi.string().required(),
@@ -340,6 +351,7 @@ router.post(
  */
 router.post(
   '/payments/webhook/paypal',
+  webhookRateLimiter,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       // PayPal webhook signature verification requires specific headers
