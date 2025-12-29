@@ -1,6 +1,22 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { authenticate } from '../middleware/authMiddleware';
-import { validate } from '../middleware/validationMiddleware';
+import { protect as authenticate } from '../middleware/auth';
+import Joi from 'joi';
+
+// Simple validation middleware
+const validate = (schema: { body?: Joi.ObjectSchema }) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (schema.body) {
+      const { error } = schema.body.validate(req.body);
+      if (error) {
+        return res.status(400).json({
+          success: false,
+          error: error.details[0].message
+        });
+      }
+    }
+    next();
+  };
+};
 import { StripeService } from '../services/StripeService';
 import { PayPalService } from '../services/PayPalService';
 import { NotificationService } from '../services/NotificationService';
