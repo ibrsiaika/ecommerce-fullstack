@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 import mongoose from 'mongoose';
-import { PaymentMethod, PaymentMethodType, PaymentMethodStatus } from '../models/PaymentMethod';
-import { Transaction, TransactionType, TransactionStatus } from '../models/Transaction';
+import { PaymentMethod, PaymentMethodType, PaymentMethodStatus, IPaymentMethod } from '../models/PaymentMethod';
+import { Transaction, TransactionType, TransactionStatus, ITransaction, IProcessor } from '../models/Transaction';
 import { AuditLogService } from './AuditLogService';
 import { AuditActionType, ResourceType } from '../models/AuditLog';
 
@@ -53,7 +53,7 @@ export class StripeService {
    * 
    * Main entry point for processing payments
    */
-  static async charge(request: ChargeRequest): Promise<Transaction> {
+  static async charge(request: ChargeRequest): Promise<ITransaction> {
     const { userId, paymentMethodId, amount, currency = 'USD', description, orderId, fraudScore, idempotencyKey, metadata } = request;
 
     try {
@@ -110,15 +110,22 @@ export class StripeService {
 
       // Handle based on payment intent status
       if (paymentIntent.status === 'succeeded') {
-        await transaction.updateStatus(TransactionStatus.SUCCEEDED, {
+        // Get latest charge info if available
+        const latestCharge = typeof paymentIntent.latest_charge === 'string' 
+          ? await stripe.charges.retrieve(paymentIntent.latest_charge)
+          : paymentIntent.latest_charge;
+
+        const processorUpdate: IProcessor = {
           name: 'stripe',
           transactionId: paymentIntent.id,
-          authorizationCode: paymentIntent.client_secret,
-          avsResult: paymentIntent.charges?.data[0]?.payment_method_details?.card?.checks?.address_line1_check,
-          cvvResult: paymentIntent.charges?.data[0]?.payment_method_details?.card?.checks?.cvc_check,
-          riskLevel: paymentIntent.charges?.data[0]?.outcome?.risk_level,
-          riskDetails: paymentIntent.charges?.data[0]?.outcome,
-        });
+          authorizationCode: paymentIntent.client_secret || undefined,
+          avsResult: latestCharge?.payment_method_details?.card?.checks?.address_line1_check || undefined,
+          cvvResult: latestCharge?.payment_method_details?.card?.checks?.cvc_check || undefined,
+          riskLevel: latestCharge?.outcome?.risk_level || undefined,
+          riskDetails: latestCharge?.outcome || undefined,
+        };
+
+        await transaction.updateStatus(TransactionStatus.SUCCEEDED, processorUpdate);
 
         // Mark payment method as used
         await paymentMethod.markAsUsed();
@@ -127,10 +134,10 @@ export class StripeService {
         await AuditLogService.log(
           AuditActionType.PAYMENT_PROCESSED,
           ResourceType.TRANSACTION,
-          transaction._id,
-          userId,
+          String(transaction._id),
+          String(userId),
           null,
-          { amount, currency, method: paymentMethod.displayName }
+          { payment: { from: null, to: { amount, currency, method: paymentMethod.displayName } } }
         );
       } else if (paymentIntent.status === 'requires_action') {
         await transaction.updateStatus(TransactionStatus.PROCESSING);
@@ -144,7 +151,7 @@ export class StripeService {
       // Handle payment errors
       if (error.type === 'StripeCardError') {
         // Card error (e.g., declined)
-        const transaction = await Transaction.create({
+        const errorTransaction = await Transaction.create({
           order: orderId,
           user: userId,
           paymentMethod: paymentMethodId,
@@ -161,12 +168,15 @@ export class StripeService {
         });
 
         const retryable = error.decline_code !== 'fraudulent' && error.decline_code !== 'card_not_supported';
-        await transaction.recordDecline(error.decline_code, error.message, retryable);
+        await errorTransaction.recordDecline(error.decline_code, error.message, retryable);
 
-        // Log decline
-        await paymentMethod.recordDecline(error.message);
+        // Log decline - refetch payment method if needed
+        const pm = await PaymentMethod.findById(paymentMethodId);
+        if (pm) {
+          await pm.recordDecline(error.message);
+        }
 
-        return transaction;
+        return errorTransaction;
       }
 
       throw error;
@@ -176,7 +186,7 @@ export class StripeService {
   /**
    * Process refund
    */
-  static async refund(request: RefundRequest): Promise<Transaction> {
+  static async refund(request: RefundRequest): Promise<ITransaction> {
     const { transactionId, amount, reason } = request;
 
     // Get original transaction
@@ -188,11 +198,14 @@ export class StripeService {
     const refundAmount = amount || originalTxn.amount;
 
     try {
-      // Process refund with Stripe
+      // Process refund with Stripe - reason must be a valid Stripe reason type
+      const refundReason = reason === 'duplicate' ? 'duplicate' : 
+                           reason === 'fraudulent' ? 'fraudulent' : 'requested_by_customer';
+      
       const refund = await stripe.refunds.create({
         payment_intent: originalTxn.processor.transactionId,
         amount: Math.round(refundAmount),
-        reason: reason || 'requested_by_customer',
+        reason: refundReason,
         metadata: {
           originalTransactionId: transactionId.toString(),
         },
@@ -218,7 +231,7 @@ export class StripeService {
   /**
    * Create or save a payment method
    */
-  static async createPaymentMethod(request: CreatePaymentMethodRequest): Promise<PaymentMethod> {
+  static async createPaymentMethod(request: CreatePaymentMethodRequest): Promise<IPaymentMethod> {
     const { userId, stripePaymentMethodId, displayName, type, setAsDefault } = request;
 
     // Get payment method details from Stripe
@@ -248,10 +261,10 @@ export class StripeService {
     const card = cardData
       ? {
           brand: cardData.brand,
-          last4: cardData.last_digits,
+          last4: cardData.last4,
           expMonth: cardData.exp_month,
           expYear: cardData.exp_year,
-          fingerprint: cardData.fingerprint,
+          fingerprint: cardData.fingerprint || '',
           country: cardData.country || 'US',
         }
       : undefined;

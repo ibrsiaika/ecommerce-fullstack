@@ -175,6 +175,29 @@ export interface IFraudAlert extends Document {
   block(analyst: mongoose.Types.ObjectId, reason: string): Promise<void>;
 }
 
+// Static methods interface
+export interface IFraudAlertModel extends Model<IFraudAlert> {
+  createAlert(
+    alertType: FraudAlertType,
+    userId: mongoose.Types.ObjectId,
+    email: string,
+    riskScore: number,
+    signals: DetectionSignal[],
+    contextType: 'order' | 'payment' | 'account' | 'refund' | 'login',
+    contextData: Record<string, any>,
+    detectionMethod?: 'automated' | 'manual' | 'external',
+    metadata?: {
+      userAgent?: string;
+      ipAddress?: string;
+      deviceId?: string;
+      contextId?: mongoose.Types.ObjectId;
+    }
+  ): Promise<IFraudAlert>;
+  findPending(riskLevel?: FraudRiskLevel, limit?: number): Promise<IFraudAlert[]>;
+  findByUser(userId: mongoose.Types.ObjectId, limit?: number): Promise<IFraudAlert[]>;
+  findRelated(alert: IFraudAlert): Promise<IFraudAlert[]>;
+}
+
 const fraudAlertSchema = new Schema<IFraudAlert>(
   {
     alertId: {
@@ -524,7 +547,7 @@ fraudAlertSchema.statics.findRelated = async function (
   return this.find(query).limit(100);
 };
 
-export const FraudAlert: Model<IFraudAlert> = mongoose.model<IFraudAlert>(
+export const FraudAlert = mongoose.model<IFraudAlert, IFraudAlertModel>(
   'FraudAlert',
   fraudAlertSchema
 );
