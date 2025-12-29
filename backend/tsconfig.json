@@ -38,6 +38,8 @@
     "node_modules",
     "dist",
     "**/*.test.ts",
+    "src/services/OrderFraudIntegration.ts",
+    "src/services/CapabilityService.ts",
     "src/scripts/seedProducts.ts"
   ]
 }
