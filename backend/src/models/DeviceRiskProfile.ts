@@ -265,7 +265,7 @@ deviceRiskProfileSchema.methods.recordLogin = async function (
   success: boolean
 ): Promise<void> {
   // Track unique users from this device
-  const userExists = this.loginHistory.some((login) => login.userId.equals(userId));
+  const userExists = this.loginHistory.some((login: LoginRecord) => login.userId.equals(userId));
   if (!userExists) {
     this.uniqueUserCount++;
   }
@@ -289,7 +289,7 @@ deviceRiskProfileSchema.methods.recordLogin = async function (
     // Reset counter every 24h
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const recentFailures = this.loginHistory.filter(
-      (login) => login.timestamp > oneDayAgo && !login.success
+      (login: LoginRecord) => login.timestamp > oneDayAgo && !login.success
     );
     this.loginAttemptCount24h = recentFailures.length;
   }
@@ -325,13 +325,13 @@ deviceRiskProfileSchema.methods.recordPayment = async function (
 
   // Calculate payment success rate
   const totalPayments = this.paymentHistory.length;
-  const successfulPayments = this.paymentHistory.filter((p) => p.success).length;
+  const successfulPayments = this.paymentHistory.filter((p: PaymentRecord) => p.success).length;
   this.paymentSuccessRate = totalPayments > 0 ? successfulPayments / totalPayments : 0.5;
 
   // Track preferred card
-  const cardPayments = this.paymentHistory.filter((p) => p.cardLast4 === cardLast4);
+  const cardPayments = this.paymentHistory.filter((p: PaymentRecord) => p.cardLast4 === cardLast4);
   if (cardPayments.length > 0) {
-    const cardSuccesses = cardPayments.filter((p) => p.success).length;
+    const cardSuccesses = cardPayments.filter((p: PaymentRecord) => p.success).length;
     this.preferredCardSuccessRate = cardSuccesses / cardPayments.length;
     this.preferredCardLast4 = cardLast4;
   }

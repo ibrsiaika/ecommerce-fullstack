@@ -240,8 +240,8 @@ export class BehaviorAnalysisService {
 
     // Check payment method
     if (transactionData.paymentMethod) {
-      const preferredMethods = pattern.payments.preferredPaymentMethods.map((m) => m.method);
-      if (!preferredMethods.includes(transactionData.paymentMethod)) {
+      const preferredMethods = pattern.payments.preferredPaymentMethods.map((m: { method: string; cardBrand?: string; count: number; successRate: number }) => m.method);
+      if (!preferredMethods.includes(transactionData.paymentMethod as string)) {
         deviations.push(`New payment method: ${transactionData.paymentMethod}`);
         anomalyScore += 20;
       }

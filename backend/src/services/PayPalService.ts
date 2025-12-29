@@ -1,7 +1,7 @@
 import axios from 'axios';
 import mongoose from 'mongoose';
-import { PaymentMethod, PaymentMethodType, PaymentMethodStatus } from '../models/PaymentMethod';
-import { Transaction, TransactionType, TransactionStatus } from '../models/Transaction';
+import { PaymentMethod, PaymentMethodType, PaymentMethodStatus, IPaymentMethod } from '../models/PaymentMethod';
+import { Transaction, TransactionType, TransactionStatus, ITransaction } from '../models/Transaction';
 import { AuditLogService } from './AuditLogService';
 import { AuditActionType, ResourceType } from '../models/AuditLog';
 
@@ -85,7 +85,7 @@ export class PayPalService {
    * Create and execute payment (vault payment)
    * Uses saved PayPal token for recurring/stored payment
    */
-  static async charge(request: ChargeRequest): Promise<Transaction> {
+  static async charge(request: ChargeRequest): Promise<ITransaction> {
     const { userId, paymentMethodId, amount, currency = 'USD', description, orderId, fraudScore, idempotencyKey } = request;
 
     try {
@@ -174,8 +174,8 @@ export class PayPalService {
    */
   private static async executePayment(
     paymentId: string,
-    transaction: Transaction,
-    paymentMethod: PaymentMethod,
+    transaction: ITransaction,
+    paymentMethod: IPaymentMethod,
     accessToken: string
   ): Promise<void> {
     try {
@@ -205,10 +205,10 @@ export class PayPalService {
         await AuditLogService.log(
           AuditActionType.PAYMENT_PROCESSED,
           ResourceType.TRANSACTION,
-          transaction._id,
-          transaction.user,
+          String(transaction._id),
+          String(transaction.user),
           null,
-          { amount: transaction.amount, currency: transaction.currency }
+          { payment: { from: null, to: { amount: transaction.amount, currency: transaction.currency } } }
         );
       } else {
         await transaction.updateStatus(TransactionStatus.FAILED);
@@ -225,7 +225,7 @@ export class PayPalService {
   /**
    * Process refund
    */
-  static async refund(request: RefundRequest): Promise<Transaction> {
+  static async refund(request: RefundRequest): Promise<ITransaction> {
     const { transactionId, amount, reason } = request;
 
     // Get original transaction
@@ -276,7 +276,7 @@ export class PayPalService {
   /**
    * Create/link PayPal account for user
    */
-  static async linkPayPalAccount(userId: mongoose.Types.ObjectId, email: string, paypalId: string): Promise<PaymentMethod> {
+  static async linkPayPalAccount(userId: mongoose.Types.ObjectId, email: string, paypalId: string): Promise<IPaymentMethod> {
     // Check for duplicate
     const existing = await PaymentMethod.findOne({
       user: userId,

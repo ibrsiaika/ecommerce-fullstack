@@ -13,9 +13,8 @@ import sellerRoutes from '../routes/seller';
 import configRoutes from '../routes/config';
 import approvalRoutes from '../routes/approvalRoutes';
 import auditRoutes from '../routes/auditRoutes';
-// Note: fraudRoutes and phase4Routes are temporarily disabled due to incomplete implementation
-// import fraudRoutes from '../routes/fraudRoutes';
-// import phase4Routes from '../routes/phase4Routes';
+import fraudRoutes from '../routes/fraudRoutes';
+import phase4Routes from '../routes/phase4Routes';
 
 // Middleware
 import { errorHandler } from '../middleware/errorHandler';
@@ -40,9 +39,8 @@ const routes: RouteConfig[] = [
   { path: '/api/seller', router: sellerRoutes },
   { path: '/api/admin/approvals', router: approvalRoutes },
   { path: '/api/audit', router: auditRoutes },
-  // Note: These routes are temporarily disabled pending complete implementation
-  // { path: '/api/admin/fraud', router: fraudRoutes },
-  // { path: '/api/phase4', router: phase4Routes },
+  { path: '/api/admin/fraud', router: fraudRoutes },
+  { path: '/api/phase4', router: phase4Routes },
 ];
 
 /**
