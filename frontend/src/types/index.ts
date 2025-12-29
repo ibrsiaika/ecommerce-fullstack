@@ -35,11 +35,12 @@ export interface AuthResponse {
 export interface Review {
   id: string;
   _id?: string;
-  user: User;
+  user: User | string;
+  name?: string;
   rating: number;
   comment: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export interface Product {

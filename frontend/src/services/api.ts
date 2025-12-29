@@ -1,13 +1,6 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosError, AxiosResponse } from 'axios';
-import type { AuthResponse, Product, Order } from '../types';
-
-// Generic API response wrapper
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
+import type { AuthResponse, Product, Order, ApiResponse } from '../types';
 
 class ApiClient {
   private client: AxiosInstance;
