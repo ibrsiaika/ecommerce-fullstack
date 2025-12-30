@@ -29,7 +29,8 @@ export interface AuthResponse {
   message?: string;
   data: User;
   token: string;
-  refreshToken?: string;
+  sessionId?: string;
+  expiresIn?: number;
 }
 
 // Product types
