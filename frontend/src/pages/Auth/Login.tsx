@@ -34,18 +34,23 @@ const Login: React.FC = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     
     if (!email || !password) {
+      console.warn('Email or password missing');
       return;
     }
 
     try {
-      await dispatch(login({ email, password })).unwrap();
+      console.log('Attempting login with email:', email);
+      const result = await dispatch(login({ email, password })).unwrap();
+      console.log('Login successful:', result);
       const from = (location.state as any)?.from?.pathname || '/';
       navigate(from, { replace: true });
-    } catch {
+    } catch (err) {
+      console.error('Login failed:', err);
       // Error is handled by the slice
     }
   };
@@ -85,7 +90,7 @@ const Login: React.FC = () => {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-7">
+          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-7" noValidate>
             {/* Email Field */}
             <div className="group">
               <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-3">
@@ -142,7 +147,7 @@ const Login: React.FC = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !email || !password}
               className="w-full py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-xl bg-black text-white hover:bg-gray-900 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 group mt-8"
             >
               {isLoading ? (
