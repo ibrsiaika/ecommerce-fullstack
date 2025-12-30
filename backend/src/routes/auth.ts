@@ -204,7 +204,7 @@ router.post('/refresh', authLimiter, refreshToken);
  *       200:
  *         description: Logged out from all devices
  */
-router.post('/logout-all', protect, logoutAll);
+router.post('/logout-all', protect, sensitiveLimiter, logoutAll);
 
 /**
  * @swagger
@@ -218,7 +218,7 @@ router.post('/logout-all', protect, logoutAll);
  *       200:
  *         description: Active sessions retrieved
  */
-router.get('/sessions', protect, getSessions);
+router.get('/sessions', protect, sensitiveLimiter, getSessions);
 
 /**
  * @swagger
@@ -238,11 +238,11 @@ router.get('/sessions', protect, getSessions);
  *       200:
  *         description: Session revoked
  */
-router.delete('/sessions/:sessionId', protect, revokeSession);
+router.delete('/sessions/:sessionId', protect, sensitiveLimiter, revokeSession);
 
 // Additional auth routes
-router.get('/me', protect, getMe);
-router.put('/updatedetails', protect, updateDetails);
+router.get('/me', protect, sensitiveLimiter, getMe);
+router.put('/updatedetails', protect, sensitiveLimiter, updateDetails);
 router.put('/updatepassword', protect, sensitiveLimiter, [
   body('currentPassword').notEmpty().withMessage('Current password is required'),
   body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters long')
