@@ -162,7 +162,7 @@ router.post('/login', authLimiter, [
  *       200:
  *         description: Logout successful
  */
-router.post('/logout', protect, logout);
+router.post('/logout', protect, sensitiveLimiter, logout);
 
 /**
  * @swagger
