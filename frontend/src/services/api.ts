@@ -121,7 +121,8 @@ class ApiClient {
   private clearAuthAndRedirect() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('sessionId');
+    localStorage.removeItem('userId');
     
     // Only redirect if not already on login page
     if (!window.location.pathname.includes('/login')) {
@@ -130,20 +131,30 @@ class ApiClient {
   }
 
   private async refreshToken() {
-    const refreshToken = localStorage.getItem('refreshToken');
+    const sessionId = localStorage.getItem('sessionId');
+    const userId = localStorage.getItem('userId');
     
-    // If no refresh token, try the cookie-based refresh
-    // The backend sends tokens in httpOnly cookies, so this might work
-    // without explicitly sending the refresh token
+    if (!sessionId || !userId) {
+      throw new Error('Session data not found');
+    }
+    
     try {
       const response = await axios.post(
         `${this.baseURL}/api/auth/refresh`,
-        { refreshToken },
+        { sessionId, userId },
         { 
           withCredentials: true,
           headers: { 'Content-Type': 'application/json' }
         }
       );
+      
+      if (response.data.success && response.data.token) {
+        // Update sessionId if it changed
+        if (response.data.sessionId) {
+          localStorage.setItem('sessionId', response.data.sessionId);
+        }
+      }
+      
       return response;
     } catch {
       // If refresh endpoint doesn't exist or fails, throw to trigger logout
@@ -176,8 +187,11 @@ class ApiClient {
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
     }
-    if (response.data.refreshToken) {
-      localStorage.setItem('refreshToken', response.data.refreshToken);
+    if (response.data.sessionId) {
+      localStorage.setItem('sessionId', response.data.sessionId);
+    }
+    if (response.data.data?.id) {
+      localStorage.setItem('userId', response.data.data.id);
     }
     
     return response;
@@ -190,8 +204,11 @@ class ApiClient {
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
     }
-    if (response.data.refreshToken) {
-      localStorage.setItem('refreshToken', response.data.refreshToken);
+    if (response.data.sessionId) {
+      localStorage.setItem('sessionId', response.data.sessionId);
+    }
+    if (response.data.data?.id) {
+      localStorage.setItem('userId', response.data.data.id);
     }
     
     return response;
@@ -204,7 +221,8 @@ class ApiClient {
       // Always clear local storage on logout
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('sessionId');
+      localStorage.removeItem('userId');
     }
   }
 
