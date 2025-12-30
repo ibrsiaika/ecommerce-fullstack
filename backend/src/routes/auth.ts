@@ -7,7 +7,11 @@ import {
   getMe,
   updateDetails,
   updatePassword,
-  verifyEmail
+  verifyEmail,
+  refreshToken,
+  logoutAll,
+  getSessions,
+  revokeSession
 } from '../controllers/authController';
 import { protect } from '../middleware/auth';
 
@@ -158,6 +162,82 @@ router.post('/login', [
  *         description: Logout successful
  */
 router.post('/logout', protect, logout);
+
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Refresh access token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - sessionId
+ *               - userId
+ *             properties:
+ *               sessionId:
+ *                 type: string
+ *               userId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ *       401:
+ *         description: Invalid or expired refresh token
+ */
+router.post('/refresh', refreshToken);
+
+/**
+ * @swagger
+ * /api/auth/logout-all:
+ *   post:
+ *     summary: Logout from all devices
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logged out from all devices
+ */
+router.post('/logout-all', protect, logoutAll);
+
+/**
+ * @swagger
+ * /api/auth/sessions:
+ *   get:
+ *     summary: Get all active sessions
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Active sessions retrieved
+ */
+router.get('/sessions', protect, getSessions);
+
+/**
+ * @swagger
+ * /api/auth/sessions/{sessionId}:
+ *   delete:
+ *     summary: Revoke a specific session
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Session revoked
+ */
+router.delete('/sessions/:sessionId', protect, revokeSession);
 
 // Additional auth routes
 router.get('/me', protect, getMe);
