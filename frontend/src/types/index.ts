@@ -29,8 +29,8 @@ export interface AuthResponse {
   message?: string;
   data: User;
   token: string;
-  sessionId?: string;
-  expiresIn?: number;
+  sessionId: string;
+  expiresIn: number;
 }
 
 // Product types

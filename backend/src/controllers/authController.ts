@@ -98,7 +98,7 @@ export const register = async (
       token: loginResult.tokens.accessToken,
       data: {
         id: loginResult.user.id,
-        name: `${user.firstName} ${user.lastName}`.trim(),
+        name: `${loginResult.user.firstName} ${loginResult.user.lastName}`.trim(),
         email: loginResult.user.email,
         role: loginResult.user.role,
         avatar: loginResult.user.avatar,
@@ -150,6 +150,9 @@ export const login = async (
       timezone
     );
 
+    // Fetch user to get additional fields not in loginResult
+    const user = await User.findById(loginResult.user.id);
+
     // Set refresh token as httpOnly cookie
     res.cookie('refreshToken', loginResult.tokens.refreshToken, {
       httpOnly: true,
@@ -168,7 +171,8 @@ export const login = async (
         email: loginResult.user.email,
         role: loginResult.user.role,
         avatar: loginResult.user.avatar,
-        isEmailVerified: true
+        isEmailVerified: user?.isEmailVerified || false,
+        createdAt: user?.createdAt
       },
       sessionId: loginResult.tokens.sessionId,
       expiresIn: loginResult.tokens.expiresIn
