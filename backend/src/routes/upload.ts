@@ -1,10 +1,11 @@
-import express, { Response, Request } from 'express';
+import express, { Response, Request, NextFunction } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { authenticate, AuthenticatedRequest } from '../middleware/auth';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { sendSuccess, sendError } from '../utils/response';
+import { uploadLimiter, apiLimiter } from '../config/rateLimits';
 
 const router = express.Router();
 
@@ -54,6 +55,7 @@ const upload = multer({
  */
 router.post(
   '/',
+  uploadLimiter,
   authenticate,
   upload.single('file'),
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -80,6 +82,7 @@ router.post(
  */
 router.post(
   '/multiple',
+  uploadLimiter,
   authenticate,
   upload.array('files', 10),
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -111,6 +114,7 @@ router.post(
  */
 router.delete(
   '/:filename',
+  apiLimiter,
   authenticate,
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { filename } = req.params;
@@ -132,7 +136,7 @@ router.delete(
 );
 
 // Error handling middleware for multer errors
-router.use((err: any, _req: Request, res: Response, next: Function) => {
+router.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return sendError(res, 400, 'File size exceeds the 5MB limit');

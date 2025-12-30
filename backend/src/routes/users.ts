@@ -4,8 +4,12 @@ import User from '../models/User';
 import { authenticate, requireAdmin, AuthenticatedRequest } from '../middleware/auth';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { sendSuccess, sendError, sendPaginatedSuccess } from '../utils/response';
+import { apiLimiter, sensitiveLimiter } from '../config/rateLimits';
 
 const router = express.Router();
+
+// Apply general API rate limiting to all user routes
+router.use(apiLimiter);
 
 /**
  * @route   GET /api/users/profile
@@ -64,12 +68,12 @@ router.put(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return sendError(res, 400, 'Validation failed', errors.array().map((e: any) => e.msg));
+      return sendError(res, 400, 'Validation failed', errors.array().map((e: { msg: string }) => e.msg));
     }
 
     const { firstName, lastName, phone, avatar } = req.body;
     
-    const updateFields: any = {};
+    const updateFields: Record<string, string | undefined> = {};
     if (firstName !== undefined) updateFields.firstName = firstName;
     if (lastName !== undefined) updateFields.lastName = lastName;
     if (phone !== undefined) updateFields.phone = phone;
@@ -104,6 +108,7 @@ router.put(
  */
 router.put(
   '/password',
+  sensitiveLimiter,
   authenticate,
   [
     body('oldPassword')
@@ -116,7 +121,7 @@ router.put(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return sendError(res, 400, 'Validation failed', errors.array().map((e: any) => e.msg));
+      return sendError(res, 400, 'Validation failed', errors.array().map((e: { msg: string }) => e.msg));
     }
 
     const { oldPassword, newPassword } = req.body;
@@ -264,12 +269,12 @@ router.put(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return sendError(res, 400, 'Validation failed', errors.array().map((e: any) => e.msg));
+      return sendError(res, 400, 'Validation failed', errors.array().map((e: { msg: string }) => e.msg));
     }
 
     const { firstName, lastName, role, status, phone } = req.body;
     
-    const updateFields: any = {};
+    const updateFields: Record<string, string | undefined> = {};
     if (firstName !== undefined) updateFields.firstName = firstName;
     if (lastName !== undefined) updateFields.lastName = lastName;
     if (role !== undefined) updateFields.role = role;
