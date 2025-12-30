@@ -2,7 +2,7 @@ import Store from '../models/Store';
 import Product from '../models/Product';
 import Order from '../models/Order';
 import Withdrawal from '../models/Withdrawal';
-import { AppError } from '../middleware/appError';
+import { AppError } from '../middleware/errorHandler';
 import mongoose from 'mongoose';
 
 export class SellerService {
