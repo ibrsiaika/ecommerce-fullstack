@@ -14,6 +14,7 @@ import {
   revokeSession
 } from '../controllers/authController';
 import { protect } from '../middleware/auth';
+import { authLimiter, sensitiveLimiter } from '../config/rateLimits';
 
 const router = express.Router();
 
@@ -88,7 +89,7 @@ const router = express.Router();
  *       400:
  *         description: Bad request
  */
-router.post('/register', [
+router.post('/register', authLimiter, [
   body('name')
     .trim()
     .isLength({ min: 2, max: 50 })
@@ -139,7 +140,7 @@ router.post('/register', [
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', [
+router.post('/login', authLimiter, [
   body('email')
     .isEmail()
     .normalizeEmail()
@@ -189,7 +190,7 @@ router.post('/logout', protect, logout);
  *       401:
  *         description: Invalid or expired refresh token
  */
-router.post('/refresh', refreshToken);
+router.post('/refresh', authLimiter, refreshToken);
 
 /**
  * @swagger
@@ -242,7 +243,7 @@ router.delete('/sessions/:sessionId', protect, revokeSession);
 // Additional auth routes
 router.get('/me', protect, getMe);
 router.put('/updatedetails', protect, updateDetails);
-router.put('/updatepassword', protect, [
+router.put('/updatepassword', protect, sensitiveLimiter, [
   body('currentPassword').notEmpty().withMessage('Current password is required'),
   body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters long')
 ], updatePassword);
