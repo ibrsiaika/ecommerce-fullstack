@@ -1,6 +1,6 @@
 import Order, { IOrder } from '../models/Order';
 import Product from '../models/Product';
-import { AppError } from '../middleware/appError';
+import { AppError } from '../middleware/errorHandler';
 import emailService from './emailService';
 import Stripe from 'stripe';
 

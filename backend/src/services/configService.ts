@@ -1,7 +1,7 @@
 import SiteConfig, { ISiteConfig, IThemeConfig, IBrandingConfig, ILayoutConfig, IFeatureFlags, INotificationConfig } from '../models/SiteConfig';
 import AdminPreference from '../models/AdminPreference';
 import Role from '../models/Role';
-import { AppError } from '../middleware/appError';
+import { AppError } from '../middleware/errorHandler';
 
 export class ConfigService {
   /**

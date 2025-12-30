@@ -1,5 +1,5 @@
 import Product, { IProduct } from '../models/Product';
-import { AppError } from '../middleware/appError';
+import { AppError } from '../middleware/errorHandler';
 
 export class ProductService {
   async getAll(

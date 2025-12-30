@@ -3,7 +3,7 @@ import Product from '../models/Product';
 import User from '../models/User';
 import Store from '../models/Store';
 import Analytics from '../models/Analytics';
-import { AppError } from '../middleware/appError';
+import { AppError } from '../middleware/errorHandler';
 
 export class AdminDashboardService {
   // Get overall platform statistics

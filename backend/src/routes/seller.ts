@@ -1,7 +1,7 @@
 import express, { Response } from 'express';
 import { protect } from '../middleware/auth';
 import sellerService from '../services/sellerService';
-import { asyncHandler } from '../middleware/appError';
+import { asyncHandler } from '../middleware/errorHandler';
 import { sendSuccess, sendError } from '../utils/response';
 import { AuthenticatedRequest } from '../middleware/auth';
 
