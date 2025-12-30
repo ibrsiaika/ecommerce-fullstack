@@ -348,29 +348,29 @@ const ProductList: React.FC = () => {
                 <div className="flex gap-2">
                   <Link
                     to={`/products/${product._id}`}
-                    className="flex-1 btn btn-secondary py-2.5 text-sm justify-center group/btn"
+                    className="flex-1 btn btn-secondary py-2.5 text-sm justify-center group/btn font-medium border border-neutral-300 hover:border-neutral-400 hover:bg-neutral-50 transition-all duration-200 active:scale-95"
                   >
                     View
-                    <FiArrowRight className="w-4 h-4 ml-1 group-hover/btn:translate-x-0.5 transition-transform" />
+                    <FiArrowRight className="w-4 h-4 ml-1 group-hover/btn:translate-x-1 transition-transform duration-200" />
                   </Link>
                   <button
                     onClick={() => handleAddToCart(product)}
                     disabled={product.countInStock === 0}
-                    className={`flex-1 btn py-2.5 text-sm justify-center transition-all duration-300 ${
+                    className={`flex-1 btn py-2.5 text-sm justify-center font-medium transition-all duration-300 active:scale-95 ${
                       addedToCart === product._id
-                        ? 'btn-secondary bg-green-50 border-green-500 text-green-700'
-                        : 'btn-primary'
-                    } disabled:opacity-40 disabled:cursor-not-allowed`}
+                        ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 border border-emerald-600'
+                        : 'bg-black text-white hover:bg-neutral-900 shadow-lg shadow-black/20 border border-black hover:border-neutral-900'
+                    } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black disabled:shadow-none`}
                   >
                     {addedToCart === product._id ? (
                       <>
-                        <FiCheck className="w-4 h-4 mr-1" />
-                        Added!
+                        <FiCheck className="w-4 h-4 mr-1.5 animate-pulse" />
+                        <span>Added!</span>
                       </>
                     ) : (
                       <>
-                        <FiPlus className="w-4 h-4 mr-1" />
-                        Add
+                        <FiPlus className="w-4 h-4 mr-1.5 group-hover:rotate-90 transition-transform duration-300" />
+                        <span>Add</span>
                       </>
                     )}
                   </button>
