@@ -1,7 +1,7 @@
 import express from 'express';
 import { protect, authorize } from '../middleware/auth';
 import configService from '../services/configService';
-import { asyncHandler } from '../middleware/appError';
+import { asyncHandler } from '../middleware/errorHandler';
 import { sendSuccess, sendError } from '../utils/response';
 
 const router = express.Router();

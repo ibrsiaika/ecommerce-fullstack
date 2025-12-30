@@ -17,8 +17,7 @@ import fraudRoutes from '../routes/fraudRoutes';
 import phase4Routes from '../routes/phase4Routes';
 
 // Middleware
-import { errorHandler } from '../middleware/errorHandler';
-import { notFound } from '../middleware/notFound';
+import { errorHandler, notFound } from '../middleware/errorHandler';
 
 /**
  * Route configuration
