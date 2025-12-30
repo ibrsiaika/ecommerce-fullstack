@@ -1,10 +1,15 @@
 import axios from 'axios';
-import type { AxiosInstance, AxiosError, AxiosResponse } from 'axios';
+import type { AxiosInstance, AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import type { AuthResponse, Product, Order, ApiResponse } from '../types';
 
 class ApiClient {
   private client: AxiosInstance;
   private baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  private isRefreshing = false;
+  private failedQueue: Array<{
+    resolve: (token: string | null) => void;
+    reject: (error: Error) => void;
+  }> = [];
 
   constructor() {
     this.client = axios.create({
@@ -24,19 +29,126 @@ class ApiClient {
       return config;
     });
 
-    // Handle errors
+    // Handle errors with token refresh support
     this.client.interceptors.response.use(
       (response) => response,
-      (error: AxiosError) => {
-        if (error.response?.status === 401) {
-          // Clear auth data on 401
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
+      async (error: AxiosError) => {
+        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+        
+        // Check if this is a 401 error and we haven't retried yet
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          // Don't retry for login/register endpoints
+          if (originalRequest.url?.includes('/auth/login') || 
+              originalRequest.url?.includes('/auth/register')) {
+            return Promise.reject(error);
+          }
+
+          if (this.isRefreshing) {
+            // Queue this request to retry after token refresh
+            return new Promise((resolve, reject) => {
+              this.failedQueue.push({ resolve, reject });
+            })
+              .then((token) => {
+                if (token) {
+                  originalRequest.headers.Authorization = `Bearer ${token}`;
+                }
+                return this.client(originalRequest);
+              })
+              .catch((err) => {
+                return Promise.reject(err);
+              });
+          }
+
+          originalRequest._retry = true;
+          this.isRefreshing = true;
+
+          try {
+            // Attempt to refresh the token
+            const response = await this.refreshToken();
+            
+            if (response?.data?.token) {
+              const newToken = response.data.token;
+              localStorage.setItem('token', newToken);
+              
+              // Update the authorization header
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              
+              // Process the failed queue with the new token
+              this.processQueue(null, newToken);
+              
+              // Retry the original request
+              return this.client(originalRequest);
+            }
+          } catch (refreshError) {
+            // Token refresh failed, process queue with error
+            this.processQueue(refreshError as Error, null);
+            
+            // Clear auth data and redirect to login
+            this.clearAuthAndRedirect();
+            
+            return Promise.reject(refreshError);
+          } finally {
+            this.isRefreshing = false;
+          }
         }
+
+        // For other 401 errors (e.g., invalid credentials on login), don't redirect
+        if (error.response?.status === 401) {
+          // Check if we should clear auth (token expired and refresh failed)
+          const errorData = error.response?.data as { error?: { code?: string } };
+          if (errorData?.error?.code === 'SESSION_INVALID' || 
+              errorData?.error?.code === 'TOKEN_EXPIRED') {
+            this.clearAuthAndRedirect();
+          }
+        }
+        
         return Promise.reject(error);
       }
     );
+  }
+
+  private processQueue(error: Error | null, token: string | null) {
+    this.failedQueue.forEach((prom) => {
+      if (error) {
+        prom.reject(error);
+      } else {
+        prom.resolve(token);
+      }
+    });
+    this.failedQueue = [];
+  }
+
+  private clearAuthAndRedirect() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('refreshToken');
+    
+    // Only redirect if not already on login page
+    if (!window.location.pathname.includes('/login')) {
+      window.location.href = '/login';
+    }
+  }
+
+  private async refreshToken() {
+    const refreshToken = localStorage.getItem('refreshToken');
+    
+    // If no refresh token, try the cookie-based refresh
+    // The backend sends tokens in httpOnly cookies, so this might work
+    // without explicitly sending the refresh token
+    try {
+      const response = await axios.post(
+        `${this.baseURL}/api/auth/refresh`,
+        { refreshToken },
+        { 
+          withCredentials: true,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+      return response;
+    } catch {
+      // If refresh endpoint doesn't exist or fails, throw to trigger logout
+      throw new Error('Token refresh failed');
+    }
   }
 
   // Generic HTTP methods
@@ -44,11 +156,11 @@ class ApiClient {
     return this.client.get(url);
   }
 
-  post(url: string, data?: any) {
+  post(url: string, data?: unknown) {
     return this.client.post(url, data);
   }
 
-  put(url: string, data?: any) {
+  put(url: string, data?: unknown) {
     return this.client.put(url, data);
   }
 
@@ -58,15 +170,42 @@ class ApiClient {
 
   // Auth endpoints
   async register(data: { name: string; email: string; password: string }) {
-    return this.client.post<AuthResponse>('/api/auth/register', data);
+    const response = await this.client.post<AuthResponse>('/api/auth/register', data);
+    
+    // Store tokens if returned
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+    }
+    if (response.data.refreshToken) {
+      localStorage.setItem('refreshToken', response.data.refreshToken);
+    }
+    
+    return response;
   }
 
   async login(data: { email: string; password: string }) {
-    return this.client.post<AuthResponse>('/api/auth/login', data);
+    const response = await this.client.post<AuthResponse>('/api/auth/login', data);
+    
+    // Store tokens if returned
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+    }
+    if (response.data.refreshToken) {
+      localStorage.setItem('refreshToken', response.data.refreshToken);
+    }
+    
+    return response;
   }
 
   async logout() {
-    return this.client.post('/api/auth/logout');
+    try {
+      await this.client.post('/api/auth/logout');
+    } finally {
+      // Always clear local storage on logout
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('refreshToken');
+    }
   }
 
   async getCurrentUser() {
@@ -82,7 +221,7 @@ class ApiClient {
     maxPrice?: number,
     search?: string
   ) {
-    const params: any = { page, limit };
+    const params: Record<string, unknown> = { page, limit };
     if (category) params.category = category;
     if (minPrice !== undefined) params.minPrice = minPrice;
     if (maxPrice !== undefined) params.maxPrice = maxPrice;
@@ -155,7 +294,7 @@ class ApiClient {
     return this.client.put(`/api/orders/${orderId}/status`, { status });
   }
 
-  async processPayment(orderId: string, paymentData: any) {
+  async processPayment(orderId: string, paymentData: unknown) {
     return this.client.post(`/api/orders/${orderId}/pay`, paymentData);
   }
 
@@ -174,7 +313,7 @@ class ApiClient {
   }
 
   // User endpoints
-  async updateProfile(data: any) {
+  async updateProfile(data: Record<string, unknown>) {
     return this.client.put('/api/users/profile', data);
   }
 
@@ -186,7 +325,7 @@ class ApiClient {
     return this.client.get('/api/users', { params: { page, limit } });
   }
 
-  async updateUser(id: string, data: any) {
+  async updateUser(id: string, data: Record<string, unknown>) {
     return this.client.put(`/api/users/${id}`, data);
   }
 

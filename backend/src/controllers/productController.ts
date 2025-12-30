@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { validationResult, body } from 'express-validator';
-import { asyncHandler, AppError } from '../middleware/appError';
+import { asyncHandler, AppError } from '../middleware/errorHandler';
 import productService from '../services/productService';
 import { sendPaginatedSuccess, sendSuccess, sendValidationError } from '../utils/response';
 
