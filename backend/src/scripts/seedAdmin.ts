@@ -6,34 +6,37 @@ export const seedAdmin = async () => {
   try {
     await connectDB();
     
-    // Check if admin user already exists
-    const existingAdmin = await User.findOne({ email: 'admin@example.com' });
-    if (existingAdmin) {
-      console.log('✅ Admin user already exists');
-      console.log('Email: admin@example.com');
-      console.log('Password: admin123');
+    // Check if demo user already exists
+    const existingDemo = await User.findOne({ email: 'user@example.com' });
+    if (existingDemo) {
+      console.log('✅ Demo user already exists');
+      console.log('Email: user@example.com');
+      console.log('Password: password123');
       mongoose.connection.close();
       return;
     }
     
-    // Create admin user - DO NOT hash password here, User model will do it in pre-save hook
-    const adminUser = new User({
-      name: 'Admin User',
-      email: 'admin@example.com',
-      password: 'admin123', // User model will hash this in pre-save hook
-      phone: '+1234567890',
-      role: 'admin',
+    // Create demo user with correct field names
+    const demoUser = new User({
+      firstName: 'Demo',
+      lastName: 'User',
+      email: 'user@example.com',
+      passwordHash: undefined, // Will be set by setPassword
+      role: 'buyer',
       isEmailVerified: true,
-      isActive: true
+      status: 'active'
     });
     
-    await adminUser.save();
-    console.log('✅ Admin user created successfully!');
-    console.log('Email: admin@example.com');
-    console.log('Password: admin123');
+    // Use the setPassword method to properly hash
+    await demoUser.setPassword('password123');
+    await demoUser.save();
+    
+    console.log('✅ Demo user created successfully!');
+    console.log('Email: user@example.com');
+    console.log('Password: password123');
     
   } catch (error) {
-    console.error('❌ Error creating admin user:', error);
+    console.error('❌ Error creating demo user:', error);
   } finally {
     mongoose.connection.close();
   }
