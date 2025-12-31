@@ -3,7 +3,15 @@ import { Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import api from '../services/api';
-import { FiArrowRight, FiShoppingBag, FiStar, FiCheck } from 'react-icons/fi';
+import {
+  FiArrowRight,
+  FiShoppingBag,
+  FiStar,
+  FiCheck,
+  FiAward,
+  FiTruck,
+  FiRefreshCcw,
+} from 'react-icons/fi';
 
 // Import local hero image
 import homepageItemImage from '../assets/homepageitem.png';
@@ -76,15 +84,15 @@ const Home: React.FC = () => {
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-gray-100 rounded-full -ml-36 -mb-36 pointer-events-none" />
         
         <div className="container relative">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 min-h-[580px] lg:min-h-[620px] items-center">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 min-h-[520px] lg:min-h-[620px] items-center">
             {/* Left Content */}
-            <div className="py-12 lg:py-20 lg:pr-8">
+            <div className="py-10 sm:py-12 lg:py-20 lg:pr-8">
               {/* Brand Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-gray-200 shadow-sm mb-8">
                 <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-black to-gray-800 flex items-center justify-center text-white text-xs font-bold">
                   E
                 </div>
-                <span className="text-sm font-medium text-gray-700">Premium Quality</span>
+                <span className="text-sm font-medium text-gray-700">Designed for everyday essentials</span>
               </div>
 
               {/* Main Heading */}
@@ -97,7 +105,7 @@ const Home: React.FC = () => {
               </h1>
 
               {/* Subtitle */}
-              <p className="text-lg text-gray-500 mb-10 max-w-md leading-relaxed">
+              <p className="text-lg text-gray-500 mb-8 sm:mb-10 max-w-xl leading-relaxed">
                 Curated products with exceptional quality, simplicity, and outstanding service. Shop with confidence.
               </p>
 
@@ -105,7 +113,7 @@ const Home: React.FC = () => {
               <div className="flex flex-wrap gap-4">
                 <Link 
                   to="/products" 
-                  className="inline-flex items-center justify-center gap-3 bg-black text-white text-base font-semibold rounded-xl hover:bg-gray-900 active:scale-95 transition-all duration-200 py-4 px-8 shadow-lg"
+                  className="inline-flex items-center justify-center gap-3 bg-black text-white text-base font-semibold rounded-xl hover:bg-gray-900 active:scale-95 transition-all duration-200 py-4 px-8 shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
                 >
                   Explore Collections
                   <FiArrowRight className="w-5 h-5" />
@@ -113,7 +121,7 @@ const Home: React.FC = () => {
                 {!isAuthenticated && (
                   <Link 
                     to="/register" 
-                    className="inline-flex items-center justify-center bg-white text-gray-900 text-base font-semibold rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 py-4 px-8"
+                    className="inline-flex items-center justify-center bg-white text-gray-900 text-base font-semibold rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 py-4 px-8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
                   >
                     Create Account
                   </Link>
@@ -121,19 +129,16 @@ const Home: React.FC = () => {
               </div>
 
               {/* Trust indicators */}
-              <div className="flex flex-wrap items-center gap-6 mt-10 pt-8 border-t border-gray-200">
-                <div className="flex items-center gap-2">
-                  <FiCheck className="w-5 h-5 text-green-600" />
-                  <span className="text-sm text-gray-600">Free Shipping</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FiCheck className="w-5 h-5 text-green-600" />
-                  <span className="text-sm text-gray-600">30-Day Returns</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FiCheck className="w-5 h-5 text-green-600" />
-                  <span className="text-sm text-gray-600">Secure Payment</span>
-                </div>
+              <div className="flex flex-wrap items-center gap-3 mt-10 pt-8 border-t border-gray-200">
+                {['Free Shipping', '30-Day Returns', 'Secure Payment'].map((label) => (
+                  <div
+                    key={label}
+                    className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 shadow-sm"
+                  >
+                    <FiCheck className="w-4 h-4 text-gray-900" />
+                    <span className="text-sm font-medium text-gray-700">{label}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -152,6 +157,20 @@ const Home: React.FC = () => {
                   onLoad={() => setHeroImageLoaded(true)}
                 />
                 {/* Overlay gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+              </div>
+            </div>
+
+            {/* Mobile hero image (container-based, avoids huge whitespace) */}
+            <div className="lg:hidden pb-10 sm:pb-12">
+              <div className="relative w-full aspect-[16/10] rounded-3xl overflow-hidden border border-gray-200 shadow-lg bg-gray-200">
+                {!heroImageLoaded && <div className="absolute inset-0 bg-gray-200 animate-pulse" />}
+                <img
+                  src={HERO_IMAGE}
+                  alt="Featured products showcase"
+                  className={`w-full h-full object-cover transition-opacity duration-500 ${heroImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                  onLoad={() => setHeroImageLoaded(true)}
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </div>
             </div>
@@ -215,7 +234,7 @@ const Home: React.FC = () => {
             <div className="text-center mt-12">
               <Link 
                 to="/products" 
-                className="inline-flex items-center justify-center gap-2 bg-black text-white text-base font-semibold rounded-xl hover:bg-gray-900 active:scale-95 transition-all duration-200 py-4 px-8"
+                className="inline-flex items-center justify-center gap-2 bg-black text-white text-base font-semibold rounded-xl hover:bg-gray-900 active:scale-95 transition-all duration-200 py-4 px-8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
               >
                 View All Products
                 <FiArrowRight className="w-5 h-5" />
@@ -228,31 +247,46 @@ const Home: React.FC = () => {
       {/* Features Section */}
       <section className="py-16 lg:py-20 bg-gray-50 border-t border-gray-100">
         <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Section header */}
+          <div className="text-center mb-10">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">WHY E-SHOP</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">A better shopping experience</h2>
+            <p className="text-gray-500 max-w-2xl mx-auto mt-3">
+              Premium quality products, fast delivery, and easy returns — designed to make your checkout stress‑free.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 title: 'Premium Quality',
                 description: 'Every product is carefully selected for exceptional quality and durability.',
-                icon: '✨'
+                icon: <FiAward className="text-gray-900" size={18} />,
               },
               {
                 title: 'Fast Delivery',
                 description: 'Free shipping on orders over $50. Quick and reliable delivery to your door.',
-                icon: '🚚'
+                icon: <FiTruck className="text-gray-900" size={18} />,
               },
               {
                 title: 'Easy Returns',
                 description: '30-day hassle-free returns. Shop with confidence knowing you are covered.',
-                icon: '↩️'
-              }
-            ].map((feature, index) => (
-              <div 
-                key={index} 
-                className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200"
+                icon: <FiRefreshCcw className="text-gray-900" size={18} />,
+              },
+            ].map((feature) => (
+              <div
+                key={feature.title}
+                className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200"
               >
-                <div className="text-3xl mb-4">{feature.icon}</div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{feature.description}</p>
+                <div className="flex items-start gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center shrink-0">
+                    {feature.icon}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-base font-bold text-gray-900">{feature.title}</h3>
+                    <p className="text-gray-600 text-sm leading-relaxed mt-1">{feature.description}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -281,8 +315,11 @@ const ProductCard: React.FC<{ product: Product; onAddToCart: () => void }> = ({ 
   };
 
   return (
-    <div className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg hover:border-gray-200 transition-all duration-300">
-      <Link to={`/products/${product._id}`}>
+    <div className="group bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-lg hover:border-gray-300 transition-all duration-300">
+      <Link
+        to={`/products/${product._id}`}
+        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
+      >
         <div className="aspect-square bg-gray-50 overflow-hidden relative">
           {/* Loading skeleton */}
           {!imageLoaded && (
@@ -312,7 +349,10 @@ const ProductCard: React.FC<{ product: Product; onAddToCart: () => void }> = ({ 
 
       {/* Product Info */}
       <div className="p-5">
-        <Link to={`/products/${product._id}`}>
+        <Link
+          to={`/products/${product._id}`}
+          className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2 rounded-lg"
+        >
           <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-gray-600 transition-colors">
             {product.name}
           </h3>
@@ -321,7 +361,7 @@ const ProductCard: React.FC<{ product: Product; onAddToCart: () => void }> = ({ 
         {/* Rating */}
         <div className="flex items-center gap-1.5 mb-3">
           <div className="flex items-center">
-            <FiStar className="w-4 h-4 text-amber-400 fill-amber-400" />
+            <FiStar className="w-4 h-4 text-gray-900 fill-gray-900" />
             <span className="text-sm font-medium text-gray-700 ml-1">{product.rating.toFixed(1)}</span>
           </div>
           <span className="text-xs text-gray-400">({product.numReviews} reviews)</span>
@@ -336,9 +376,9 @@ const ProductCard: React.FC<{ product: Product; onAddToCart: () => void }> = ({ 
             onClick={handleAddToCart}
             className={`inline-flex items-center justify-center gap-1.5 text-sm font-semibold rounded-xl transition-all duration-200 py-2.5 px-4 ${
               addedToCart 
-                ? 'bg-green-600 text-white' 
+                ? 'bg-gray-700 text-white' 
                 : 'bg-black text-white hover:bg-gray-900 active:scale-95'
-            }`}
+            } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2`}
           >
             {addedToCart ? (
               <>

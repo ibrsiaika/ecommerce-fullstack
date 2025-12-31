@@ -305,7 +305,7 @@ const ProductList: React.FC = () => {
                   {/* Stock Status */}
                   {product.countInStock > 0 ? (
                     <div className="absolute top-3 right-3">
-                      <span className="pill bg-green-600/90 text-white text-xs shadow-sm">
+                      <span className="pill bg-neutral-900/90 text-white text-xs shadow-sm">
                         <FiCheck className="w-3 h-3" />
                         In Stock
                       </span>
@@ -319,7 +319,7 @@ const ProductList: React.FC = () => {
                   {/* Discount Badge */}
                   {product.comparePrice && product.comparePrice > product.price && (
                     <div className="absolute bottom-3 left-3">
-                      <span className="pill bg-red-500/90 text-white text-xs shadow-sm">
+                      <span className="pill bg-neutral-900/90 text-white text-xs shadow-sm">
                         -{Math.round((1 - product.price / product.comparePrice) * 100)}%
                       </span>
                     </div>
@@ -343,8 +343,8 @@ const ProductList: React.FC = () => {
                         key={i}
                         className={`text-sm ${
                           i < Math.floor(product.rating)
-                            ? 'text-amber-400'
-                            : 'text-neutral-200'
+                            ? 'text-neutral-900'
+                            : 'text-neutral-300'
                         }`}
                       >
                         ★
@@ -382,13 +382,13 @@ const ProductList: React.FC = () => {
                     disabled={product.countInStock === 0}
                     className={`flex-1 btn py-2.5 text-sm justify-center font-medium transition-all duration-300 active:scale-95 ${
                       addedToCart === product._id
-                        ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 border border-emerald-600'
+                        ? 'bg-neutral-800 hover:bg-neutral-900 text-white shadow-lg shadow-black/20 border border-neutral-900'
                         : 'bg-black text-white hover:bg-neutral-900 shadow-lg shadow-black/20 border border-black hover:border-neutral-900'
                     } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black disabled:shadow-none`}
                   >
                     {addedToCart === product._id ? (
                       <>
-                        <FiCheck className="w-4 h-4 mr-1.5 animate-pulse" />
+                        <FiCheck className="w-4 h-4 mr-1.5" />
                         <span>Added!</span>
                       </>
                     ) : (

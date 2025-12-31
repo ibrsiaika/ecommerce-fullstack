@@ -267,3 +267,159 @@
     overflow: hidden;
   }
 }
+
+@layer utilities {
+  /*
+   * MONOCHROME THEME OVERRIDES
+   * ==========================
+   * The app’s design system is black/white/gray. To keep the whole frontend consistent,
+   * these selectors remap non-neutral Tailwind color utilities to grayscale.
+   *
+   * Notes:
+   * - If an element expects white text (e.g. badges/buttons), keep a dark background.
+   * - Otherwise prefer light gray surfaces and neutral borders.
+   */
+
+  :is(
+      [class*="text-amber-"],
+      [class*="text-yellow-"],
+      [class*="text-orange-"],
+      [class*="text-red-"],
+      [class*="text-rose-"],
+      [class*="text-pink-"],
+      [class*="text-purple-"],
+      [class*="text-violet-"],
+      [class*="text-indigo-"],
+      [class*="text-blue-"],
+      [class*="text-cyan-"],
+      [class*="text-teal-"],
+      [class*="text-emerald-"],
+      [class*="text-green-"],
+      [class*="text-lime-"]
+    ) {
+    color: var(--ink-900) !important;
+  }
+
+  :is(
+      [class*="fill-amber-"],
+      [class*="fill-yellow-"],
+      [class*="fill-orange-"],
+      [class*="fill-red-"],
+      [class*="fill-rose-"],
+      [class*="fill-pink-"],
+      [class*="fill-purple-"],
+      [class*="fill-violet-"],
+      [class*="fill-indigo-"],
+      [class*="fill-blue-"],
+      [class*="fill-cyan-"],
+      [class*="fill-teal-"],
+      [class*="fill-emerald-"],
+      [class*="fill-green-"],
+      [class*="fill-lime-"]
+    ) {
+    fill: var(--ink-900) !important;
+  }
+
+  :is(
+      [class*="stroke-amber-"],
+      [class*="stroke-yellow-"],
+      [class*="stroke-orange-"],
+      [class*="stroke-red-"],
+      [class*="stroke-rose-"],
+      [class*="stroke-pink-"],
+      [class*="stroke-purple-"],
+      [class*="stroke-violet-"],
+      [class*="stroke-indigo-"],
+      [class*="stroke-blue-"],
+      [class*="stroke-cyan-"],
+      [class*="stroke-teal-"],
+      [class*="stroke-emerald-"],
+      [class*="stroke-green-"],
+      [class*="stroke-lime-"]
+    ) {
+    stroke: var(--ink-900) !important;
+  }
+
+  :is(
+      [class*="border-amber-"],
+      [class*="border-yellow-"],
+      [class*="border-orange-"],
+      [class*="border-red-"],
+      [class*="border-rose-"],
+      [class*="border-pink-"],
+      [class*="border-purple-"],
+      [class*="border-violet-"],
+      [class*="border-indigo-"],
+      [class*="border-blue-"],
+      [class*="border-cyan-"],
+      [class*="border-teal-"],
+      [class*="border-emerald-"],
+      [class*="border-green-"],
+      [class*="border-lime-"]
+    ) {
+    border-color: var(--ink-200) !important;
+  }
+
+  /* Light surfaces by default */
+  :is(
+      [class*="bg-amber-"],
+      [class*="bg-yellow-"],
+      [class*="bg-orange-"],
+      [class*="bg-red-"],
+      [class*="bg-rose-"],
+      [class*="bg-pink-"],
+      [class*="bg-purple-"],
+      [class*="bg-violet-"],
+      [class*="bg-indigo-"],
+      [class*="bg-blue-"],
+      [class*="bg-cyan-"],
+      [class*="bg-teal-"],
+      [class*="bg-emerald-"],
+      [class*="bg-green-"],
+      [class*="bg-lime-"]
+    ):not([class*="text-white"]) {
+    background-color: var(--ink-50) !important;
+  }
+
+  /* Preserve contrast when an element is designed as “white text on color” */
+  :is(
+      [class*="bg-amber-"],
+      [class*="bg-yellow-"],
+      [class*="bg-orange-"],
+      [class*="bg-red-"],
+      [class*="bg-rose-"],
+      [class*="bg-pink-"],
+      [class*="bg-purple-"],
+      [class*="bg-violet-"],
+      [class*="bg-indigo-"],
+      [class*="bg-blue-"],
+      [class*="bg-cyan-"],
+      [class*="bg-teal-"],
+      [class*="bg-emerald-"],
+      [class*="bg-green-"],
+      [class*="bg-lime-"]
+    )[class*="text-white"] {
+    background-color: var(--ink-900) !important;
+    border-color: var(--ink-900) !important;
+  }
+
+  :is(
+      [class*="ring-amber-"],
+      [class*="ring-yellow-"],
+      [class*="ring-orange-"],
+      [class*="ring-red-"],
+      [class*="ring-rose-"],
+      [class*="ring-pink-"],
+      [class*="ring-purple-"],
+      [class*="ring-violet-"],
+      [class*="ring-indigo-"],
+      [class*="ring-blue-"],
+      [class*="ring-cyan-"],
+      [class*="ring-teal-"],
+      [class*="ring-emerald-"],
+      [class*="ring-green-"],
+      [class*="ring-lime-"]
+    ) {
+    --tw-ring-color: var(--ink-900) !important;
+  }
+}
