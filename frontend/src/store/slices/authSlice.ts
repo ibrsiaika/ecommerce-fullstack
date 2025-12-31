@@ -10,6 +10,12 @@ export interface User {
   avatar?: string;
   isEmailVerified: boolean;
   createdAt: string;
+  shippingAddress?: {
+    address: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
 }
 
 // Auth state interface

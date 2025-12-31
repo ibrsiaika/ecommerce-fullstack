@@ -33,6 +33,7 @@ router.get(
       lastName: user.lastName,
       phone: user.phone,
       avatar: user.avatar,
+      shippingAddress: user.shippingAddress,
       role: user.role,
       isEmailVerified: user.isEmailVerified,
       createdAt: user.createdAt
@@ -64,6 +65,31 @@ router.put(
       .trim()
       .isLength({ max: 20 })
       .withMessage('Phone number cannot exceed 20 characters'),
+
+    body('shippingAddress')
+      .optional()
+      .isObject()
+      .withMessage('Shipping address must be an object'),
+    body('shippingAddress.address')
+      .optional()
+      .trim()
+      .isLength({ max: 200 })
+      .withMessage('Shipping street address cannot exceed 200 characters'),
+    body('shippingAddress.city')
+      .optional()
+      .trim()
+      .isLength({ max: 100 })
+      .withMessage('Shipping city cannot exceed 100 characters'),
+    body('shippingAddress.postalCode')
+      .optional()
+      .trim()
+      .isLength({ max: 30 })
+      .withMessage('Shipping postal code cannot exceed 30 characters'),
+    body('shippingAddress.country')
+      .optional()
+      .trim()
+      .isLength({ max: 100 })
+      .withMessage('Shipping country cannot exceed 100 characters'),
   ],
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const errors = validationResult(req);
@@ -71,13 +97,20 @@ router.put(
       return sendError(res, 400, 'Validation failed', errors.array().map((e: { msg: string }) => e.msg));
     }
 
-    const { firstName, lastName, phone, avatar } = req.body;
+    const { firstName, lastName, phone, avatar, shippingAddress } = req.body;
     
-    const updateFields: Record<string, string | undefined> = {};
+    const updateFields: Record<string, any> = {};
     if (firstName !== undefined) updateFields.firstName = firstName;
     if (lastName !== undefined) updateFields.lastName = lastName;
     if (phone !== undefined) updateFields.phone = phone;
     if (avatar !== undefined) updateFields.avatar = avatar;
+
+    if (shippingAddress && typeof shippingAddress === 'object') {
+      if (shippingAddress.address !== undefined) updateFields['shippingAddress.address'] = shippingAddress.address;
+      if (shippingAddress.city !== undefined) updateFields['shippingAddress.city'] = shippingAddress.city;
+      if (shippingAddress.postalCode !== undefined) updateFields['shippingAddress.postalCode'] = shippingAddress.postalCode;
+      if (shippingAddress.country !== undefined) updateFields['shippingAddress.country'] = shippingAddress.country;
+    }
 
     const user = await User.findByIdAndUpdate(
       req.user!._id,
@@ -96,6 +129,7 @@ router.put(
       lastName: user.lastName,
       phone: user.phone,
       avatar: user.avatar,
+      shippingAddress: user.shippingAddress,
       role: user.role
     }, 'Profile updated successfully');
   })

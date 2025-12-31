@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { clearCart } from '../store/slices/cartSlice';
 import { Spinner } from './Loading';
 import api from '../services/api';
-import { FiMapPin, FiCreditCard, FiCheck, FiArrowLeft, FiArrowRight, FiLoader } from 'react-icons/fi';
+import { FiMapPin, FiCreditCard, FiCheck, FiArrowLeft, FiArrowRight, FiLoader, FiPackage } from 'react-icons/fi';
 
 interface ShippingAddress {
   address: string;
@@ -12,6 +12,8 @@ interface ShippingAddress {
   postalCode: string;
   country: string;
 }
+
+type DeliveryMethod = 'delivery' | 'pickup';
 
 interface OrderData {
   orderItems: Array<{
@@ -36,18 +38,22 @@ const Checkout: React.FC = () => {
   const { user } = useAppSelector((state: any) => state.auth);
 
   const [currentStep, setCurrentStep] = useState(1);
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('delivery');
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
     address: '',
     city: '',
     postalCode: '',
     country: ''
   });
+  const [saveAddressForNextTime, setSaveAddressForNextTime] = useState(true);
+  const [isSavingAddress, setIsSavingAddress] = useState(false);
+  const [addressSaved, setAddressSaved] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('PayPal');
   const [isLoading, setIsLoading] = useState(false);
 
   // Calculate prices
   const itemsPrice = items.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0);
-  const shippingPrice = itemsPrice > 100 ? 0 : 10;
+  const shippingPrice = deliveryMethod === 'pickup' ? 0 : (itemsPrice > 100 ? 0 : 10);
   const taxPrice = Number((0.15 * itemsPrice).toFixed(2));
   const totalPrice = Number((itemsPrice + shippingPrice + taxPrice).toFixed(2));
 
@@ -60,11 +66,61 @@ const Checkout: React.FC = () => {
     }
   }, [user, items, navigate]);
 
-  const handleShippingSubmit = (e: React.FormEvent) => {
+  // Prefill from saved profile shipping address
+  useEffect(() => {
+    const saved = user?.shippingAddress;
+    if (!saved) return;
+
+    const hasAny = [saved.address, saved.city, saved.postalCode, saved.country].some((v) => (v || '').trim().length > 0);
+    if (!hasAny) return;
+
+    setShippingAddress({
+      address: saved.address || '',
+      city: saved.city || '',
+      postalCode: saved.postalCode || '',
+      country: saved.country || ''
+    });
+  }, [user]);
+
+  useEffect(() => {
+    if (!addressSaved) return;
+    const t = window.setTimeout(() => setAddressSaved(false), 2500);
+    return () => window.clearTimeout(t);
+  }, [addressSaved]);
+
+  const handleShippingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (shippingAddress.address && shippingAddress.city && shippingAddress.postalCode && shippingAddress.country) {
+
+    if (deliveryMethod === 'pickup') {
+      // Order model requires a shippingAddress; use a clear placeholder.
+      setShippingAddress({
+        address: 'Store Pickup',
+        city: 'Pickup',
+        postalCode: '00000',
+        country: 'Pickup'
+      });
       setCurrentStep(2);
+      return;
     }
+
+    if (!(shippingAddress.address && shippingAddress.city && shippingAddress.postalCode && shippingAddress.country)) {
+      return;
+    }
+
+    if (saveAddressForNextTime) {
+      try {
+        setIsSavingAddress(true);
+        await api.updateProfile({ shippingAddress });
+        setAddressSaved(true);
+      } catch (err) {
+        // Non-blocking: user can still proceed
+        console.warn('Failed to save shipping address:', err);
+      } finally {
+        setIsSavingAddress(false);
+      }
+    }
+
+    setCurrentStep(2);
   };
 
   const handlePaymentSubmit = (e: React.FormEvent) => {
@@ -174,6 +230,53 @@ const Checkout: React.FC = () => {
           <FiMapPin className="text-black" size={28} />
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Shipping Address</h2>
         </div>
+
+        {/* Delivery method */}
+        <div className="p-4 sm:p-5 rounded-2xl border-2 border-gray-200 bg-white mb-8">
+          <p className="text-sm font-semibold text-gray-900 mb-4">Delivery method</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <label
+              className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                deliveryMethod === 'delivery' ? 'border-black bg-black/5' : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <input
+                type="radio"
+                name="deliveryMethod"
+                value="delivery"
+                checked={deliveryMethod === 'delivery'}
+                onChange={() => setDeliveryMethod('delivery')}
+                className="mt-1 w-5 h-5"
+              />
+              <div className="min-w-0">
+                <p className="font-semibold text-gray-900">Delivery</p>
+                <p className="text-sm text-gray-600">Ship to your address.</p>
+              </div>
+            </label>
+
+            <label
+              className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                deliveryMethod === 'pickup' ? 'border-black bg-black/5' : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <input
+                type="radio"
+                name="deliveryMethod"
+                value="pickup"
+                checked={deliveryMethod === 'pickup'}
+                onChange={() => setDeliveryMethod('pickup')}
+                className="mt-1 w-5 h-5"
+              />
+              <div className="min-w-0">
+                <p className="font-semibold text-gray-900 flex items-center gap-2">
+                  <FiPackage />
+                  Pickup
+                </p>
+                <p className="text-sm text-gray-600">No shipping fee. Faster checkout.</p>
+              </div>
+            </label>
+          </div>
+        </div>
         
         <div className="space-y-6">
           <div>
@@ -182,9 +285,12 @@ const Checkout: React.FC = () => {
               type="text"
               value={shippingAddress.address}
               onChange={(e) => setShippingAddress({ ...shippingAddress, address: e.target.value })}
-              className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-xl focus:border-black focus:outline-none transition-colors hover:border-gray-400 bg-white"
+              className={`w-full px-4 py-4 text-base border-2 border-gray-300 rounded-xl focus:border-black focus:outline-none transition-colors hover:border-gray-400 bg-white ${
+                deliveryMethod === 'pickup' ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
               placeholder="123 Main Street"
-              required
+              required={deliveryMethod === 'delivery'}
+              disabled={deliveryMethod === 'pickup'}
             />
           </div>
 
@@ -195,9 +301,12 @@ const Checkout: React.FC = () => {
                 type="text"
                 value={shippingAddress.city}
                 onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-xl focus:border-black focus:outline-none transition-colors hover:border-gray-400 bg-white"
+                className={`w-full px-4 py-4 text-base border-2 border-gray-300 rounded-xl focus:border-black focus:outline-none transition-colors hover:border-gray-400 bg-white ${
+                  deliveryMethod === 'pickup' ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
                 placeholder="New York"
-                required
+                required={deliveryMethod === 'delivery'}
+                disabled={deliveryMethod === 'pickup'}
               />
             </div>
             <div>
@@ -206,9 +315,12 @@ const Checkout: React.FC = () => {
                 type="text"
                 value={shippingAddress.postalCode}
                 onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
-                className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-xl focus:border-black focus:outline-none transition-colors hover:border-gray-400 bg-white"
+                className={`w-full px-4 py-4 text-base border-2 border-gray-300 rounded-xl focus:border-black focus:outline-none transition-colors hover:border-gray-400 bg-white ${
+                  deliveryMethod === 'pickup' ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
                 placeholder="10001"
-                required
+                required={deliveryMethod === 'delivery'}
+                disabled={deliveryMethod === 'pickup'}
               />
             </div>
           </div>
@@ -219,16 +331,44 @@ const Checkout: React.FC = () => {
               type="text"
               value={shippingAddress.country}
               onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
-              className="w-full px-4 py-4 text-base border-2 border-gray-300 rounded-xl focus:border-black focus:outline-none transition-colors hover:border-gray-400 bg-white"
+              className={`w-full px-4 py-4 text-base border-2 border-gray-300 rounded-xl focus:border-black focus:outline-none transition-colors hover:border-gray-400 bg-white ${
+                deliveryMethod === 'pickup' ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
               placeholder="United States"
-              required
+              required={deliveryMethod === 'delivery'}
+              disabled={deliveryMethod === 'pickup'}
             />
           </div>
+
+          {/* Save for next time */}
+          {deliveryMethod === 'delivery' && (
+            <div className="p-4 rounded-2xl border-2 border-gray-200 bg-white">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={saveAddressForNextTime}
+                  onChange={(e) => setSaveAddressForNextTime(e.target.checked)}
+                  className="mt-1 w-5 h-5"
+                />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-gray-900">Save this address for next time</p>
+                  <p className="text-sm text-gray-600">You can edit it later from Profile.</p>
+                </div>
+              </label>
+              <div className="mt-3 text-sm text-gray-600">
+                {isSavingAddress ? (
+                  <span className="inline-flex items-center gap-2"><FiLoader className="animate-spin" /> Saving…</span>
+                ) : addressSaved ? (
+                  <span className="text-gray-900 font-semibold">Saved</span>
+                ) : null}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       <button type="submit" className="w-full py-4 px-6 text-lg font-semibold rounded-xl bg-black text-white hover:bg-gray-900 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 group shadow-lg hover:shadow-xl">
-        Continue to Payment
+        Continue
         <FiArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
       </button>
     </form>

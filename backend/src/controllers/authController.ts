@@ -261,11 +261,28 @@ export const getMe = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = await User.findById(req.user!._id);
+    const user = await User.findById(req.user!._id).select('-passwordHash');
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+      return;
+    }
 
     res.status(200).json({
       success: true,
-      data: user
+      data: {
+        id: user._id,
+        name: `${user.firstName} ${user.lastName}`.trim(),
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        isEmailVerified: user.isEmailVerified,
+        createdAt: user.createdAt,
+        shippingAddress: user.shippingAddress
+      }
     });
   } catch (error) {
     console.error('GetMe error:', error);
@@ -282,19 +299,45 @@ export const updateDetails = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const fieldsToUpdate = {
-      name: req.body.name,
-      email: req.body.email
-    };
+    const fieldsToUpdate: Record<string, unknown> = {};
+
+    if (typeof req.body.email === 'string') {
+      fieldsToUpdate.email = req.body.email.toLowerCase().trim();
+    }
+
+    if (typeof req.body.name === 'string') {
+      const nameParts = req.body.name.trim().split(' ').filter((p: string) => p.length > 0);
+      const firstName = nameParts[0] || 'User';
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'User';
+      fieldsToUpdate.firstName = firstName.trim();
+      fieldsToUpdate.lastName = lastName.trim();
+    }
 
     const user = await User.findByIdAndUpdate(req.user!._id, fieldsToUpdate, {
       new: true,
       runValidators: true
     });
 
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+      return;
+    }
+
     res.status(200).json({
       success: true,
-      data: user
+      data: {
+        id: user._id,
+        name: `${user.firstName} ${user.lastName}`.trim(),
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        isEmailVerified: user.isEmailVerified,
+        createdAt: user.createdAt,
+        shippingAddress: user.shippingAddress
+      }
     });
   } catch (error) {
     console.error('Update details error:', error);

@@ -118,6 +118,14 @@ export interface IUser extends Document {
   suspicious: boolean;                // Flag for manual review
   ipAddressWhitelist?: string[];      // Allowed IPs
   ipAddressBlacklist?: string[];      // Blocked IPs
+
+  // Saved Addresses (for faster checkout)
+  shippingAddress?: {
+    address: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
   
   // Seller Profile (if role = 'seller')
   seller?: ISellerProfile;
@@ -384,6 +392,14 @@ const userSchema: Schema = new Schema(
       type: [String],
       default: [],
       select: false
+    },
+
+    // Saved shipping address (optional)
+    shippingAddress: {
+      address: { type: String, default: '' },
+      city: { type: String, default: '' },
+      postalCode: { type: String, default: '' },
+      country: { type: String, default: '' }
     },
 
     // Seller Profile
