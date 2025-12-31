@@ -20,6 +20,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// If running behind a proxy (Render/Railway/Nginx), trust X-Forwarded-* headers
+app.set('trust proxy', 1);
+
 // ============================================
 // Middleware Setup
 // ============================================

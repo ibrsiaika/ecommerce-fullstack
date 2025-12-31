@@ -7,6 +7,21 @@ import emailService from '../services/emailService';
 import { AuthService } from '../services/AuthService';
 import Session from '../models/Session';
 
+const isProduction = process.env.NODE_ENV === 'production';
+const cookieSameSite = ((): 'lax' | 'strict' | 'none' => {
+  const configured = (process.env.COOKIE_SAMESITE || '').toLowerCase();
+  if (configured === 'lax' || configured === 'strict' || configured === 'none') return configured;
+  // Default for production: allow cross-site frontends (Vercel) to receive refresh cookies.
+  return isProduction ? 'none' : 'lax';
+})();
+
+const refreshCookieOptions = {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: cookieSameSite,
+  path: '/',
+} as const;
+
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
@@ -84,14 +99,10 @@ export const register = async (
       ipAddress,
       timezone
     );
-
     // Set refresh token as httpOnly cookie
     res.cookie('refreshToken', loginResult.tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      ...refreshCookieOptions,
       maxAge: loginResult.tokens.refreshExpiresIn * 1000,
-      path: '/'
     });
 
     res.status(201).json({
@@ -156,11 +167,8 @@ export const login = async (
 
     // Set refresh token as httpOnly cookie
     res.cookie('refreshToken', loginResult.tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      ...refreshCookieOptions,
       maxAge: loginResult.tokens.refreshExpiresIn * 1000,
-      path: '/'
     });
 
     res.status(200).json({
@@ -228,10 +236,7 @@ export const logout = async (
     // Clear cookies
     res.clearCookie('token');
     res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-      path: '/'
+      ...refreshCookieOptions
     });
 
     res.status(200).json({
@@ -344,11 +349,8 @@ export const updatePassword = async (
 
     // Set refresh token as httpOnly cookie
     res.cookie('refreshToken', loginResult.tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      ...refreshCookieOptions,
       maxAge: loginResult.tokens.refreshExpiresIn * 1000,
-      path: '/'
     });
 
     res.status(200).json({
@@ -450,11 +452,8 @@ export const refreshToken = async (
 
     // Set new refresh token as httpOnly cookie
     res.cookie('refreshToken', tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      ...refreshCookieOptions,
       maxAge: tokens.refreshExpiresIn * 1000,
-      path: '/'
     });
 
     res.status(200).json({
@@ -506,10 +505,7 @@ export const logoutAll = async (
     // Clear cookies
     res.clearCookie('token');
     res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-      path: '/'
+      ...refreshCookieOptions
     });
 
     res.status(200).json({

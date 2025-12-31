@@ -26,12 +26,31 @@ export const rateLimiter = rateLimit({
  * CORS configuration
  */
 export const corsConfig = cors({
-  origin: [
-    process.env.CLIENT_URL || 'http://localhost:3000',
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:5175'
-  ],
+  origin: (origin, callback) => {
+    const envOrigins = (process.env.CORS_ORIGINS || '')
+      .split(',')
+      .map((v) => v.trim())
+      .filter(Boolean);
+
+    const allowedOrigins = Array.from(
+      new Set([
+        process.env.CLIENT_URL || 'http://localhost:3000',
+        process.env.FRONTEND_URL,
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:5175',
+        ...envOrigins,
+      ].filter(Boolean) as string[])
+    );
+
+    // Allow requests with no origin (curl, mobile apps)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+
+    console.warn(`CORS blocked: ${origin}`);
+    return callback(new Error('Not allowed by CORS policy'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
