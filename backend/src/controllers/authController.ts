@@ -1,16 +1,17 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
 import crypto from 'crypto';
 import User, { IUser } from '../models/User';
-import { sendTokenResponse } from '../utils/jwt';
 import { AuthenticatedRequest } from '../middleware/auth';
 import emailService from '../services/emailService';
+import { AuthService } from '../services/AuthService';
+import Session from '../models/Session';
 
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
 export const register = async (
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -69,7 +70,44 @@ export const register = async (
       // Don't fail the registration if email fails
     }
 
-    sendTokenResponse(user, 201, res);
+    // Use AuthService to create session and tokens
+    const authService = new AuthService();
+    const userAgent = req.get('User-Agent') || 'Unknown';
+    const ipAddress = req.ip || 'unknown';
+    const timezone = req.body.timezone || 'UTC';
+
+    const loginResult = await authService.login(
+      user.email,
+      password,
+      userAgent,
+      ipAddress,
+      timezone
+    );
+
+    // Set refresh token as httpOnly cookie
+    res.cookie('refreshToken', loginResult.tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: loginResult.tokens.refreshExpiresIn * 1000,
+      path: '/'
+    });
+
+    res.status(201).json({
+      success: true,
+      token: loginResult.tokens.accessToken,
+      data: {
+        id: loginResult.user.id,
+        name: `${loginResult.user.firstName} ${loginResult.user.lastName}`.trim(),
+        email: loginResult.user.email,
+        role: loginResult.user.role,
+        avatar: loginResult.user.avatar,
+        isEmailVerified: user.isEmailVerified,
+        createdAt: user.createdAt
+      },
+      sessionId: loginResult.tokens.sessionId,
+      expiresIn: loginResult.tokens.expiresIn
+    });
   } catch (error) {
     console.error('Register error:', error);
     next(error);
@@ -80,7 +118,7 @@ export const register = async (
 // @route   POST /api/auth/login
 // @access  Public
 export const login = async (
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -98,31 +136,71 @@ export const login = async (
 
     const { email, password } = req.body;
 
-    // Check for user - select passwordHash for verification
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
+    // Use AuthService to handle login
+    const authService = new AuthService();
+    const userAgent = req.get('User-Agent') || 'Unknown';
+    const ipAddress = req.ip || 'unknown';
+    const timezone = req.body.timezone || 'UTC';
 
-    if (!user) {
-      res.status(401).json({
-        success: false,
-        error: 'Invalid credentials'
-      });
-      return;
-    }
+    const loginResult = await authService.login(
+      email.toLowerCase(),
+      password,
+      userAgent,
+      ipAddress,
+      timezone
+    );
 
-    // Check if password matches
-    const isMatch = await user.matchPassword(password);
+    // Fetch user to get additional fields not in loginResult
+    const user = await User.findById(loginResult.user.id);
 
-    if (!isMatch) {
-      res.status(401).json({
-        success: false,
-        error: 'Invalid credentials'
-      });
-      return;
-    }
+    // Set refresh token as httpOnly cookie
+    res.cookie('refreshToken', loginResult.tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: loginResult.tokens.refreshExpiresIn * 1000,
+      path: '/'
+    });
 
-    sendTokenResponse(user, 200, res);
+    res.status(200).json({
+      success: true,
+      token: loginResult.tokens.accessToken,
+      data: {
+        id: loginResult.user.id,
+        name: `${loginResult.user.firstName} ${loginResult.user.lastName}`.trim(),
+        email: loginResult.user.email,
+        role: loginResult.user.role,
+        avatar: loginResult.user.avatar,
+        isEmailVerified: user?.isEmailVerified || false,
+        createdAt: user?.createdAt
+      },
+      sessionId: loginResult.tokens.sessionId,
+      expiresIn: loginResult.tokens.expiresIn
+    });
   } catch (error) {
     console.error('Login error:', error);
+    
+    // Handle specific auth errors
+    if (error instanceof Error) {
+      const errorMessage = error.message;
+      
+      if (errorMessage.includes('suspended')) {
+        res.status(403).json({
+          success: false,
+          error: errorMessage
+        });
+        return;
+      }
+      
+      if (errorMessage.includes('not found') || errorMessage.includes('Invalid')) {
+        res.status(401).json({
+          success: false,
+          error: 'Invalid credentials'
+        });
+        return;
+      }
+    }
+    
     next(error);
   }
 };
@@ -136,9 +214,23 @@ export const logout = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    res.cookie('token', 'none', {
-      expires: new Date(Date.now() + 10 * 1000),
+    // Get sessionId from request (set by auth middleware)
+    const sessionId = req.sessionId;
+    const userId = req.user?._id?.toString();
+
+    if (sessionId && userId) {
+      // Use AuthService to revoke session
+      const authService = new AuthService();
+      await authService.logout(sessionId, userId, 'user_logout');
+    }
+
+    // Clear cookies
+    res.clearCookie('token');
+    res.clearCookie('refreshToken', {
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/'
     });
 
     res.status(200).json({
@@ -147,6 +239,9 @@ export const logout = async (
     });
   } catch (error) {
     console.error('Logout error:', error);
+    // Even if logout fails, clear cookies
+    res.clearCookie('token');
+    res.clearCookie('refreshToken');
     next(error);
   }
 };
@@ -160,7 +255,7 @@ export const getMe = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = await User.findById(req.user!.id);
+    const user = await User.findById(req.user!._id);
 
     res.status(200).json({
       success: true,
@@ -186,7 +281,7 @@ export const updateDetails = async (
       email: req.body.email
     };
 
-    const user = await User.findByIdAndUpdate(req.user!.id, fieldsToUpdate, {
+    const user = await User.findByIdAndUpdate(req.user!._id, fieldsToUpdate, {
       new: true,
       runValidators: true
     });
@@ -210,7 +305,7 @@ export const updatePassword = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = await User.findById(req.user!.id).select('+passwordHash');
+    const user = await User.findById(req.user!._id).select('+passwordHash');
 
     if (!user) {
       res.status(404).json({
@@ -232,7 +327,43 @@ export const updatePassword = async (
     await user.setPassword(req.body.newPassword);
     await user.save();
 
-    sendTokenResponse(user, 200, res);
+    // Use AuthService to create new session after password change
+    const authService = new AuthService();
+    const userAgent = req.get('User-Agent') || 'Unknown';
+    const ipAddress = req.ip || 'unknown';
+    const timezone = req.body.timezone || 'UTC';
+
+    const loginResult = await authService.login(
+      user.email,
+      req.body.newPassword,
+      userAgent,
+      ipAddress,
+      timezone
+    );
+
+    // Set refresh token as httpOnly cookie
+    res.cookie('refreshToken', loginResult.tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: loginResult.tokens.refreshExpiresIn * 1000,
+      path: '/'
+    });
+
+    res.status(200).json({
+      success: true,
+      token: loginResult.tokens.accessToken,
+      data: {
+        id: loginResult.user.id,
+        name: `${loginResult.user.firstName} ${loginResult.user.lastName}`.trim(),
+        email: loginResult.user.email,
+        role: loginResult.user.role,
+        avatar: loginResult.user.avatar,
+        isEmailVerified: user.isEmailVerified
+      },
+      sessionId: loginResult.tokens.sessionId,
+      expiresIn: loginResult.tokens.expiresIn
+    });
   } catch (error) {
     console.error('Update password error:', error);
     next(error);
@@ -243,7 +374,7 @@ export const updatePassword = async (
 // @route   GET /api/auth/verify/:token
 // @access  Public
 export const verifyEmail = async (
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -273,6 +404,212 @@ export const verifyEmail = async (
     });
   } catch (error) {
     console.error('Verify email error:', error);
+    next(error);
+  }
+};
+
+// @desc    Refresh access token
+// @route   POST /api/auth/refresh
+// @access  Public (but requires valid refresh token in cookie)
+export const refreshToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    // Get refresh token from cookie
+    const refreshToken = req.cookies.refreshToken;
+    
+    if (!refreshToken) {
+      res.status(401).json({
+        success: false,
+        error: 'Refresh token not found'
+      });
+      return;
+    }
+
+    // Get sessionId from body or try to extract from old token
+    const { sessionId, userId } = req.body;
+    
+    if (!sessionId || !userId) {
+      res.status(400).json({
+        success: false,
+        error: 'Session ID and User ID required'
+      });
+      return;
+    }
+
+    // Use AuthService to refresh token
+    const authService = new AuthService();
+    const tokens = await authService.refreshAccessToken(
+      sessionId,
+      refreshToken,
+      userId
+    );
+
+    // Set new refresh token as httpOnly cookie
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: tokens.refreshExpiresIn * 1000,
+      path: '/'
+    });
+
+    res.status(200).json({
+      success: true,
+      token: tokens.accessToken,
+      sessionId: tokens.sessionId,
+      expiresIn: tokens.expiresIn
+    });
+  } catch (error) {
+    console.error('Refresh token error:', error);
+    
+    if (error instanceof Error) {
+      if (error.message.includes('Session') || error.message.includes('Token')) {
+        res.status(401).json({
+          success: false,
+          error: error.message
+        });
+        return;
+      }
+    }
+    
+    next(error);
+  }
+};
+
+// @desc    Logout from all devices
+// @route   POST /api/auth/logout-all
+// @access  Private
+export const logoutAll = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user?._id?.toString();
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        error: 'User not authenticated'
+      });
+      return;
+    }
+
+    // Use AuthService to revoke all sessions
+    const authService = new AuthService();
+    await authService.logoutAllDevices(userId, 'user_logout');
+
+    // Clear cookies
+    res.clearCookie('token');
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/'
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Logged out from all devices successfully'
+    });
+  } catch (error) {
+    console.error('Logout all error:', error);
+    next(error);
+  }
+};
+
+// @desc    Get all active sessions
+// @route   GET /api/auth/sessions
+// @access  Private
+export const getSessions = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user?._id?.toString();
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        error: 'User not authenticated'
+      });
+      return;
+    }
+
+    const mongoose = await import('mongoose');
+    const sessions = await Session.findActiveSessions(
+      new mongoose.Types.ObjectId(userId)
+    );
+
+    res.status(200).json({
+      success: true,
+      data: sessions.map(session => ({
+        sessionId: session.sessionId,
+        deviceId: session.deviceId,
+        userAgent: session.userAgent,
+        ipAddress: session.ipAddress,
+        createdAt: session.createdAt,
+        lastActivityAt: session.lastActivityAt,
+        isCurrent: session.sessionId === req.sessionId
+      }))
+    });
+  } catch (error) {
+    console.error('Get sessions error:', error);
+    next(error);
+  }
+};
+
+// @desc    Revoke a specific session
+// @route   DELETE /api/auth/sessions/:sessionId
+// @access  Private
+export const revokeSession = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user?._id?.toString();
+    const { sessionId } = req.params;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        error: 'User not authenticated'
+      });
+      return;
+    }
+
+    if (!sessionId) {
+      res.status(400).json({
+        success: false,
+        error: 'Session ID required'
+      });
+      return;
+    }
+
+    // Use AuthService to revoke specific session
+    const authService = new AuthService();
+    await authService.logout(sessionId, userId, 'user_logout');
+
+    res.status(200).json({
+      success: true,
+      message: 'Session revoked successfully'
+    });
+  } catch (error) {
+    console.error('Revoke session error:', error);
+    
+    if (error instanceof Error && error.message.includes('not found')) {
+      res.status(404).json({
+        success: false,
+        error: 'Session not found'
+      });
+      return;
+    }
+    
     next(error);
   }
 };

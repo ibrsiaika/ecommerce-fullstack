@@ -16,18 +16,22 @@ export interface User {
 interface AuthState {
   user: User | null;
   token: string | null;
+  sessionId: string | null;
   isLoading: boolean;
   error: string | null;
   isAuthenticated: boolean;
+  expiresIn: number | null;
 }
 
 // Initial state
 const initialState: AuthState = {
   user: null,
   token: localStorage.getItem('token'),
+  sessionId: localStorage.getItem('sessionId'),
   isLoading: false,
   error: null,
   isAuthenticated: false,
+  expiresIn: null,
 };
 
 const persistToken = (token: string | null) => {
@@ -38,15 +42,33 @@ const persistToken = (token: string | null) => {
   }
 };
 
+const persistSessionId = (sessionId: string | null) => {
+  if (sessionId) {
+    localStorage.setItem('sessionId', sessionId);
+  } else {
+    localStorage.removeItem('sessionId');
+  }
+};
+
+const persistUserId = (userId: string | null) => {
+  if (userId) {
+    localStorage.setItem('userId', userId);
+  } else {
+    localStorage.removeItem('userId');
+  }
+};
+
 // Register user
 export const register = createAsyncThunk(
   'auth/register',
   async (userData: { name: string; email: string; password: string }, { rejectWithValue }) => {
     try {
       const response = await api.register(userData);
-      const { token, data } = response.data;
+      const { token, data, sessionId, expiresIn } = response.data;
       persistToken(token);
-      return { user: data, token };
+      persistSessionId(sessionId);
+      persistUserId(data.id);
+      return { user: data, token, sessionId, expiresIn };
     } catch (error: any) {
       const message = error.response?.data?.error || error.message || 'Registration failed';
       return rejectWithValue(message);
@@ -65,7 +87,7 @@ export const login = createAsyncThunk(
       const response = await api.login(credentials);
       console.log('✅ Login response received:', response.status, response.data);
       
-      const { token, data, success } = response.data;
+      const { token, data, success, sessionId, expiresIn } = response.data;
       
       if (!success) {
         console.error('❌ Login failed - success is false');
@@ -84,8 +106,10 @@ export const login = createAsyncThunk(
       }
       
       persistToken(token);
+      persistSessionId(sessionId);
+      persistUserId(data.id);
       console.log('✅ Login successful, user:', data);
-      return { user: data, token };
+      return { user: data, token, sessionId, expiresIn };
     } catch (error: any) {
       console.error('❌ Login error caught:', error);
       console.error('   Status:', error.response?.status);
@@ -127,9 +151,13 @@ export const logout = createAsyncThunk(
     try {
       await api.logout();
       persistToken(null);
+      persistSessionId(null);
+      persistUserId(null);
       return null;
     } catch (error: any) {
       persistToken(null);
+      persistSessionId(null);
+      persistUserId(null);
       return null;
     }
   }
@@ -155,9 +183,11 @@ export const changePassword = createAsyncThunk(
   async (passwordData: { currentPassword: string; newPassword: string }, { rejectWithValue }) => {
     try {
       const response = await api.put('/api/auth/updatepassword', passwordData);
-      const { token, data } = response.data;
+      const { token, data, sessionId, expiresIn } = response.data;
       persistToken(token);
-      return { user: data, token };
+      persistSessionId(sessionId);
+      persistUserId(data.id);
+      return { user: data, token, sessionId, expiresIn };
     } catch (error: any) {
       const message = error.response?.data?.error || error.message || 'Password change failed';
       return rejectWithValue(message);
@@ -176,9 +206,13 @@ const authSlice = createSlice({
     clearAuth: (state) => {
       state.user = null;
       state.token = null;
+      state.sessionId = null;
       state.isAuthenticated = false;
       state.error = null;
+      state.expiresIn = null;
       persistToken(null);
+      persistSessionId(null);
+      persistUserId(null);
     },
   },
   extraReducers: (builder) => {
@@ -192,6 +226,8 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        state.sessionId = action.payload.sessionId;
+        state.expiresIn = action.payload.expiresIn;
         state.isAuthenticated = true;
         state.error = null;
       })
@@ -209,6 +245,8 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        state.sessionId = action.payload.sessionId;
+        state.expiresIn = action.payload.expiresIn;
         state.isAuthenticated = true;
         state.error = null;
       })
@@ -231,16 +269,21 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = null;
         state.token = null;
+        state.sessionId = null;
         state.isAuthenticated = false;
         persistToken(null);
+        persistSessionId(null);
+        persistUserId(null);
       })
       // Logout
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.token = null;
+        state.sessionId = null;
         state.isAuthenticated = false;
         state.error = null;
         state.isLoading = false;
+        state.expiresIn = null;
       })
       // Update profile
       .addCase(updateProfile.pending, (state) => {
@@ -265,6 +308,8 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        state.sessionId = action.payload.sessionId;
+        state.expiresIn = action.payload.expiresIn;
         state.error = null;
       })
       .addCase(changePassword.rejected, (state, action) => {
