@@ -193,8 +193,10 @@ export class AuthService {
       timezone,
       refreshTokenHash,
       expiresAt,
-      requiresReauth: isNewDevice || isNewIP,  // New device = verify before access
-      suspiciousActivityDetected: false
+      // Only require re-auth if this is a NEW device for an EXISTING user with trusted devices
+      // For new users or first device, don't require re-auth
+      requiresReauth: false,
+      suspiciousActivityDetected: isNewDevice && user.trustedDevices && user.trustedDevices.length > 0
     });
     
     await session.save();

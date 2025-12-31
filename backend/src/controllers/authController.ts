@@ -89,7 +89,7 @@ export const register = async (
     res.cookie('refreshToken', loginResult.tokens.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
       maxAge: loginResult.tokens.refreshExpiresIn * 1000,
       path: '/'
     });
@@ -230,7 +230,7 @@ export const logout = async (
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
       path: '/'
     });
 
@@ -346,7 +346,7 @@ export const updatePassword = async (
     res.cookie('refreshToken', loginResult.tokens.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
       maxAge: loginResult.tokens.refreshExpiresIn * 1000,
       path: '/'
     });
@@ -452,7 +452,7 @@ export const refreshToken = async (
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
       maxAge: tokens.refreshExpiresIn * 1000,
       path: '/'
     });
@@ -508,7 +508,7 @@ export const logoutAll = async (
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
       path: '/'
     });
 

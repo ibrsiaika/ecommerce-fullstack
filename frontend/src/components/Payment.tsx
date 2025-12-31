@@ -69,7 +69,7 @@ declare global {
 // ============================================
 
 const PayPalButton: React.FC<PayPalButtonProps> = ({ amount, orderId, onSuccess, onError }) => {
-  const { user } = useAppSelector((state: any) => state.auth);
+  const { token } = useAppSelector((state: any) => state.auth);
   const [sdkReady, setSdkReady] = useState(false);
 
   useEffect(() => {
@@ -114,7 +114,7 @@ const PayPalButton: React.FC<PayPalButtonProps> = ({ amount, orderId, onSuccess,
               method: 'PUT',
               headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${user.token}`
+                Authorization: `Bearer ${token}`
               },
               body: JSON.stringify({
                 id: details.id,
@@ -139,7 +139,7 @@ const PayPalButton: React.FC<PayPalButtonProps> = ({ amount, orderId, onSuccess,
         }
       }).render('#paypal-button-container');
     }
-  }, [sdkReady, amount, orderId, user, onSuccess, onError]);
+  }, [sdkReady, amount, orderId, token, onSuccess, onError]);
 
   return (
     <div>
@@ -160,60 +160,34 @@ const PayPalButton: React.FC<PayPalButtonProps> = ({ amount, orderId, onSuccess,
 // ============================================
 
 const StripeButton: React.FC<StripeButtonProps> = ({ amount, orderId, onSuccess, onError }) => {
-  const { user } = useAppSelector((state: any) => state.auth);
+  const { token } = useAppSelector((state: any) => state.auth);
   const [loading, setLoading] = useState(false);
 
   const handleStripePayment = async () => {
     setLoading(true);
     
     try {
-      // Create payment intent
-      const response = await fetch('/api/payments/create-payment-intent', {
+      // Create Stripe checkout session
+      const response = await fetch(`/api/orders/${orderId}/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${user.token}`
-        },
-        body: JSON.stringify({
-          amount: Math.round(amount * 100),
-          orderId
-        })
+          Authorization: `Bearer ${token}`
+        }
       });
 
       if (response.ok) {
-        await response.json();
+        const data = await response.json();
         
-        // Simulate successful payment
-        setTimeout(() => {
-          const mockPaymentIntent = {
-            id: `pi_${Date.now()}`,
-            status: 'succeeded',
-            amount: Math.round(amount * 100),
-            created: Math.floor(Date.now() / 1000)
-          };
-          
-          // Update order payment status
-          fetch(`/api/orders/${orderId}/pay`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${user.token}`
-            },
-            body: JSON.stringify({
-              id: mockPaymentIntent.id,
-              status: mockPaymentIntent.status,
-              update_time: new Date().toISOString()
-            })
-          }).then(res => {
-            if (res.ok) {
-              onSuccess(mockPaymentIntent);
-            } else {
-              onError('Payment update failed');
-            }
-          });
-          
-          setLoading(false);
-        }, 2000);
+        // If Stripe is configured, redirect to checkout
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        }
+        
+        // If no URL (Stripe not configured), show error
+        onError('Stripe payment is not configured. Please contact support.');
+        setLoading(false);
       } else {
         const errorData = await response.json();
         onError(errorData.error || 'Payment failed');

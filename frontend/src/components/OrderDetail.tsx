@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
 import Payment from './Payment';
+import api from '../services/api';
 
 interface OrderItem {
   product: string;
@@ -45,19 +46,22 @@ interface Order {
 
 const OrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAppSelector((state: any) => state.auth);
+  const [searchParams] = useSearchParams();
+  const { user, token } = useAppSelector((state: any) => state.auth);
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
+  const paymentSectionRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchOrder = async () => {
-      if (!user || !id) return;
+      if (!user || !id || !token) return;
 
       try {
         const response = await fetch(`/api/orders/${id}`, {
           headers: {
-            Authorization: `Bearer ${user.token}`
+            Authorization: `Bearer ${token}`
           }
         });
 
@@ -77,6 +81,42 @@ const OrderDetail: React.FC = () => {
 
     fetchOrder();
   }, [id, user]);
+
+  // Verify payment if returning from Stripe
+  useEffect(() => {
+    const verifyStripePayment = async () => {
+      const paymentStatus = searchParams.get('payment');
+      const sessionId = searchParams.get('session_id');
+
+      if (paymentStatus === 'success' && sessionId && id) {
+        try {
+          const response = await api.verifyPayment(id, sessionId);
+          if (response.data.success) {
+            setPaymentMessage('✅ Payment successful! Your order has been paid.');
+            setOrder(response.data.data);
+          }
+        } catch (err: any) {
+          console.error('Payment verification failed:', err);
+          // Still show the order, webhook might have already processed it
+        }
+      } else if (paymentStatus === 'cancelled') {
+        setPaymentMessage('⚠️ Payment was cancelled. You can try again below.');
+      }
+    };
+
+    if (!loading && order) {
+      verifyStripePayment();
+    }
+  }, [searchParams, id, loading, order]);
+
+  // Auto-scroll to payment section if ?pay=true
+  useEffect(() => {
+    if (!loading && order && !order.isPaid && searchParams.get('pay') === 'true') {
+      setTimeout(() => {
+        paymentSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+  }, [loading, order, searchParams]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -145,6 +185,15 @@ const OrderDetail: React.FC = () => {
   return (
     <div className="min-h-screen bg-white">
       <div className="container py-16 lg:py-20">
+        {/* Payment Message */}
+        {paymentMessage && (
+          <div className={`mb-8 p-6 rounded-xl ${paymentMessage.includes('successful') ? 'bg-green-50 border-2 border-green-200' : 'bg-yellow-50 border-2 border-yellow-200'}`}>
+            <p className={`text-lg font-semibold ${paymentMessage.includes('successful') ? 'text-green-700' : 'text-yellow-700'}`}>
+              {paymentMessage}
+            </p>
+          </div>
+        )}
+
         {/* Header Section */}
         <div className="mb-12">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -252,20 +301,20 @@ const OrderDetail: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex justify-between text-lg">
                   <span className="text-gray-600 font-semibold">Items:</span>
-                  <span className="font-bold text-gray-900">${order.itemsPrice.toFixed(2)}</span>
+                  <span className="font-bold text-gray-900">${(order.itemsPrice ?? 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-lg">
                   <span className="text-gray-600 font-semibold">Shipping:</span>
-                  <span className="font-bold text-gray-900">${order.shippingPrice.toFixed(2)}</span>
+                  <span className="font-bold text-gray-900">${(order.shippingPrice ?? 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-lg">
                   <span className="text-gray-600 font-semibold">Tax:</span>
-                  <span className="font-bold text-gray-900">${order.taxPrice.toFixed(2)}</span>
+                  <span className="font-bold text-gray-900">${(order.taxPrice ?? 0).toFixed(2)}</span>
                 </div>
                 <div className="border-t-2 border-gray-300 pt-4">
                   <div className="flex justify-between text-3xl font-bold">
                     <span>Total:</span>
-                    <span className="text-gray-900">${order.totalPrice.toFixed(2)}</span>
+                    <span className="text-gray-900">${(order.totalPrice ?? 0).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -302,7 +351,7 @@ const OrderDetail: React.FC = () => {
 
             {/* Payment Section for Unpaid Orders */}
             {!order.isPaid && (
-              <div className="surface rounded-2xl p-8 border-2 border-yellow-200 bg-yellow-50">
+              <div ref={paymentSectionRef} className="surface rounded-2xl p-8 border-2 border-yellow-200 bg-yellow-50">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">⏳ Complete Payment</h2>
                 <Payment
                   orderId={order._id}

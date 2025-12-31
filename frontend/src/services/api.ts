@@ -316,6 +316,14 @@ class ApiClient {
     return this.client.post(`/api/orders/${orderId}/pay`, paymentData);
   }
 
+  async createCheckoutSession(orderId: string) {
+    return this.client.post(`/api/orders/${orderId}/create-checkout-session`);
+  }
+
+  async verifyPayment(orderId: string, sessionId: string) {
+    return this.client.post(`/api/orders/${orderId}/verify-payment`, { sessionId });
+  }
+
   async cancelOrder(orderId: string) {
     return this.client.put(`/api/orders/${orderId}/cancel`);
   }

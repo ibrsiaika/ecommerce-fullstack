@@ -1,22 +1,66 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { logout } from '../../store/slices/authSlice';
 import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX, FiSearch } from 'react-icons/fi';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const { items } = useAppSelector((state) => state.cart);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const totalItems = items.reduce((total: number, item: any) => total + item.quantity, 0);
+
+  // Check if currently on products page
+  const isOnProductsPage = location.pathname === '/products';
+
+  // Focus input when search opens
+  useEffect(() => {
+    if (searchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [searchOpen]);
+
+  // Close search on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && searchOpen) {
+        setSearchOpen(false);
+        setSearchQuery('');
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [searchOpen]);
 
   const handleLogout = () => {
     dispatch(logout());
     navigate('/');
     setMobileMenuOpen(false);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchOpen(false);
+      setSearchQuery('');
+    }
+  };
+
+  const handleSearchToggle = () => {
+    if (searchOpen) {
+      setSearchOpen(false);
+      setSearchQuery('');
+    } else {
+      setSearchOpen(true);
+    }
   };
 
   const navItems = [
@@ -55,10 +99,16 @@ const Header: React.FC = () => {
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-1">
-            {/* Search */}
-            <button className="p-2.5 text-neutral-500 hover:text-neutral-900 transition-colors">
-              <FiSearch className="w-5 h-5" />
-            </button>
+            {/* Search - Hidden on products page */}
+            {!isOnProductsPage && (
+              <button 
+                onClick={handleSearchToggle}
+                className="p-2.5 text-neutral-500 hover:text-neutral-900 transition-colors"
+                aria-label="Search"
+              >
+                <FiSearch className="w-5 h-5" />
+              </button>
+            )}
 
             {/* Cart */}
             <Link
@@ -178,6 +228,56 @@ const Header: React.FC = () => {
               )}
             </div>
           </div>
+        )}
+
+        {/* Search Overlay */}
+        <div 
+          className={`absolute left-0 right-0 top-full bg-white border-b border-neutral-200 shadow-lg overflow-hidden transition-all duration-300 ease-out ${
+            searchOpen ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <form onSubmit={handleSearchSubmit} className="container py-4">
+            <div className="relative flex items-center">
+              <FiSearch className="absolute left-4 w-5 h-5 text-neutral-400" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products..."
+                className="w-full pl-12 pr-24 py-3 text-base border border-neutral-300 rounded-full focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all"
+              />
+              <div className="absolute right-2 flex items-center gap-2">
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="p-1.5 text-neutral-400 hover:text-neutral-600 transition-colors"
+                  >
+                    <FiX className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  disabled={!searchQuery.trim()}
+                  className="px-4 py-1.5 text-sm font-medium text-white bg-neutral-900 rounded-full hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Search
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* Search Backdrop */}
+        {searchOpen && (
+          <div 
+            className="fixed inset-0 top-16 bg-black/20 z-[-1] animate-fade-in"
+            onClick={() => {
+              setSearchOpen(false);
+              setSearchQuery('');
+            }}
+          />
         )}
       </div>
     </header>

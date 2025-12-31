@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
-import { FiPackage, FiArrowRight, FiCheck, FiClock } from 'react-icons/fi';
+import { FiPackage, FiArrowRight, FiCheck, FiClock, FiTruck, FiShoppingBag, FiCreditCard } from 'react-icons/fi';
 
 interface Order {
   _id: string;
@@ -11,22 +11,26 @@ interface Order {
   isPaid: boolean;
   isDelivered: boolean;
   orderStatus: string;
+  orderItems?: Array<{ name: string; quantity: number }>;
 }
 
 const OrderHistory: React.FC = () => {
-  const { user } = useAppSelector((state: any) => state.auth);
+  const { user, token } = useAppSelector((state: any) => state.auth);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
-      if (!user) return;
+      if (!user || !token) {
+        setLoading(false);
+        return;
+      }
 
       try {
         const response = await fetch('/api/orders/myorders', {
           headers: {
-            Authorization: `Bearer ${user.token}`
+            Authorization: `Bearer ${token}`
           }
         });
 
@@ -45,22 +49,22 @@ const OrderHistory: React.FC = () => {
     };
 
     fetchOrders();
-  }, [user]);
+  }, [user, token]);
 
-  const getStatusColor = (status: string) => {
+  const getStatusInfo = (status: string) => {
     switch (status.toLowerCase()) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return { color: 'bg-amber-50 text-amber-700 border-amber-200', icon: FiClock, label: 'Pending' };
       case 'processing':
-        return 'bg-blue-100 text-blue-800';
+        return { color: 'bg-blue-50 text-blue-700 border-blue-200', icon: FiShoppingBag, label: 'Processing' };
       case 'shipped':
-        return 'bg-purple-100 text-purple-800';
+        return { color: 'bg-purple-50 text-purple-700 border-purple-200', icon: FiTruck, label: 'Shipped' };
       case 'delivered':
-        return 'bg-green-100 text-green-800';
+        return { color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: FiCheck, label: 'Delivered' };
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return { color: 'bg-red-50 text-red-700 border-red-200', icon: FiClock, label: 'Cancelled' };
       default:
-        return 'bg-gray-100 text-gray-800';
+        return { color: 'bg-gray-50 text-gray-700 border-gray-200', icon: FiClock, label: status };
     }
   };
 
@@ -72,14 +76,27 @@ const OrderHistory: React.FC = () => {
     });
   };
 
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInHours < 48) return 'Yesterday';
+    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
+    return formatDate(dateString);
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
         <div className="text-center px-4">
-          <div className="inline-block mb-6">
-            <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 border-4 border-gray-200 border-t-black"></div>
+          <div className="relative inline-block mb-6">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-black"></div>
+            <FiPackage className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-400" size={24} />
           </div>
-          <p className="text-lg sm:text-xl text-gray-600 font-semibold">Loading your orders...</p>
+          <p className="text-lg text-gray-600 font-medium">Loading your orders...</p>
         </div>
       </div>
     );
@@ -87,10 +104,12 @@ const OrderHistory: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="container px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
-          <div className="p-4 sm:p-6 rounded-xl bg-red-50 border-2 border-red-200">
-            <p className="text-red-700 font-semibold text-base sm:text-lg">⚠️ {error}</p>
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+        <div className="container max-w-4xl mx-auto px-4 py-8 sm:py-16">
+          <div className="p-6 rounded-2xl bg-red-50 border border-red-200 text-center">
+            <div className="text-4xl mb-4">😕</div>
+            <p className="text-red-700 font-semibold text-lg mb-2">Something went wrong</p>
+            <p className="text-red-600 text-sm">{error}</p>
           </div>
         </div>
       </div>
@@ -98,131 +117,176 @@ const OrderHistory: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Decorative background */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gray-50 rounded-full -mr-48 -mt-48 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-72 h-72 bg-gray-50 rounded-full -ml-36 -mb-36 pointer-events-none" />
-      
-      <div className="container px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 relative">
-        <div className="mb-10 sm:mb-14">
-          <div className="flex items-center gap-3 mb-4">
-            <FiPackage className="text-black" size={32} />
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">Order History</h1>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <div className="container max-w-4xl mx-auto px-4 py-6 sm:py-10 lg:py-14">
+        {/* Header */}
+        <div className="mb-8 sm:mb-10">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2.5 bg-black rounded-xl">
+              <FiPackage className="text-white" size={24} />
+            </div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">My Orders</h1>
           </div>
-          <p className="text-base sm:text-lg text-gray-600">Track and manage all your orders</p>
+          <p className="text-gray-500 ml-0 sm:ml-14">Track and manage your purchases</p>
         </div>
 
         {orders.length === 0 ? (
-          <div className="text-center py-16 sm:py-20 px-4">
-            <div className="text-6xl sm:text-8xl mb-6">📦</div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">No orders yet</h3>
-            <p className="text-base sm:text-lg text-gray-600 mb-8 sm:mb-10 max-w-md mx-auto">You haven't placed any orders. Start shopping to see your orders here.</p>
+          /* Empty State */
+          <div className="text-center py-12 sm:py-20 px-4">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+              <FiShoppingBag className="text-gray-400" size={48} />
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">No orders yet</h3>
+            <p className="text-gray-500 mb-8 max-w-sm mx-auto">
+              When you place an order, it will appear here for easy tracking.
+            </p>
             <Link
               to="/products"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold bg-black text-white hover:bg-gray-900 active:scale-95 transition-all duration-200 group shadow-lg hover:shadow-xl"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-base font-semibold bg-black text-white hover:bg-gray-800 active:scale-95 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               Start Shopping
-              <FiArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
+              <FiArrowRight size={18} />
             </Link>
           </div>
         ) : (
-          <div className="space-y-4 sm:space-y-6">
-            {orders.map((order) => (
-              <div 
-                key={order._id} 
-                className="p-4 sm:p-6 lg:p-8 rounded-xl lg:rounded-2xl border border-gray-200 bg-white hover:shadow-lg transition-all duration-300 hover:border-gray-300"
-              >
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 lg:gap-8 items-start lg:items-center">
-                  {/* Order Number */}
-                  <div className="col-span-1">
-                    <p className="text-xs sm:text-sm text-gray-600 font-semibold uppercase tracking-widest mb-1">Order ID</p>
-                    <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">#{order.orderNumber}</p>
+          /* Orders List */
+          <div className="space-y-4">
+            {orders.map((order) => {
+              const statusInfo = getStatusInfo(order.orderStatus);
+              const StatusIcon = statusInfo.icon;
+              
+              return (
+                <div 
+                  key={order._id} 
+                  className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300"
+                >
+                  {/* Mobile Card Layout */}
+                  <div className="sm:hidden">
+                    {/* Header with Order ID and Status */}
+                    <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-gray-500">ORDER</span>
+                        <span className="text-sm font-bold text-gray-900">#{order.orderNumber}</span>
+                      </div>
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${statusInfo.color}`}>
+                        <StatusIcon size={12} />
+                        {statusInfo.label}
+                      </span>
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="p-4">
+                      {/* Date and Total */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <p className="text-xs text-gray-500 mb-0.5">{getRelativeTime(order.createdAt)}</p>
+                          <p className="text-2xl font-bold text-gray-900">${(order.totalPrice ?? 0).toFixed(2)}</p>
+                        </div>
+                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
+                          order.isPaid 
+                            ? 'bg-emerald-100 text-emerald-700' 
+                            : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {order.isPaid ? <FiCheck size={14} /> : <FiClock size={14} />}
+                          {order.isPaid ? 'Paid' : 'Unpaid'}
+                        </div>
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex gap-2">
+                        <Link
+                          to={`/order/${order._id}`}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm bg-gray-100 text-gray-900 hover:bg-gray-200 active:scale-[0.98] transition-all"
+                        >
+                          View Details
+                        </Link>
+                        {!order.isPaid && (
+                          <Link
+                            to={`/order/${order._id}?pay=true`}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm bg-black text-white hover:bg-gray-800 active:scale-[0.98] transition-all shadow-md"
+                          >
+                            <FiCreditCard size={16} />
+                            Pay Now
+                          </Link>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Date */}
-                  <div className="col-span-1">
-                    <p className="text-xs sm:text-sm text-gray-600 font-semibold uppercase tracking-widest mb-1">Date</p>
-                    <p className="text-base sm:text-lg lg:text-lg font-semibold text-gray-900">{formatDate(order.createdAt)}</p>
-                  </div>
+                  {/* Desktop/Tablet Layout */}
+                  <div className="hidden sm:block p-5 lg:p-6">
+                    <div className="flex items-center gap-6">
+                      {/* Order Info */}
+                      <div className="flex-1 grid grid-cols-4 gap-4 lg:gap-6 items-center">
+                        {/* Order Number & Date */}
+                        <div className="col-span-1">
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Order</p>
+                          <p className="text-base lg:text-lg font-bold text-gray-900">#{order.orderNumber}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{formatDate(order.createdAt)}</p>
+                        </div>
 
-                  {/* Total */}
-                  <div className="col-span-1">
-                    <p className="text-xs sm:text-sm text-gray-600 font-semibold uppercase tracking-widest mb-1">Total</p>
-                    <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">${order.totalPrice.toFixed(2)}</p>
-                  </div>
+                        {/* Total */}
+                        <div className="col-span-1">
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total</p>
+                          <p className="text-xl lg:text-2xl font-bold text-gray-900">${(order.totalPrice ?? 0).toFixed(2)}</p>
+                        </div>
 
-                  {/* Payment Status - Hidden on mobile, shown on sm+ */}
-                  <div className="hidden sm:block col-span-1">
-                    <p className="text-xs sm:text-sm text-gray-600 font-semibold uppercase tracking-widest mb-1">Payment</p>
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold text-sm ${
-                      order.isPaid
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {order.isPaid ? (
-                        <>
-                          <FiCheck size={16} />
-                          Paid
-                        </>
-                      ) : (
-                        <>
-                          <FiClock size={16} />
-                          Pending
-                        </>
-                      )}
-                    </span>
-                  </div>
+                        {/* Payment Status */}
+                        <div className="col-span-1">
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Payment</p>
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
+                            order.isPaid 
+                              ? 'bg-emerald-100 text-emerald-700' 
+                              : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {order.isPaid ? <FiCheck size={14} /> : <FiClock size={14} />}
+                            {order.isPaid ? 'Paid' : 'Pending'}
+                          </span>
+                        </div>
 
-                  {/* Order Status - Hidden on mobile, shown on lg+ */}
-                  <div className="hidden lg:block col-span-1">
-                    <p className="text-xs sm:text-sm text-gray-600 font-semibold uppercase tracking-widest mb-1">Status</p>
-                    <span className={`inline-flex px-4 py-2 rounded-full font-bold text-sm ${getStatusColor(order.orderStatus)}`}>
-                      {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
-                    </span>
-                  </div>
+                        {/* Order Status */}
+                        <div className="col-span-1">
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Status</p>
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold border ${statusInfo.color}`}>
+                            <StatusIcon size={14} />
+                            {statusInfo.label}
+                          </span>
+                        </div>
+                      </div>
 
-                  {/* Actions */}
-                  <div className="col-span-2 sm:col-span-1 flex flex-col sm:flex-row gap-2">
-                    <Link
-                      to={`/order/${order._id}`}
-                      className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2 rounded-lg font-bold text-xs sm:text-sm bg-white border-2 border-gray-300 text-gray-900 hover:border-gray-400 active:scale-95 transition-all duration-200 order-2 sm:order-1"
-                    >
-                      <span className="hidden sm:inline">View</span>
-                      <FiArrowRight size={16} />
-                    </Link>
-                    {!order.isPaid && (
-                      <Link
-                        to={`/order/${order._id}/pay`}
-                        className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2 rounded-lg font-bold text-xs sm:text-sm bg-black text-white hover:bg-gray-900 active:scale-95 transition-all duration-200 order-1 sm:order-2 shadow-md hover:shadow-lg"
-                      >
-                        <span className="hidden sm:inline">Pay</span>
-                        <span className="sm:hidden">Pay Now</span>
-                      </Link>
-                    )}
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 pl-4 border-l border-gray-200">
+                        <Link
+                          to={`/order/${order._id}`}
+                          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 active:scale-95 transition-all"
+                        >
+                          View
+                          <FiArrowRight size={16} />
+                        </Link>
+                        {!order.isPaid && (
+                          <Link
+                            to={`/order/${order._id}?pay=true`}
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm bg-black text-white hover:bg-gray-800 active:scale-95 transition-all shadow-md"
+                          >
+                            <FiCreditCard size={16} />
+                            Pay
+                          </Link>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
+              );
+            })}
+          </div>
+        )}
 
-                {/* Mobile Status Row */}
-                <div className="grid grid-cols-2 gap-4 mt-4 sm:hidden border-t border-gray-200 pt-4">
-                  <div>
-                    <p className="text-xs text-gray-600 font-semibold uppercase tracking-widest mb-1">Payment</p>
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-bold ${
-                      order.isPaid
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {order.isPaid ? '✓ Paid' : '⏳ Pending'}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 font-semibold uppercase tracking-widest mb-1">Status</p>
-                    <span className={`inline-flex px-2 py-1 rounded text-xs font-bold ${getStatusColor(order.orderStatus)}`}>
-                      {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
+        {/* Order Count Summary */}
+        {orders.length > 0 && (
+          <div className="mt-8 text-center">
+            <p className="text-sm text-gray-500">
+              Showing {orders.length} order{orders.length !== 1 ? 's' : ''}
+            </p>
           </div>
         )}
       </div>

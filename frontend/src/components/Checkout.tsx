@@ -78,7 +78,7 @@ const Checkout: React.FC = () => {
     try {
       const orderData: OrderData = {
         orderItems: items.map((item: any) => ({
-          product: item._id,
+          product: item.id,
           name: item.name,
           image: item.image,
           price: item.price,
@@ -92,9 +92,28 @@ const Checkout: React.FC = () => {
         totalPrice
       };
 
-      const response = await api.post('/orders', orderData);
-      dispatch(clearCart());
-      navigate(`/order/${response.data.data._id}`);
+      // Create the order first
+      const orderResponse = await api.createOrder(orderData);
+      const orderId = orderResponse.data.data._id;
+
+      // Create Stripe checkout session and redirect
+      try {
+        const checkoutResponse = await api.createCheckoutSession(orderId);
+        
+        if (checkoutResponse.data.url) {
+          // Clear cart before redirecting to payment
+          dispatch(clearCart());
+          // Redirect to Stripe checkout
+          window.location.href = checkoutResponse.data.url;
+        } else {
+          throw new Error('No checkout URL received');
+        }
+      } catch (stripeError: any) {
+        // If Stripe is not configured, just navigate to order page
+        console.log('Stripe not configured, order created without payment:', stripeError.message);
+        dispatch(clearCart());
+        navigate(`/order/${orderId}`);
+      }
     } catch (error: any) {
       console.error('Order creation error:', error);
       const errorMsg = error.response?.data?.error || error.message || 'Failed to create order';

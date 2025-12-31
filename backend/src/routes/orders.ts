@@ -8,11 +8,19 @@ import {
   updateOrderToDelivered,
   updateOrderStatus,
   cancelOrder,
-  orderValidation
+  orderValidation,
+  createCheckoutSession,
+  stripeWebhook,
+  verifyPayment
 } from '../controllers/orderController';
 import { protect, authorize } from '../middleware/auth';
 
 const router = express.Router();
+
+// @route   POST /api/orders/webhook
+// @desc    Stripe webhook (must be before body parser)
+// @access  Public (Stripe)
+router.post('/webhook', express.raw({ type: 'application/json' }), stripeWebhook);
 
 // @route   POST /api/orders
 // @desc    Create new order
@@ -38,6 +46,16 @@ router.get('/:id', protect, getOrderById);
 // @desc    Update order to paid
 // @access  Private
 router.put('/:id/pay', protect, updateOrderToPaid);
+
+// @route   POST /api/orders/:id/create-checkout-session
+// @desc    Create Stripe checkout session
+// @access  Private
+router.post('/:id/create-checkout-session', protect, createCheckoutSession);
+
+// @route   POST /api/orders/:id/verify-payment
+// @desc    Verify Stripe payment
+// @access  Private
+router.post('/:id/verify-payment', protect, verifyPayment);
 
 // @route   PUT /api/orders/:id/deliver
 // @desc    Update order to delivered (Admin only)

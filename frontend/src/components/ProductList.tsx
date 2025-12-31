@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import api from '../services/api';
@@ -64,6 +64,7 @@ const LazyImage: React.FC<{
 
 const ProductList: React.FC = () => {
   const dispatch = useAppDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [status, setStatus] = useState<'idle' | 'loading' | 'loadingMore' | 'error'>('idle');
@@ -76,8 +77,12 @@ const ProductList: React.FC = () => {
     total: 0,
     limit: 12,
   });
+  
+  // Get initial search from URL params
+  const urlSearch = searchParams.get('search') || '';
+  
   const [filters, setFilters] = useState({
-    search: '',
+    search: urlSearch,
     category: '',
     limit: 12,
   });
@@ -85,6 +90,24 @@ const ProductList: React.FC = () => {
   
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Sync filters with URL search params
+  useEffect(() => {
+    const searchFromUrl = searchParams.get('search') || '';
+    if (searchFromUrl !== filters.search) {
+      setFilters(prev => ({ ...prev, search: searchFromUrl }));
+    }
+  }, [searchParams]);
+
+  // Update URL when search filter changes
+  const handleSearchChange = (newSearch: string) => {
+    setFilters(prev => ({ ...prev, search: newSearch }));
+    if (newSearch) {
+      setSearchParams({ search: newSearch });
+    } else {
+      setSearchParams({});
+    }
+  };
 
   const fetchProducts = useCallback(async (pageNum: number = 1, append: boolean = false) => {
     try {
@@ -240,7 +263,8 @@ const ProductList: React.FC = () => {
           </p>
           <button
             onClick={() => {
-              setFilters({ ...filters, search: '', category: '' });
+              handleSearchChange('');
+              setFilters(prev => ({ ...prev, category: '' }));
               setPage(1);
             }}
             className="btn btn-secondary inline-flex items-center gap-2"
@@ -414,7 +438,7 @@ const ProductList: React.FC = () => {
               type="text"
               placeholder="Search products..."
               value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="input pl-10"
             />
           </form>
