@@ -10,21 +10,38 @@ interface EmailOptions {
 }
 
 class EmailService {
-  private transporter: nodemailer.Transporter;
+  private transporter: nodemailer.Transporter | null = null;
+  private isConfigured: boolean = false;
 
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
+    // Only create transporter if SMTP credentials are configured
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
+    
+    if (smtpUser && smtpPass && smtpUser !== 'your-email@gmail.com') {
+      this.transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        secure: false,
+        auth: {
+          user: smtpUser,
+          pass: smtpPass
+        }
+      });
+      this.isConfigured = true;
+      console.log('📧 Email service configured');
+    } else {
+      console.log('📧 Email service not configured (SMTP credentials missing) - emails will be skipped');
+    }
   }
 
   async sendEmail(options: EmailOptions): Promise<void> {
+    // Skip if email not configured
+    if (!this.isConfigured || !this.transporter) {
+      console.log(`📧 [SKIPPED] Email to ${options.to}: ${options.subject}`);
+      return;
+    }
+
     try {
       await this.transporter.sendMail({
         from: `"${process.env.FROM_NAME || 'E-Commerce'}" <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
@@ -32,9 +49,10 @@ class EmailService {
         subject: options.subject,
         html: options.html
       });
+      console.log(`📧 [SENT] Email to ${options.to}: ${options.subject}`);
     } catch (error) {
       console.error('Email sending failed:', error);
-      throw error;
+      // Don't throw - email failure shouldn't break the app
     }
   }
 
