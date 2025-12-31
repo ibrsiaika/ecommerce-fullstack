@@ -30,9 +30,10 @@ export const register = async (
     const { name, email, password } = req.body;
 
     // Parse name into firstName and lastName
-    const nameParts = name.trim().split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
+    // If only one name provided, use it as firstName and set lastName to a placeholder
+    const nameParts = name.trim().split(' ').filter((part: string) => part.length > 0);
+    const firstName = nameParts[0] || 'User';
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'User';
 
     // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });

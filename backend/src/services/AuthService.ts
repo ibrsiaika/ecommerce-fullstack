@@ -139,7 +139,7 @@ export class AuthService {
     timezone: string = 'UTC'
   ): Promise<LoginResult> {
     // Find user (password must be selected)
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select('+passwordHash');
     
     if (!user) {
       throw new Error('User not found');
