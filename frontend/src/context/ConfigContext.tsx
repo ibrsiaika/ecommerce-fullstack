@@ -260,16 +260,25 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       const response = await api.get('/api/config/public');
-      const config = response.data.data;
+      const config = (response as any)?.data?.data;
+
+      if (!config || typeof config !== 'object') {
+        setState(prev => ({
+          ...prev,
+          error: 'Invalid config response',
+          loading: false
+        }));
+        return;
+      }
       
       setState(prev => ({
         ...prev,
-        theme: config.theme,
-        branding: config.branding,
-        layout: config.layout,
-        features: config.features,
-        notifications: config.notifications,
-        maintenanceMode: config.maintenanceMode,
+        theme: config.theme || prev.theme,
+        branding: config.branding || prev.branding,
+        layout: config.layout || prev.layout,
+        features: config.features || prev.features,
+        notifications: config.notifications || prev.notifications,
+        maintenanceMode: typeof config.maintenanceMode === 'boolean' ? config.maintenanceMode : prev.maintenanceMode,
         loading: false
       }));
     } catch (error: any) {
@@ -281,16 +290,25 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
     try {
       setState(prev => ({ ...prev, loading: true }));
       const response = await api.get('/api/config');
-      const config = response.data.data;
+      const config = (response as any)?.data?.data;
+
+      if (!config || typeof config !== 'object') {
+        setState(prev => ({
+          ...prev,
+          error: 'Invalid config response',
+          loading: false
+        }));
+        return;
+      }
       
       setState(prev => ({
         ...prev,
-        theme: config.theme,
-        branding: config.branding,
-        layout: config.layout,
-        features: config.features,
-        notifications: config.notifications,
-        maintenanceMode: config.maintenanceMode,
+        theme: config.theme || prev.theme,
+        branding: config.branding || prev.branding,
+        layout: config.layout || prev.layout,
+        features: config.features || prev.features,
+        notifications: config.notifications || prev.notifications,
+        maintenanceMode: typeof config.maintenanceMode === 'boolean' ? config.maintenanceMode : prev.maintenanceMode,
         loading: false
       }));
     } catch (error: any) {
