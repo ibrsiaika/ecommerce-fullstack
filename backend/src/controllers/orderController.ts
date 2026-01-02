@@ -117,7 +117,7 @@ export const createOrder = async (req: Request, res: Response) => {
 export const getOrderById = async (req: Request, res: Response) => {
   try {
     const order = await Order.findById(req.params.id)
-      .populate('user', 'name email')
+      .populate('user', 'firstName lastName email role')
       .populate('orderItems.product', 'name');
 
     if (!order) {
@@ -243,7 +243,7 @@ export const getOrders = async (req: Request, res: Response) => {
     const skip = (page - 1) * limit;
 
     const orders = await Order.find({})
-      .populate('user', 'id name email')
+      .populate('user', '_id firstName lastName email role')
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(skip);
@@ -336,11 +336,13 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
     // Send status update email notification
     try {
-      const populatedOrder = await Order.findById(updatedOrder._id).populate('user', 'name email');
+      const populatedOrder = await Order.findById(updatedOrder._id).populate('user', 'firstName lastName email role');
       if (populatedOrder && (populatedOrder.user as any).email && status) {
+        const u = populatedOrder.user as any;
+        const fullName = `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email;
         await emailService.sendOrderStatusUpdate(
-          (populatedOrder.user as any).email,
-          (populatedOrder.user as any).name,
+          u.email,
+          fullName,
           (populatedOrder as any).orderNumber,
           status,
           trackingNumber

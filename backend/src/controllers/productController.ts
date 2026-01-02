@@ -21,6 +21,7 @@ const mapProductPreview = (product: any) => ({
   countInStock: product.countInStock,
   sku: product.sku,
   isFeatured: product.isFeatured,
+  createdBy: product.createdBy,
   createdAt: product.createdAt,
   updatedAt: product.updatedAt
 });
@@ -70,7 +71,7 @@ export const createProduct = asyncHandler(async (req: Request, res: Response) =>
 
   const product = await productService.create({
     ...req.body,
-    user: (req as any).user?.id
+    createdBy: (req as any).user?.id
   });
 
   return sendSuccess(res, 201, mapProductPreview(product), 'Product created');

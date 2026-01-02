@@ -65,7 +65,8 @@ const storeSchema: Schema = new Schema(
     owner: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
+      unique: true
     },
     email: {
       type: String,
@@ -126,8 +127,8 @@ const storeSchema: Schema = new Schema(
     },
     bankDetails: {
       accountName: String,
-      accountNumber: String,
-      ifscCode: String,
+      accountNumber: { type: String, select: false },
+      ifscCode: { type: String, select: false },
       bankName: String
     },
     commissionRate: {
@@ -136,7 +137,8 @@ const storeSchema: Schema = new Schema(
     },
     totalEarnings: {
       type: Number,
-      default: 0
+      default: 0,
+      set: (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
     },
     totalOrders: {
       type: Number,
@@ -156,10 +158,11 @@ const storeSchema: Schema = new Schema(
 );
 
 // Indexes for better performance
-storeSchema.index({ owner: 1 });
-storeSchema.index({ slug: 1 });
+storeSchema.index({ owner: 1 }, { unique: true });
+storeSchema.index({ slug: 1 }, { unique: true });
 storeSchema.index({ isVerified: 1, isActive: 1 });
 storeSchema.index({ rating: -1 });
 storeSchema.index({ createdAt: -1 });
+storeSchema.index({ name: 'text', description: 'text' });
 
 export default mongoose.model<IStore>('Store', storeSchema);

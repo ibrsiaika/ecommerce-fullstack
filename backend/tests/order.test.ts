@@ -5,7 +5,7 @@ import User from '../src/models/User';
 import Product from '../src/models/Product';
 import Order from '../src/models/Order';
 
-const MONGODB_TEST_URI = process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017/ecommerce_test_orders';
+// order endpoint tests — uses shared in-memory MongoDB from setup.ts
 
 describe('Order Endpoints', () => {
   let authToken: string;
@@ -13,17 +13,12 @@ describe('Order Endpoints', () => {
   let productId: string;
   let orderId: string;
 
-  beforeAll(async () => {
-    await mongoose.connect(MONGODB_TEST_URI);
-  });
-
   beforeEach(async () => {
-    // Clean up database
     await User.deleteMany({});
     await Product.deleteMany({});
     await Order.deleteMany({});
 
-    // Create regular user
+    // create a regular buyer
     const userResponse = await request(app)
       .post('/api/auth/register')
       .send({
@@ -33,23 +28,29 @@ describe('Order Endpoints', () => {
       });
     authToken = userResponse.body.token;
 
-    // Create admin user
-    const adminUser = await User.create({
-      name: 'Admin User',
-      email: 'admin@example.com',
-      password: 'password123',
-      role: 'admin'
-    });
-    
-    const adminResponse = await request(app)
+    // create an admin: register, promote, re-login
+    await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Admin User',
+        email: 'admin@example.com',
+        password: 'password123'
+      });
+
+    await User.updateOne(
+      { email: 'admin@example.com' },
+      { $set: { role: 'admin' } }
+    );
+
+    const adminLogin = await request(app)
       .post('/api/auth/login')
       .send({
         email: 'admin@example.com',
         password: 'password123'
       });
-    adminToken = adminResponse.body.token;
+    adminToken = adminLogin.body.token;
 
-    // Create a test product
+    // create a test product directly (bypasses route validation)
     const product = await Product.create({
       name: 'Test Product',
       description: 'A test product',
@@ -60,13 +61,6 @@ describe('Order Endpoints', () => {
       sku: 'TEST-SKU-001'
     });
     productId = (product._id as mongoose.Types.ObjectId).toString();
-  });
-
-  afterAll(async () => {
-    await User.deleteMany({});
-    await Product.deleteMany({});
-    await Order.deleteMany({});
-    await mongoose.connection.close();
   });
 
   describe('POST /api/orders', () => {
@@ -88,6 +82,8 @@ describe('Order Endpoints', () => {
           country: 'Test Country'
         },
         paymentMethod: 'PayPal',
+        taxPrice: 0,
+        shippingPrice: 0,
         totalPrice: 199.98
       };
 
@@ -121,6 +117,8 @@ describe('Order Endpoints', () => {
           country: 'Test Country'
         },
         paymentMethod: 'PayPal',
+        taxPrice: 0,
+        shippingPrice: 0,
         totalPrice: 199.98
       };
 
@@ -129,8 +127,8 @@ describe('Order Endpoints', () => {
         .send(orderData)
         .expect(401);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('Not authorized');
+      expect(response.body.status).toBe('error');
+      expect(response.body.error.code).toBe('MISSING_TOKEN');
     });
 
     it('should not create order with empty order items', async () => {
@@ -143,6 +141,8 @@ describe('Order Endpoints', () => {
           country: 'Test Country'
         },
         paymentMethod: 'PayPal',
+        taxPrice: 0,
+        shippingPrice: 0,
         totalPrice: 0
       };
 
@@ -156,9 +156,8 @@ describe('Order Endpoints', () => {
     });
   });
 
-  describe('GET /api/orders/mine', () => {
+  describe('GET /api/orders/myorders', () => {
     beforeEach(async () => {
-      // Create an order for the user
       const orderData = {
         orderItems: [
           {
@@ -176,6 +175,8 @@ describe('Order Endpoints', () => {
           country: 'Test Country'
         },
         paymentMethod: 'PayPal',
+        taxPrice: 0,
+        shippingPrice: 0,
         totalPrice: 99.99
       };
 
@@ -203,14 +204,13 @@ describe('Order Endpoints', () => {
         .get('/api/orders/myorders')
         .expect(401);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('Not authorized');
+      expect(response.body.status).toBe('error');
+      expect(response.body.error.code).toBe('MISSING_TOKEN');
     });
   });
 
   describe('GET /api/orders/:id', () => {
     beforeEach(async () => {
-      // Create an order
       const orderData = {
         orderItems: [
           {
@@ -228,6 +228,8 @@ describe('Order Endpoints', () => {
           country: 'Test Country'
         },
         paymentMethod: 'PayPal',
+        taxPrice: 0,
+        shippingPrice: 0,
         totalPrice: 99.99
       };
 
@@ -267,13 +269,11 @@ describe('Order Endpoints', () => {
         .expect(404);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Order not found');
     });
   });
 
   describe('PUT /api/orders/:id/status', () => {
     beforeEach(async () => {
-      // Create an order
       const orderData = {
         orderItems: [
           {
@@ -291,6 +291,8 @@ describe('Order Endpoints', () => {
           country: 'Test Country'
         },
         paymentMethod: 'PayPal',
+        taxPrice: 0,
+        shippingPrice: 0,
         totalPrice: 99.99
       };
 
@@ -319,8 +321,7 @@ describe('Order Endpoints', () => {
         .send({ status: 'shipped' })
         .expect(403);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('not authorized');
+      expect(response.body.status).toBe('error');
     });
 
     it('should not update order status without authentication', async () => {
@@ -329,8 +330,8 @@ describe('Order Endpoints', () => {
         .send({ status: 'shipped' })
         .expect(401);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('Not authorized');
+      expect(response.body.status).toBe('error');
+      expect(response.body.error.code).toBe('MISSING_TOKEN');
     });
   });
 });

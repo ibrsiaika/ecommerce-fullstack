@@ -60,7 +60,8 @@ const orderItemSchema = new Schema<IOrderItem>({
   price: {
     type: Number,
     required: true,
-    min: 0
+    min: 0,
+    set: (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
   },
   image: {
     type: String,
@@ -115,18 +116,21 @@ const orderSchema = new Schema<IOrder>({
     type: Number,
     required: true,
     default: 0.0,
-    min: 0
+    min: 0,
+    set: (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
   },
   shippingPrice: {
     type: Number,
     required: true,
     default: 0.0,
-    min: 0
+    min: 0,
+    set: (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
   },
   totalPrice: {
     type: Number,
     required: true,
-    min: 0
+    min: 0,
+    set: (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
   },
   isPaid: {
     type: Boolean,
@@ -162,9 +166,10 @@ const orderSchema = new Schema<IOrder>({
 
 // Indexes for better query performance
 orderSchema.index({ user: 1, createdAt: -1 });
-orderSchema.index({ orderStatus: 1 });
+orderSchema.index({ user: 1, isPaid: 1, createdAt: -1 });
+orderSchema.index({ orderStatus: 1, createdAt: -1 });
 orderSchema.index({ isPaid: 1 });
-orderSchema.index({ isDelivered: 1 });
+orderSchema.index({ isDelivered: 1, createdAt: -1 });
 
 // Virtual for order number (formatted ID)
 orderSchema.virtual('orderNumber').get(function() {

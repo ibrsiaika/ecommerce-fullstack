@@ -14,11 +14,17 @@ class EmailService {
   private isConfigured: boolean = false;
 
   constructor() {
-    // Only create transporter if SMTP credentials are configured
+    // skip transporter setup entirely in test env
+    if (process.env.NODE_ENV === 'test') {
+      this.isConfigured = false;
+      return;
+    }
+
+    // only create transporter if SMTP credentials are configured
     const smtpUser = process.env.SMTP_USER;
     const smtpPass = process.env.SMTP_PASS;
-    
-    if (smtpUser && smtpPass && smtpUser !== 'your-email@gmail.com') {
+
+    if (smtpUser && smtpPass && smtpUser !== 'your-email@gmail.com' && smtpUser !== 'test@example.com') {
       this.transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
         port: parseInt(process.env.SMTP_PORT || '587'),
@@ -29,9 +35,9 @@ class EmailService {
         }
       });
       this.isConfigured = true;
-      console.log('📧 Email service configured');
+      console.log('Email service configured');
     } else {
-      console.log('📧 Email service not configured (SMTP credentials missing) - emails will be skipped');
+      console.log('Email service not configured (SMTP credentials missing) - emails will be skipped');
     }
   }
 

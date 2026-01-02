@@ -1,45 +1,47 @@
 import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 import { config } from 'dotenv';
 
-// Load test environment variables
+// load test env
 config({ path: '.env.test' });
 
-// Set NODE_ENV to test
 process.env.NODE_ENV = 'test';
 
-// Set test timeout
 jest.setTimeout(30000);
 
-const MONGODB_TEST_URI = process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017/ecommerce_test';
+let mongoServer: MongoMemoryServer;
 
 beforeAll(async () => {
   try {
-    // Disconnect if already connected
+    // disconnect any existing connection
     if (mongoose.connection.readyState !== 0) {
       await mongoose.disconnect();
     }
-    
-    // Connect to test database
-    await mongoose.connect(MONGODB_TEST_URI, {
-      serverSelectionTimeoutMS: 5000,
+
+    // spin up in-memory mongodb so tests don't need a local mongod
+    mongoServer = await MongoMemoryServer.create();
+    const uri = mongoServer.getUri();
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 5000
     });
-    console.log('Test DB connected');
   } catch (error) {
-    console.error('Failed to connect to test database:', error);
+    console.error('Failed to start in-memory MongoDB:', error);
     process.exit(1);
   }
-}, 30000);
+}, 60000);
 
 afterAll(async () => {
   try {
     if (mongoose.connection.readyState !== 0) {
       await mongoose.disconnect();
     }
+    if (mongoServer) {
+      await mongoServer.stop();
+    }
   } catch (error) {
     console.error('Failed to disconnect:', error);
-    process.exit(1);
   }
-}, 10000);
+}, 30000);
 
 afterEach(async () => {
   try {
@@ -48,17 +50,17 @@ afterEach(async () => {
       const collection = collections[key];
       await collection.deleteMany({});
     }
-  } catch (error) {
-    // Ignore cleanup errors
+  } catch (_error) {
+    // ignore cleanup errors
   }
 });
 
-// Mock console to reduce noise
+// keep error logs visible during tests so failures are debuggable
+// but suppress noisy info/debug logs
 global.console = {
   ...console,
   log: jest.fn(),
   debug: jest.fn(),
   info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
+  // keep warn and error visible
 };

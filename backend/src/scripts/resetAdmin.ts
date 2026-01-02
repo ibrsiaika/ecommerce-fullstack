@@ -2,40 +2,44 @@ import mongoose from 'mongoose';
 import User from '../models/User';
 import connectDB from '../config/database';
 
+// guard against accidental prod runs
+if (process.env.NODE_ENV === 'production') {
+  console.error('resetAdmin script is forbidden in production');
+  process.exit(1);
+}
+
 export const resetAdmin = async () => {
   try {
     await connectDB();
-    
-    // Delete existing admin user
-    const deleted = await User.deleteOne({ email: 'admin@example.com' });
-    if (deleted.deletedCount > 0) {
-      console.log('✅ Deleted existing admin user');
-    }
-    
-    // Create new admin user - User model will hash password in pre-save hook
+
+    // drop the old admin so we can re-create cleanly
+    await User.deleteOne({ email: 'admin@example.com' });
+    console.log('Cleared existing admin@example.com if any');
+
+    // proper field names: firstName/lastName, passwordHash via setPassword, status active
     const adminUser = new User({
-      name: 'Admin User',
+      firstName: 'Admin',
+      lastName: 'User',
       email: 'admin@example.com',
-      password: 'admin123', // User model will hash this in pre-save hook
-      phone: '+1234567890',
       role: 'admin',
       isEmailVerified: true,
-      isActive: true
+      status: 'active'
     });
-    
+
+    // use the model's argon2id hashing path
+    await adminUser.setPassword('Admin123!@#');
     await adminUser.save();
-    console.log('✅ Admin user created successfully!');
+
+    console.log('Admin user created successfully');
     console.log('Email: admin@example.com');
-    console.log('Password: admin123');
-    
+    console.log('Password: Admin123!@#');
   } catch (error) {
-    console.error('❌ Error resetting admin user:', error);
+    console.error('Error resetting admin user:', error);
   } finally {
     mongoose.connection.close();
   }
 };
 
-// Run if executed directly
 if (require.main === module) {
   resetAdmin();
 }

@@ -8,6 +8,9 @@
 
 import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit';
 
+// disable rate limiting in test env so suites can hammer endpoints
+const skipInTests = () => process.env.NODE_ENV === 'test';
+
 /**
  * Rate limit configurations for different endpoint types
  */
@@ -29,6 +32,7 @@ export const authLimiter: RateLimitRequestHandler = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: false,
+  skip: skipInTests,
   keyGenerator: (req) => {
     // Use IP + email combination for more precise limiting
     const email = req.body?.email || '';
@@ -51,7 +55,8 @@ export const passwordResetLimiter: RateLimitRequestHandler = rateLimit({
     }
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  skip: skipInTests
 });
 
 /**
@@ -69,7 +74,8 @@ export const sensitiveLimiter: RateLimitRequestHandler = rateLimit({
     }
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  skip: skipInTests
 });
 
 /**
@@ -88,11 +94,7 @@ export const apiLimiter: RateLimitRequestHandler = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => {
-    // Skip rate limiting for admin users
-    const user = (req as any).user;
-    return user?.role === 'admin' || user?.role === 'super_admin';
-  }
+  skip: (req) => skipInTests() || ((req as any).user?.role === 'admin' || (req as any).user?.role === 'super_admin')
 });
 
 /**
@@ -110,7 +112,8 @@ export const strictApiLimiter: RateLimitRequestHandler = rateLimit({
     }
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  skip: skipInTests
 });
 
 /**
@@ -128,7 +131,8 @@ export const publicLimiter: RateLimitRequestHandler = rateLimit({
     }
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  skip: skipInTests
 });
 
 /**
@@ -146,7 +150,8 @@ export const uploadLimiter: RateLimitRequestHandler = rateLimit({
     }
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  skip: skipInTests
 });
 
 /**

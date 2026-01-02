@@ -151,7 +151,7 @@ export class AdminDashboardService {
   // Get seller performance metrics
   async getTopSellers(limit: number = 10) {
     const topSellers = await Store.find()
-      .populate('owner', 'name email')
+      .populate('owner', 'firstName lastName email')
       .sort({ totalEarnings: -1 })
       .limit(limit)
       .lean();
@@ -244,7 +244,7 @@ export class AdminDashboardService {
   // Get pending verifications
   async getPendingVerifications() {
     const pendingStores = await Store.find({ isVerified: false })
-      .populate('owner', 'name email')
+      .populate('owner', 'firstName lastName email')
       .sort({ createdAt: -1 });
 
     return pendingStores;

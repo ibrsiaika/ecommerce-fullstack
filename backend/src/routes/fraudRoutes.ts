@@ -53,7 +53,7 @@ router.get('/alerts', authenticate, requireFraudAnalyst, async (req: Request, re
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(skip)
-      .populate('userId', 'email name'); // Include user email/name
+      .populate('userId', 'email firstName lastName');
 
     const total = await FraudAlert.countDocuments(query);
 

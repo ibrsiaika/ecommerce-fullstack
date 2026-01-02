@@ -3,6 +3,12 @@ import Product, { IReview } from '../models/Product';
 import User from '../models/User';
 import connectDB from '../config/database';
 
+// guard against accidental prod runs
+if (process.env.NODE_ENV === 'production') {
+  console.error('seedProducts script is forbidden in production');
+  process.exit(1);
+}
+
 // Sample product data with real product images
 const sampleProducts = [
   {
@@ -180,7 +186,7 @@ export const seedProducts = async () => {
     
     // Clear existing products
     await Product.deleteMany({});
-    console.log('✅ Cleared existing products');
+    console.log('Cleared existing products');
     
     // Get a user to assign as creator (admin user)
     const adminUser = await User.findOne({ role: 'admin' });
@@ -198,20 +204,21 @@ export const seedProducts = async () => {
     
     // Insert sample products
     const createdProducts = await Product.insertMany(productsWithCreator);
-    console.log(`✅ Seeded ${createdProducts.length} products`);
+    console.log(`Seeded ${createdProducts.length} products`);
     
     // Add some reviews to products
+    const adminName = adminUser.getFullName();
     const reviewsData = [
       {
         user: adminUser._id,
-        name: adminUser.name,
+        name: adminName,
         rating: 5,
         comment: 'Excellent product! Highly recommended.',
         createdAt: new Date()
       },
       {
         user: adminUser._id,
-        name: adminUser.name,
+        name: adminName,
         rating: 4,
         comment: 'Great quality and fast delivery.',
         createdAt: new Date()
@@ -223,7 +230,7 @@ export const seedProducts = async () => {
       const product = createdProducts[i];
       const reviewData: IReview = {
         user: adminUser._id as mongoose.Types.ObjectId,
-        name: adminUser.name,
+        name: adminName,
         rating: reviewsData[i % reviewsData.length].rating,
         comment: reviewsData[i % reviewsData.length].comment,
         createdAt: new Date()
@@ -232,8 +239,8 @@ export const seedProducts = async () => {
       await product.save();
     }
     
-    console.log('✅ Added sample reviews');
-    console.log('🎉 Product seeding completed successfully!');
+    console.log('Added sample reviews');
+    console.log('Product seeding completed successfully');
     
   } catch (error) {
     console.error('❌ Error seeding products:', error);

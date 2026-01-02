@@ -1,26 +1,12 @@
 import request from 'supertest';
-import mongoose from 'mongoose';
 import app from '../src/server';
 import User from '../src/models/User';
 
-// Use a different test database for auth tests
-const MONGODB_TEST_URI = process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017/ecommerce_test_auth';
+// auth endpoint tests — uses shared in-memory MongoDB from setup.ts
 
 describe('Authentication Endpoints', () => {
-  beforeAll(async () => {
-    // Connect to test database
-    await mongoose.connect(MONGODB_TEST_URI);
-  });
-
   beforeEach(async () => {
-    // Clean up database before each test
     await User.deleteMany({});
-  });
-
-  afterAll(async () => {
-    // Clean up and close database connection
-    await User.deleteMany({});
-    await mongoose.connection.close();
   });
 
   describe('POST /api/auth/register', () => {
@@ -101,7 +87,6 @@ describe('Authentication Endpoints', () => {
 
   describe('POST /api/auth/login', () => {
     beforeEach(async () => {
-      // Create a test user
       const userData = {
         name: 'Test User',
         email: 'test@example.com',
@@ -165,7 +150,6 @@ describe('Authentication Endpoints', () => {
     let authToken: string;
 
     beforeEach(async () => {
-      // Create and login user to get token
       const userData = {
         name: 'Test User',
         email: 'test@example.com',
@@ -196,8 +180,8 @@ describe('Authentication Endpoints', () => {
         .get('/api/auth/me')
         .expect(401);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Not authorized to access this route - No token provided');
+      expect(response.body.status).toBe('error');
+      expect(response.body.error.code).toBe('MISSING_TOKEN');
     });
 
     it('should not get user profile with invalid token', async () => {
@@ -206,8 +190,8 @@ describe('Authentication Endpoints', () => {
         .set('Authorization', 'Bearer invalid-token')
         .expect(401);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Not authorized to access this route - Invalid token');
+      expect(response.body.status).toBe('error');
+      expect(response.body.error.code).toBe('INVALID_TOKEN');
     });
   });
 });

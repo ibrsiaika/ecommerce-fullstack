@@ -147,15 +147,14 @@ const userSchema: Schema = new Schema(
     email: {
       type: String,
       required: [true, 'Email is required'],
-      unique: true,
       lowercase: true,
       trim: true,
       match: [
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
         'Please provide a valid email address'
       ],
-      maxlength: 255,
-      index: true
+      maxlength: 255
+      // unique constraint declared below as partialFilterExpression on deletedAt: null
     },
 
     firstName: {
@@ -193,7 +192,6 @@ const userSchema: Schema = new Schema(
         message: 'Invalid role'
       },
       default: 'buyer',
-      index: true,
       immutable: false
     },
 
@@ -215,8 +213,7 @@ const userSchema: Schema = new Schema(
     // Email Verification
     isEmailVerified: {
       type: Boolean,
-      default: false,
-      index: true
+      default: false
     },
 
     emailVerificationToken: {
@@ -281,8 +278,7 @@ const userSchema: Schema = new Schema(
         values: ['active', 'inactive', 'suspended', 'deleted'],
         message: 'Invalid account status'
       },
-      default: 'active',
-      index: true
+      default: 'active'
     },
 
     suspensionReason: {
@@ -378,8 +374,7 @@ const userSchema: Schema = new Schema(
     // Fraud & Security
     suspicious: {
       type: Boolean,
-      default: false,
-      index: true
+      default: false
     },
 
     ipAddressWhitelist: {
@@ -468,27 +463,70 @@ const userSchema: Schema = new Schema(
 /**
  * INDEX STRATEGY
  * ==============
- * Indexes must cover all queries for optimal performance
+ * Indexes cover all queries for optimal performance.
+ * Email unique index scoped to non-deleted users so soft-deleted accounts can re-register.
  */
 
-// Single field indexes
-userSchema.index({ email: 1 }, { unique: true, sparse: false });
+// email unique only among non-deleted users (GDPR-friendly)
+userSchema.index(
+  { email: 1 },
+  { unique: true, partialFilterExpression: { deletedAt: null } }
+);
+// role + status compound for admin user lists
 userSchema.index({ role: 1, status: 1 });
-userSchema.index({ status: 1 });
+// suspicious users feed
 userSchema.index({ suspicious: 1, createdAt: -1 });
-userSchema.index({ isEmailVerified: 1 });
-
-// Seller indexes
+// seller dashboards
 userSchema.index({ 'seller.verificationStatus': 1 });
 userSchema.index({ 'seller.trustScore': 1 });
-
-// Timestamps
+// recent signups
 userSchema.index({ createdAt: -1 });
+// soft delete marker
 userSchema.index({ deletedAt: 1 }, { sparse: true });
-
-// Security indexes
+// security: locked accounts + failed login backoff
 userSchema.index({ loginLockedUntil: 1 }, { sparse: true });
 userSchema.index({ lastFailedLoginAt: 1 }, { sparse: true });
+
+/**
+ * Soft delete: hide deleted users by default.
+ * Override with `.setOptions({ includeDeleted: true })` for admin queries.
+ */
+const softDeleteFilter = function (this: any) {
+  if (this.getOptions && this.getOptions().includeDeleted === true) return;
+  const existing = this.getQuery().deletedAt;
+  if (existing === undefined) {
+    this.where({ deletedAt: null });
+  }
+};
+userSchema.pre('find', softDeleteFilter);
+userSchema.pre('findOne', softDeleteFilter);
+userSchema.pre('findOneAndUpdate', softDeleteFilter);
+userSchema.pre('countDocuments', softDeleteFilter);
+
+/**
+ * toJSON: strip sensitive fields even if select:false is bypassed.
+ * Defense in depth for API responses.
+ */
+userSchema.set('toJSON', {
+  virtuals: true,
+  transform: (_doc, ret: any) => {
+    delete ret.passwordHash;
+    delete ret.passwordHistory;
+    delete ret.passwordResetToken;
+    delete ret.passwordResetExpiresAt;
+    delete ret.emailVerificationToken;
+    delete ret.twoFactorSecret;
+    delete ret.backupCodes;
+    delete ret.trustedDevices;
+    delete ret.ipAddressWhitelist;
+    delete ret.ipAddressBlacklist;
+    if (ret.seller && ret.seller.payoutDetails) {
+      delete ret.seller.payoutDetails.accountNumber;
+      delete ret.seller.payoutDetails.routingNumber;
+    }
+    return ret;
+  }
+});
 
 /**
  * Instance Methods

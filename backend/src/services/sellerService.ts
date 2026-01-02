@@ -26,7 +26,7 @@ export class SellerService {
   // Get seller store
   async getStore(userId: string) {
     const store = await Store.findOne({ owner: userId })
-      .populate('owner', 'name email avatar');
+      .populate('owner', 'firstName lastName email avatar');
 
     if (!store) {
       throw new AppError('Store not found', 404);
@@ -240,7 +240,7 @@ export class SellerService {
   // Get public store profile
   async getPublicStore(slug: string) {
     const store = await Store.findOne({ slug, isActive: true })
-      .populate('owner', 'name')
+      .populate('owner', 'firstName lastName')
       .lean();
 
     if (!store) {

@@ -25,7 +25,7 @@ export class ProductService {
 
     const [products, total] = await Promise.all([
       Product.find(filter)
-        .populate('reviews.user', 'name email avatar')
+        .populate('reviews.user', 'firstName lastName email avatar')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
@@ -45,7 +45,7 @@ export class ProductService {
 
   async getById(id: string) {
     const product = await Product.findById(id)
-      .populate('reviews.user', 'name email avatar');
+      .populate('reviews.user', 'firstName lastName email avatar');
 
     if (!product) {
       throw new AppError('Product not found', 404);
@@ -56,7 +56,7 @@ export class ProductService {
 
   async getBySlug(slug: string) {
     const product = await Product.findOne({ slug })
-      .populate('reviews.user', 'name email avatar');
+      .populate('reviews.user', 'firstName lastName email avatar');
 
     if (!product) {
       throw new AppError('Product not found', 404);

@@ -34,6 +34,10 @@ export interface IProduct extends Document {
   rating: number;
   seoTitle?: string;
   seoDescription?: string;
+  // seller link, populated on create from req.user
+  createdBy: mongoose.Types.ObjectId;
+  // soft delete for catalog items
+  deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -72,8 +76,7 @@ const productSchema: Schema = new Schema({
   },
   slug: {
     type: String,
-    lowercase: true,
-    index: true
+    lowercase: true
   },
   description: {
     type: String,
@@ -83,11 +86,14 @@ const productSchema: Schema = new Schema({
   price: {
     type: Number,
     required: [true, 'Please add a price'],
-    min: [0, 'Price cannot be negative']
+    min: [0, 'Price cannot be negative'],
+    // round to 2 decimals on save to avoid float drift
+    set: (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
   },
   comparePrice: {
     type: Number,
-    min: [0, 'Compare price cannot be negative']
+    min: [0, 'Compare price cannot be negative'],
+    set: (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
   },
   images: {
     type: [String],
@@ -172,12 +178,21 @@ const productSchema: Schema = new Schema({
   seoDescription: {
     type: String,
     maxlength: [160, 'SEO description cannot be more than 160 characters']
+  },
+  createdBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    index: true
+  },
+  deletedAt: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true
 });
 
-// Create slug from name before saving
+// slug from name
 productSchema.pre<IProduct>('save', function(next) {
   if (this.isModified('name')) {
     this.slug = this.name
@@ -188,11 +203,11 @@ productSchema.pre<IProduct>('save', function(next) {
   next();
 });
 
-// Update rating and numReviews when reviews change
+// recompute rating on review changes
 productSchema.pre<IProduct>('save', function(next) {
   if (this.isModified('reviews')) {
     this.numReviews = this.reviews.length;
-    
+
     if (this.reviews.length > 0) {
       const totalRating = this.reviews.reduce((acc: number, review: IReview) => acc + review.rating, 0);
       this.rating = Math.round((totalRating / this.reviews.length) * 10) / 10;
@@ -203,7 +218,20 @@ productSchema.pre<IProduct>('save', function(next) {
   next();
 });
 
-// Create indexes for better performance
+// soft delete: hide deleted by default, allow override via setOptions({ includeDeleted: true })
+const softDeleteFilter = function(this: any) {
+  if (this.getOptions && this.getOptions().includeDeleted === true) return;
+  // only apply when no explicit deletedAt condition present
+  const existing = this.getQuery().deletedAt;
+  if (existing === undefined) {
+    this.where({ deletedAt: null });
+  }
+};
+productSchema.pre('find', softDeleteFilter);
+productSchema.pre('findOne', softDeleteFilter);
+productSchema.pre('findOneAndUpdate', softDeleteFilter);
+
+// indexes
 productSchema.index({ slug: 1 }, { unique: true, sparse: true });
 productSchema.index({ name: 'text', description: 'text', tags: 'text' });
 productSchema.index({ category: 1, subcategory: 1 });
@@ -211,5 +239,7 @@ productSchema.index({ price: 1 });
 productSchema.index({ rating: -1 });
 productSchema.index({ createdAt: -1 });
 productSchema.index({ isActive: 1, isFeatured: 1 });
+// seller dashboard query index
+productSchema.index({ createdBy: 1, isActive: 1, createdAt: -1 });
 
 export default mongoose.model<IProduct>('Product', productSchema);

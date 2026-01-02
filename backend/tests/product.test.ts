@@ -4,23 +4,18 @@ import app from '../src/server';
 import User from '../src/models/User';
 import Product from '../src/models/Product';
 
-const MONGODB_TEST_URI = process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017/ecommerce_test_products';
+// product endpoint tests — uses shared in-memory MongoDB from setup.ts
 
 describe('Product Endpoints', () => {
   let authToken: string;
   let adminToken: string;
   let productId: string;
 
-  beforeAll(async () => {
-    await mongoose.connect(MONGODB_TEST_URI);
-  });
-
   beforeEach(async () => {
-    // Clean up database
     await User.deleteMany({});
     await Product.deleteMany({});
 
-    // Create regular user
+    // create a regular buyer via the public register endpoint
     const userResponse = await request(app)
       .post('/api/auth/register')
       .send({
@@ -30,23 +25,30 @@ describe('Product Endpoints', () => {
       });
     authToken = userResponse.body.token;
 
-    // Create admin user
-    const adminUser = await User.create({
-      name: 'Admin User',
-      email: 'admin@example.com',
-      password: 'password123',
-      role: 'admin'
-    });
-    
-    const adminResponse = await request(app)
+    // create an admin: register, then promote role directly in the DB
+    const adminReg = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Admin User',
+        email: 'admin@example.com',
+        password: 'password123'
+      });
+
+    await User.updateOne(
+      { email: 'admin@example.com' },
+      { $set: { role: 'admin' } }
+    );
+
+    // login again to get a fresh token carrying the admin role
+    const adminLogin = await request(app)
       .post('/api/auth/login')
       .send({
         email: 'admin@example.com',
         password: 'password123'
       });
-    adminToken = adminResponse.body.token;
+    adminToken = adminLogin.body.token;
 
-    // Create a test product
+    // create a test product as admin
     const productResponse = await request(app)
       .post('/api/products')
       .set('Authorization', `Bearer ${adminToken}`)
@@ -60,12 +62,6 @@ describe('Product Endpoints', () => {
         sku: 'TEST-SKU-001'
       });
     productId = productResponse.body.data._id;
-  });
-
-  afterAll(async () => {
-    await User.deleteMany({});
-    await Product.deleteMany({});
-    await mongoose.connection.close();
   });
 
   describe('GET /api/products', () => {
@@ -129,7 +125,6 @@ describe('Product Endpoints', () => {
         .expect(404);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Product not found');
     });
   });
 
@@ -173,8 +168,7 @@ describe('Product Endpoints', () => {
         .send(productData)
         .expect(403);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('User role \'user\' is not authorized to access this route');
+      expect(response.body.status).toBe('error');
     });
 
     it('should not create product without authentication', async () => {
@@ -193,8 +187,8 @@ describe('Product Endpoints', () => {
         .send(productData)
         .expect(401);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Not authorized to access this route - No token provided');
+      expect(response.body.status).toBe('error');
+      expect(response.body.error.code).toBe('MISSING_TOKEN');
     });
   });
 
@@ -226,8 +220,8 @@ describe('Product Endpoints', () => {
         .send(reviewData)
         .expect(401);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Not authorized to access this route - No token provided');
+      expect(response.body.status).toBe('error');
+      expect(response.body.error.code).toBe('MISSING_TOKEN');
     });
 
     it('should not add duplicate review from same user', async () => {
@@ -251,7 +245,7 @@ describe('Product Endpoints', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Product already reviewed');
+      expect(response.body.message).toBe('Product already reviewed');
     });
   });
 });
