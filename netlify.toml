@@ -17,3 +17,6 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # Vite variables (VITE_*) are intentionally baked into the client bundle.
+  # VITE_API_URL is not a secret; allowlist it so Netlify secrets scanning doesn't fail the build.
+  SECRETS_SCAN_OMIT_KEYS = "VITE_API_URL"
