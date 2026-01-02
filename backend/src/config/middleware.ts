@@ -27,19 +27,22 @@ export const rateLimiter = rateLimit({
  */
 export const corsConfig = cors({
   origin: (origin, callback) => {
+    const normalizeOrigin = (value: string) => value.trim().replace(/\/+$/, '');
+
     const envOrigins = (process.env.CORS_ORIGINS || '')
       .split(',')
-      .map((v) => v.trim())
+      .map((v) => normalizeOrigin(v))
       .filter(Boolean);
 
     const allowedOrigins = Array.from(
       new Set([
-        process.env.CLIENT_URL || 'http://localhost:3000',
-        process.env.FRONTEND_URL,
+        process.env.CLIENT_URL ? normalizeOrigin(process.env.CLIENT_URL) : 'http://localhost:3000',
+        process.env.FRONTEND_URL ? normalizeOrigin(process.env.FRONTEND_URL) : undefined,
         'http://localhost:5173',
         'http://localhost:5174',
         'http://localhost:5175',
-        'https://gentle-cheesecake-5c1663.netlify.app/',
+        // Netlify site (no trailing slash)
+        'https://gentle-cheesecake-5c1663.netlify.app',
         ...envOrigins,
       ].filter(Boolean) as string[])
     );
@@ -47,14 +50,17 @@ export const corsConfig = cors({
     // Allow requests with no origin (curl, mobile apps)
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    const normalizedOrigin = normalizeOrigin(origin);
+
+    if (allowedOrigins.includes(normalizedOrigin)) return callback(null, true);
 
     console.warn(`CORS blocked: ${origin}`);
     return callback(new Error('Not allowed by CORS policy'));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  optionsSuccessStatus: 204
 });
 
 /**
