@@ -43,17 +43,34 @@ export const corsConfig = cors({
       ].filter(Boolean) as string[])
     );
 
+    const isAllowedOrigin = (requestOrigin: string) => {
+      return allowedOrigins.some((allowed) => {
+        if (allowed === requestOrigin) return true;
+        // Support a minimal wildcard syntax, e.g. "https://*.netlify.app"
+        if (allowed.includes('*')) {
+          const escaped = allowed
+            .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+            .replace(/\*/g, '.*');
+          const re = new RegExp(`^${escaped}$`);
+          return re.test(requestOrigin);
+        }
+        return false;
+      });
+    };
+
     // Allow requests with no origin (curl, mobile apps)
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (isAllowedOrigin(origin)) return callback(null, true);
 
     console.warn(`CORS blocked: ${origin}`);
-    return callback(new Error('Not allowed by CORS policy'));
+    // Do NOT throw here; throwing causes a 500 and browsers show confusing errors.
+    return callback(null, false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  optionsSuccessStatus: 204
 });
 
 /**
