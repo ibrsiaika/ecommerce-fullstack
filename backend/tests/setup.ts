@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { config } from 'dotenv';
 
 // load test env
@@ -9,7 +9,7 @@ process.env.NODE_ENV = 'test';
 
 jest.setTimeout(30000);
 
-let mongoServer: MongoMemoryServer;
+let replSet: MongoMemoryReplSet;
 
 beforeAll(async () => {
   try {
@@ -18,14 +18,14 @@ beforeAll(async () => {
       await mongoose.disconnect();
     }
 
-    // spin up in-memory mongodb so tests don't need a local mongod
-    mongoServer = await MongoMemoryServer.create();
-    const uri = mongoServer.getUri();
+    // replica set required for MongoDB transactions in tests
+    replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
+    const uri = replSet.getUri();
     await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 5000
     });
   } catch (error) {
-    console.error('Failed to start in-memory MongoDB:', error);
+    console.error('Failed to start in-memory MongoDB replica set:', error);
     process.exit(1);
   }
 }, 60000);
@@ -35,8 +35,8 @@ afterAll(async () => {
     if (mongoose.connection.readyState !== 0) {
       await mongoose.disconnect();
     }
-    if (mongoServer) {
-      await mongoServer.stop();
+    if (replSet) {
+      await replSet.stop();
     }
   } catch (error) {
     console.error('Failed to disconnect:', error);

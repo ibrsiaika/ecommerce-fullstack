@@ -95,7 +95,8 @@ describe('Order Endpoints', () => {
 
       expect(response.body.success).toBe(true);
       expect(response.body.data).toHaveProperty('_id');
-      expect(response.body.data.totalPrice).toBe(199.98);
+      // server recalculates totals: 2x99.99=199.98 + 8% tax=16.00 + free shipping(over 100) = 215.98
+      expect(response.body.data.totalPrice).toBe(215.98);
       orderId = response.body.data._id;
     });
 
@@ -196,7 +197,8 @@ describe('Order Endpoints', () => {
       expect(response.body.success).toBe(true);
       expect(response.body.data).toBeInstanceOf(Array);
       expect(response.body.data.length).toBe(1);
-      expect(response.body.data[0]).toHaveProperty('totalPrice', 99.99);
+      // server calculates: 99.99 + 8% tax(8.00) + shipping(9.99) = 117.98
+      expect(response.body.data[0]).toHaveProperty('totalPrice', 117.98);
     });
 
     it('should not get orders without authentication', async () => {
@@ -248,7 +250,8 @@ describe('Order Endpoints', () => {
 
       expect(response.body.success).toBe(true);
       expect(response.body.data).toHaveProperty('_id', orderId);
-      expect(response.body.data).toHaveProperty('totalPrice', 99.99);
+      // server calculates: 99.99 + 8% tax(8.00) + shipping(9.99) = 117.98
+      expect(response.body.data).toHaveProperty('totalPrice', 117.98);
     });
 
     it('should get order by ID for admin', async () => {

@@ -3,8 +3,10 @@ import { validationResult, body } from 'express-validator';
 import Order from '../models/Order';
 import Product from '../models/Product';
 import User from '../models/User';
+import ProcessedWebhookEvent from '../models/ProcessedWebhookEvent';
 import emailService from '../services/emailService';
 import Stripe from 'stripe';
+import mongoose from 'mongoose';
 
 // Initialize Stripe (will be null if not configured properly)
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -29,10 +31,7 @@ export const createOrder = async (req: Request, res: Response) => {
     const {
       orderItems,
       shippingAddress,
-      paymentMethod,
-      taxPrice,
-      shippingPrice,
-      totalPrice
+      paymentMethod
     } = req.body;
 
     if (orderItems && orderItems.length === 0) {
@@ -43,9 +42,18 @@ export const createOrder = async (req: Request, res: Response) => {
       return;
     }
 
-    // Verify product details and stock
+    // fetch all products in one go — we need server-side prices
+    const productIds = orderItems.map((i: any) => i.product);
+    const products = await Product.find({ _id: { $in: productIds } });
+
+    // build a lookup so we can cross-check each line item
+    const productMap = new Map(products.map((p: any) => [p._id.toString(), p]));
+
+    let itemsPrice = 0;
+    const verifiedItems: any[] = [];
+
     for (const item of orderItems) {
-      const product = await Product.findById(item.product);
+      const product = productMap.get(item.product);
       if (!product) {
         res.status(404).json({
           success: false,
@@ -61,26 +69,64 @@ export const createOrder = async (req: Request, res: Response) => {
         });
         return;
       }
+
+      // always use the server-side price, never the client-sent one
+      const lineUnit = product.price;
+      const lineTotal = lineUnit * item.quantity;
+      itemsPrice += lineTotal;
+
+      verifiedItems.push({
+        product: product._id,
+        name: product.name,
+        quantity: item.quantity,
+        price: lineUnit,
+        image: product.images?.[0] || item.image || ''
+      });
     }
 
-    const order = new Order({
-      user: (req as any).user.id,
-      orderItems,
-      shippingAddress,
-      paymentMethod,
-      taxPrice,
-      shippingPrice,
-      totalPrice
-    });
+    // server-side totals — tax and shipping computed, not trusted from client
+    const TAX_RATE = 0.08; // 8% — move to config/SiteConfig later
+    const SHIPPING_FLAT = itemsPrice > 100 ? 0 : 9.99;
+    const taxPrice = Math.round(itemsPrice * TAX_RATE * 100) / 100;
+    const shippingPrice = SHIPPING_FLAT;
+    const totalPrice = Math.round((itemsPrice + taxPrice + shippingPrice) * 100) / 100;
 
-    const createdOrder = await order.save();
+    // atomic order creation + stock decrement inside a transaction
+    const session = await mongoose.startSession();
 
-    // Update product stock
-    for (const item of orderItems) {
-      await Product.findByIdAndUpdate(
-        item.product,
-        { $inc: { countInStock: -item.quantity } }
-      );
+    let createdOrder: any;
+    try {
+      createdOrder = await session.withTransaction(async () => {
+        // conditional decrement — prevents oversell under concurrency
+        for (const item of verifiedItems) {
+          const result = await Product.updateOne(
+            { _id: item.product, countInStock: { $gte: item.quantity } },
+            { $inc: { countInStock: -item.quantity } },
+            { session }
+          );
+
+          if (result.modifiedCount === 0) {
+            throw new Error(`Out of stock: ${item.name}`);
+          }
+        }
+
+        const [order] = await Order.create(
+          [{
+            user: (req as any).user.id,
+            orderItems: verifiedItems,
+            shippingAddress,
+            paymentMethod,
+            taxPrice,
+            shippingPrice,
+            totalPrice
+          }],
+          { session }
+        );
+
+        return order;
+      });
+    } finally {
+      await session.endSession();
     }
 
     // Send order confirmation email
@@ -593,19 +639,34 @@ export const stripeWebhook = async (req: Request, res: Response) => {
   const sig = req.headers['stripe-signature'] as string;
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+  // never trust the body without signature verification
+  if (!endpointSecret) {
+    console.error('STRIPE_WEBHOOK_SECRET is not set — refusing to process webhook');
+    res.status(500).json({ error: 'Webhook secret not configured' });
+    return;
+  }
+
   let event;
 
   try {
-    if (endpointSecret) {
-      event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-    } else {
-      // For testing without webhook secret
-      event = req.body;
-    }
+    // req.body is a Buffer because the webhook route uses express.raw
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
   } catch (err: any) {
     console.error('Webhook signature verification failed:', err.message);
     res.status(400).send(`Webhook Error: ${err.message}`);
     return;
+  }
+
+  // idempotency: skip if we've already seen this event
+  try {
+    const alreadyProcessed = await ProcessedWebhookEvent.exists({ eventId: event.id });
+    if (alreadyProcessed) {
+      res.json({ received: true, duplicate: true });
+      return;
+    }
+  } catch (err) {
+    console.error('Failed to check webhook idempotency:', err);
+    // don't abort — better to risk double-processing than to drop a payment
   }
 
   // Handle the event
@@ -620,17 +681,30 @@ export const stripeWebhook = async (req: Request, res: Response) => {
           order.isPaid = true;
           order.paidAt = new Date();
           order.paymentResult = {
-            id: session.payment_intent,
+            id: session.payment_intent as string,
             status: session.payment_status,
             update_time: new Date().toISOString(),
             email_address: session.customer_details?.email || ''
           };
           await order.save();
-          console.log(`✅ Order ${orderId} marked as paid via Stripe webhook`);
+          console.log(`Order ${orderId} marked as paid via Stripe webhook`);
         }
       } catch (error) {
         console.error('Error updating order:', error);
       }
+    }
+  }
+
+  // record the event so retries don't double-process
+  try {
+    await ProcessedWebhookEvent.create({
+      eventId: event.id,
+      eventType: event.type
+    });
+  } catch (err: any) {
+    // duplicate key is fine — means another worker beat us to it
+    if (err?.code !== 11000) {
+      console.error('Failed to record processed webhook event:', err);
     }
   }
 

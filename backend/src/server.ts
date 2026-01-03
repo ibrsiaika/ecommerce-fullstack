@@ -1,5 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
+// enables async error forwarding to errorHandler for Express 4
+import 'express-async-errors';
 
 // Configuration imports
 import {
@@ -12,6 +14,7 @@ import {
 import { swaggerConfig } from './config/swagger';
 import { registerRoutes } from './config/routes';
 import { connectDatabase, setupGracefulShutdown } from './config/database';
+import logger from './utils/logger';
 
 // Load environment variables
 dotenv.config();
@@ -76,6 +79,17 @@ const startServer = async () => {
 
 // Start server if not in test environment
 if (process.env.NODE_ENV !== 'test') {
+  // catch stray promise rejections so they don't silently crash the process
+  process.on('unhandledRejection', (reason) => {
+    logger.error({ msg: 'Unhandled promise rejection', reason });
+  });
+
+  process.on('uncaughtException', (error) => {
+    logger.error({ msg: 'Uncaught exception', error: error.message, stack: error.stack });
+    // give logger time to flush then exit — process state is now unreliable
+    setTimeout(() => process.exit(1), 1000);
+  });
+
   startServer();
 }
 
