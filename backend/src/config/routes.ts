@@ -1,6 +1,7 @@
 import { Express } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import express from 'express';
+import mongoose from 'mongoose';
 
 // Routes
 import authRoutes from '../routes/auth';
@@ -13,8 +14,6 @@ import sellerRoutes from '../routes/seller';
 import configRoutes from '../routes/config';
 import approvalRoutes from '../routes/approvalRoutes';
 import auditRoutes from '../routes/auditRoutes';
-import fraudRoutes from '../routes/fraudRoutes';
-import phase4Routes from '../routes/phase4Routes';
 
 // Middleware
 import { errorHandler, notFound } from '../middleware/errorHandler';
@@ -38,8 +37,6 @@ const routes: RouteConfig[] = [
   { path: '/api/seller', router: sellerRoutes },
   { path: '/api/admin/approvals', router: approvalRoutes },
   { path: '/api/audit', router: auditRoutes },
-  { path: '/api/admin/fraud', router: fraudRoutes },
-  { path: '/api/phase4', router: phase4Routes },
 ];
 
 /**
@@ -49,7 +46,7 @@ export const registerRoutes = (app: Express, swaggerSpec: any) => {
   // API Documentation
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-  // Health check
+  // Health check (liveness — process is up)
   app.get('/health', (req, res) => {
     res.status(200).json({
       status: 'OK',
@@ -57,6 +54,21 @@ export const registerRoutes = (app: Express, swaggerSpec: any) => {
       uptime: process.uptime(),
       environment: process.env.NODE_ENV || 'development'
     });
+  });
+
+  // Readiness check — DB must be reachable before taking traffic
+  app.get('/ready', async (req, res) => {
+    try {
+      const db = mongoose.connection.db;
+      if (!db) {
+        res.status(503).json({ status: 'not_ready' });
+        return;
+      }
+      await db.admin().ping();
+      res.status(200).json({ status: 'ready' });
+    } catch {
+      res.status(503).json({ status: 'not_ready' });
+    }
   });
 
   // Register all routes

@@ -5,11 +5,37 @@ import rateLimit from 'express-rate-limit';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 
+// helmet with production-grade defaults
+// HSTS preload, strict CSP, no-sniff, frameguard deny
+const helmetConfig = helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", 'https://js.stripe.com'],
+      frameSrc: ['https://js.stripe.com', 'https://hooks.stripe.com'],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'", 'https://api.stripe.com'],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      fontSrc: ["'self'", 'data:'],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'", 'https://checkout.stripe.com']
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  frameguard: { action: 'deny' }
+});
+
 /**
  * Security middleware configuration
  */
 export const securityMiddleware = [
-  helmet(),
+  helmetConfig,
   compression(),
 ];
 
