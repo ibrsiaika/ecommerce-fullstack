@@ -87,41 +87,27 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      console.log('🔐 Attempting login with:', credentials.email);
-      console.log('🌐 API Base URL:', import.meta.env.VITE_API_URL || 'http://localhost:5000');
-      
       const response = await api.login(credentials);
-      console.log('✅ Login response received:', response.status, response.data);
-      
+
       const { token, data, success, sessionId, expiresIn } = response.data;
-      
+
       if (!success) {
-        console.error('❌ Login failed - success is false');
         return rejectWithValue('Login failed');
       }
-      
+
       if (!token) {
-        console.error('❌ Login failed - no token in response');
         return rejectWithValue('No token received');
       }
-      
+
       if (!data) {
-        console.error('❌ Login failed - no user data in response');
-        console.log('📦 Response data structure:', response.data);
         return rejectWithValue('No user data received');
       }
-      
+
       persistToken(token);
       persistSessionId(sessionId);
       persistUserId(data.id);
-      console.log('✅ Login successful, user:', data);
       return { user: data, token, sessionId, expiresIn };
     } catch (error: any) {
-      console.error('❌ Login error caught:', error);
-      console.error('   Status:', error.response?.status);
-      console.error('   Data:', error.response?.data);
-      console.error('   Message:', error.message);
-      
       const message = error.response?.data?.error || error.message || 'Login failed';
       return rejectWithValue(message);
     }

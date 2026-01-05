@@ -16,6 +16,9 @@ import { PageLoader, LoadingFallback } from './components/Loading';
 // Configuration Provider
 import { ConfigProvider } from './context/ConfigContext';
 
+// Error boundary
+import { ErrorBoundary } from './components/ErrorBoundary';
+
 // Route configuration and guards
 import {
   publicRoutes,
@@ -161,9 +164,11 @@ function AppContent() {
 function App() {
   return (
     <Provider store={store}>
-      <ConfigProvider>
-        <AppContent />
-      </ConfigProvider>
+      <ErrorBoundary>
+        <ConfigProvider>
+          <AppContent />
+        </ConfigProvider>
+      </ErrorBoundary>
     </Provider>
   );
 }

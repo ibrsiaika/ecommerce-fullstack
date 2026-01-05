@@ -388,7 +388,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
 
   const toggleFeature = async (featureName: string, enabled: boolean) => {
     try {
-      await api.put(`/config/features/${featureName}`, { enabled });
+      await api.put(`/api/config/features/${featureName}`, { enabled });
       setState(prev => ({
         ...prev,
         features: { ...prev.features, [featureName]: enabled }
@@ -440,7 +440,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
 
   const toggleAdminWidget = async (widgetId: string) => {
     try {
-      await api.put(`/config/admin/preferences/widgets/${widgetId}/toggle`);
+      await api.put(`/api/config/admin/preferences/widgets/${widgetId}/toggle`);
       await fetchAdminPreferences();
     } catch (error: any) {
       setState(prev => ({ ...prev, error: error.message }));
@@ -467,7 +467,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
 
   const deleteAdminFilter = async (filterName: string) => {
     try {
-      await api.delete(`/config/admin/preferences/filters/${filterName}`);
+      await api.delete(`/api/config/admin/preferences/filters/${filterName}`);
       await fetchAdminPreferences();
     } catch (error: any) {
       setState(prev => ({ ...prev, error: error.message }));
