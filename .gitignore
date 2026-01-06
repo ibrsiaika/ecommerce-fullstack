@@ -57,6 +57,5 @@ tmp/
 temp/
 *.tmp
 
-.github/
-backend/package-lock.json
-frontend/package-lock.json
+# Uploads (runtime data)
+uploads/
