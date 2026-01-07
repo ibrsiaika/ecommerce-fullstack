@@ -62,13 +62,11 @@ export const corsConfig = cors({
 
     const allowedOrigins = Array.from(
       new Set([
-        process.env.CLIENT_URL ? normalizeOrigin(process.env.CLIENT_URL) : 'http://localhost:3000',
+        process.env.CLIENT_URL ? normalizeOrigin(process.env.CLIENT_URL) : 'http://localhost:5173',
         process.env.FRONTEND_URL ? normalizeOrigin(process.env.FRONTEND_URL) : undefined,
         'http://localhost:5173',
         'http://localhost:5174',
         'http://localhost:5175',
-        // Netlify site (no trailing slash)
-        'https://gentle-cheesecake-5c1663.netlify.app',
         ...envOrigins,
       ].filter(Boolean) as string[])
     );
