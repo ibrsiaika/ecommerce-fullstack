@@ -285,6 +285,53 @@ export class SellerService {
 
     return { following: !isFollowing };
   }
+
+  // seller creates a product under their own store
+  async createSellerProduct(userId: string, data: any) {
+    const store = await Store.findOne({ owner: userId });
+    if (!store) {
+      throw new AppError('You must create a store first', 400);
+    }
+
+    // check SKU uniqueness
+    const existing = await Product.findOne({ sku: data.sku });
+    if (existing) {
+      throw new AppError('Product with this SKU already exists', 400);
+    }
+
+    const product = await Product.create({
+      ...data,
+      createdBy: userId
+    });
+
+    // bump store product counter
+    await Store.findByIdAndUpdate(store._id, { $inc: { totalProducts: 1 } });
+
+    return product;
+  }
+
+  // seller deletes their own product (soft delete)
+  async deleteSellerProduct(userId: string, productId: string) {
+    const product = await Product.findById(productId);
+    if (!product) {
+      throw new AppError('Product not found', 404);
+    }
+
+    if (product.createdBy?.toString() !== userId) {
+      throw new AppError('Not authorized to delete this product', 403);
+    }
+
+    product.deletedAt = new Date();
+    product.isActive = false;
+    await product.save();
+
+    await Store.findOneAndUpdate(
+      { owner: userId },
+      { $inc: { totalProducts: -1 } }
+    );
+
+    return product;
+  }
 }
 
 export default new SellerService();

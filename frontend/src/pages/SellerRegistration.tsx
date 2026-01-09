@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
+import api from '../services/api';
 
 interface FormData {
   storeName: string;
@@ -140,15 +141,10 @@ const SellerRegistration: React.FC = () => {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/sellers/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+      const response = await api.post('/api/seller/register', formData);
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to register as seller');
+      if (response.data?.success === false) {
+        throw new Error(response.data?.message || 'Failed to register as seller');
       }
 
       navigate('/seller');

@@ -1,5 +1,5 @@
 import express, { Response } from 'express';
-import { protect } from '../middleware/auth';
+import { protect, authorize } from '../middleware/auth';
 import sellerService from '../services/sellerService';
 import { asyncHandler } from '../middleware/errorHandler';
 import { sendSuccess, sendError } from '../utils/response';
@@ -124,10 +124,11 @@ router.get(
 
 // @route   PUT /api/seller/store
 // @desc    Update my store
-// @access  Private
+// @access  Private/Seller
 router.put(
   '/store',
   protect,
+  authorize('seller', 'admin'),
   asyncHandler(async (req: any, res: Response) => {
     const store = await sellerService.updateStore(req.user._id.toString(), req.body);
     sendSuccess(res, 200, store, 'Store updated successfully');
@@ -136,10 +137,11 @@ router.put(
 
 // @route   GET /api/seller/products
 // @desc    Get my products
-// @access  Private
+// @access  Private/Seller
 router.get(
   '/products',
   protect,
+  authorize('seller', 'admin'),
   asyncHandler(async (req: any, res: Response) => {
     const page = req.query.page ? parseInt(req.query.page as string) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
@@ -152,12 +154,45 @@ router.get(
   })
 );
 
+// @route   POST /api/seller/products
+// @desc    Create a product as a seller
+// @access  Private/Seller
+router.post(
+  '/products',
+  protect,
+  authorize('seller'),
+  asyncHandler(async (req: any, res: Response) => {
+    const product = await sellerService.createSellerProduct(
+      req.user._id.toString(),
+      req.body
+    );
+    sendSuccess(res, 201, product, 'Product created');
+  })
+);
+
+// @route   DELETE /api/seller/products/:id
+// @desc    Delete (soft) a product owned by the seller
+// @access  Private/Seller
+router.delete(
+  '/products/:id',
+  protect,
+  authorize('seller'),
+  asyncHandler(async (req: any, res: Response) => {
+    const product = await sellerService.deleteSellerProduct(
+      req.user._id.toString(),
+      req.params.id
+    );
+    sendSuccess(res, 200, product, 'Product deleted');
+  })
+);
+
 // @route   GET /api/seller/orders
 // @desc    Get my orders
-// @access  Private
+// @access  Private/Seller
 router.get(
   '/orders',
   protect,
+  authorize('seller', 'admin'),
   asyncHandler(async (req: any, res: Response) => {
     const page = req.query.page ? parseInt(req.query.page as string) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
@@ -172,10 +207,11 @@ router.get(
 
 // @route   GET /api/seller/earnings
 // @desc    Get my earnings
-// @access  Private
+// @access  Private/Seller
 router.get(
   '/earnings',
   protect,
+  authorize('seller', 'admin'),
   asyncHandler(async (req: any, res: Response) => {
     const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
     const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
@@ -190,10 +226,11 @@ router.get(
 
 // @route   GET /api/seller/dashboard
 // @desc    Get seller dashboard
-// @access  Private
+// @access  Private/Seller
 router.get(
   '/dashboard',
   protect,
+  authorize('seller', 'admin'),
   asyncHandler(async (req: any, res: Response) => {
     const dashboard = await sellerService.getSellerDashboard(req.user._id.toString());
     sendSuccess(res, 200, dashboard, 'Dashboard retrieved');
@@ -202,10 +239,11 @@ router.get(
 
 // @route   POST /api/seller/withdraw
 // @desc    Request withdrawal
-// @access  Private
+// @access  Private/Seller
 router.post(
   '/withdraw',
   protect,
+  authorize('seller'),
   asyncHandler(async (req: any, res: Response) => {
     const { amount, bankDetails } = req.body;
     const withdrawal = await sellerService.requestWithdrawal(
@@ -219,10 +257,11 @@ router.post(
 
 // @route   GET /api/seller/withdrawals
 // @desc    Get withdrawal history
-// @access  Private
+// @access  Private/Seller
 router.get(
   '/withdrawals',
   protect,
+  authorize('seller'),
   asyncHandler(async (req: any, res: Response) => {
     const page = req.query.page ? parseInt(req.query.page as string) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
