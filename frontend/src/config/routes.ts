@@ -9,6 +9,9 @@ const Checkout = lazy(() => import('../components/Checkout'));
 const OrderHistory = lazy(() => import('../components/OrderHistory'));
 const OrderDetail = lazy(() => import('../components/OrderDetail'));
 const AdminConfig = lazy(() => import('../components/AdminConfig'));
+const SellerDashboard = lazy(() => import('../components/seller/SellerDashboard'));
+const SellerProducts = lazy(() => import('../components/seller/SellerProducts'));
+const SellerOrders = lazy(() => import('../components/seller/SellerOrders'));
 const SellerRegistration = lazy(() => import('../pages/SellerRegistration'));
 
 /**
@@ -62,4 +65,8 @@ export const adminRoutes: RouteConfig[] = [
 /**
  * Seller routes - require seller role
  */
-export const sellerRoutes: RouteConfig[] = [];
+export const sellerRoutes: RouteConfig[] = [
+  { path: '/seller', component: SellerDashboard, sellerOnly: true },
+  { path: '/seller/products', component: SellerProducts, sellerOnly: true },
+  { path: '/seller/orders', component: SellerOrders, sellerOnly: true },
+];

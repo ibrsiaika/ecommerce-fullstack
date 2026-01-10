@@ -65,6 +65,7 @@ const Header: React.FC = () => {
 
   const navItems = [
     { label: 'Collections', href: '/products' },
+    ...(isAuthenticated && user?.role === 'seller' ? [{ label: 'Seller Dashboard', href: '/seller' }] : []),
     ...(isAuthenticated ? [{ label: 'Orders', href: '/orders' }] : []),
     ...(isAuthenticated && user?.role === 'admin' ? [{ label: 'Admin', href: '/admin/config' }] : []),
   ];
