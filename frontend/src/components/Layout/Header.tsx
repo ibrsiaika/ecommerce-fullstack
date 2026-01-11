@@ -67,7 +67,7 @@ const Header: React.FC = () => {
     { label: 'Collections', href: '/products' },
     ...(isAuthenticated && user?.role === 'seller' ? [{ label: 'Seller Dashboard', href: '/seller' }] : []),
     ...(isAuthenticated ? [{ label: 'Orders', href: '/orders' }] : []),
-    ...(isAuthenticated && user?.role === 'admin' ? [{ label: 'Admin', href: '/admin/config' }] : []),
+    ...(isAuthenticated && user?.role === 'admin' ? [{ label: 'Admin', href: '/admin/dashboard' }] : []),
   ];
 
   return (

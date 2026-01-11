@@ -181,7 +181,7 @@ export class AdminDashboardService {
       averageSpent,
       topCustomers
     ] = await Promise.all([
-      User.countDocuments({ role: 'user' }),
+      User.countDocuments({ role: 'buyer' }),
       User.aggregate([
         {
           $lookup: {
@@ -250,7 +250,7 @@ export class AdminDashboardService {
     return pendingStores;
   }
 
-  // Verify seller store
+  // Verify seller store — keep Store and User.seller in sync
   async verifyStore(storeId: string) {
     const store = await Store.findByIdAndUpdate(
       storeId,
@@ -261,6 +261,15 @@ export class AdminDashboardService {
     if (!store) {
       throw new AppError('Store not found', 404);
     }
+
+    // sync the embedded seller profile so the two sources of truth agree
+    await User.findByIdAndUpdate(store.owner, {
+      $set: {
+        'seller.verificationStatus': 'verified',
+        'seller.verifiedAt': new Date(),
+        'seller.verifiedBy': store.owner
+      }
+    });
 
     return store;
   }
