@@ -16,6 +16,7 @@ import {
   FiShield,
   FiLoader,
   FiUserCheck,
+  FiArrowRight,
 } from 'react-icons/fi';
 
 // ---- Types matching the backend admin endpoints ----
@@ -405,6 +406,87 @@ const AdminDashboard: React.FC = () => {
               </div>
             );
           })}
+        </div>
+
+        {/* Management shortcuts */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">
+            Management
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Link
+              to="/admin/products"
+              className="group bg-white rounded-lg border border-gray-200 p-5 shadow-sm hover:border-gray-300 hover:shadow transition-all"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="p-2 rounded-lg bg-amber-50 text-amber-600">
+                    <FiPackage size={18} />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">
+                      Manage Products
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Edit, deactivate, or remove listings
+                    </p>
+                  </div>
+                </div>
+                <FiArrowRight
+                  className="text-gray-300 group-hover:text-gray-500 transition-colors"
+                  size={16}
+                />
+              </div>
+            </Link>
+            <Link
+              to="/admin/orders"
+              className="group bg-white rounded-lg border border-gray-200 p-5 shadow-sm hover:border-gray-300 hover:shadow transition-all"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="p-2 rounded-lg bg-blue-50 text-blue-600">
+                    <FiShoppingBag size={18} />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">
+                      Manage Orders
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Update status and tracking numbers
+                    </p>
+                  </div>
+                </div>
+                <FiArrowRight
+                  className="text-gray-300 group-hover:text-gray-500 transition-colors"
+                  size={16}
+                />
+              </div>
+            </Link>
+            <Link
+              to="/admin/users"
+              className="group bg-white rounded-lg border border-gray-200 p-5 shadow-sm hover:border-gray-300 hover:shadow transition-all"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="p-2 rounded-lg bg-purple-50 text-purple-600">
+                    <FiUsers size={18} />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">
+                      Manage Users
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Roles, suspensions, and account removal
+                    </p>
+                  </div>
+                </div>
+                <FiArrowRight
+                  className="text-gray-300 group-hover:text-gray-500 transition-colors"
+                  size={16}
+                />
+              </div>
+            </Link>
+          </div>
         </div>
 
         {/* Charts row */}

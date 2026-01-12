@@ -10,6 +10,9 @@ const OrderHistory = lazy(() => import('../components/OrderHistory'));
 const OrderDetail = lazy(() => import('../components/OrderDetail'));
 const AdminConfig = lazy(() => import('../components/AdminConfig'));
 const AdminDashboard = lazy(() => import('../components/admin/AdminDashboard'));
+const AdminProducts = lazy(() => import('../components/admin/AdminProducts'));
+const AdminOrders = lazy(() => import('../components/admin/AdminOrders'));
+const AdminUsers = lazy(() => import('../components/admin/AdminUsers'));
 const SellerDashboard = lazy(() => import('../components/seller/SellerDashboard'));
 const SellerProducts = lazy(() => import('../components/seller/SellerProducts'));
 const SellerOrders = lazy(() => import('../components/seller/SellerOrders'));
@@ -61,7 +64,10 @@ export const protectedRoutes: RouteConfig[] = [
 export const adminRoutes: RouteConfig[] = [
   { path: '/admin', component: AdminConfig, adminOnly: true },
   { path: '/admin/config', component: AdminConfig, adminOnly: true },
-  { path: '/admin/dashboard', component: AdminDashboard, adminOnly: true }
+  { path: '/admin/dashboard', component: AdminDashboard, adminOnly: true },
+  { path: '/admin/products', component: AdminProducts, adminOnly: true },
+  { path: '/admin/orders', component: AdminOrders, adminOnly: true },
+  { path: '/admin/users', component: AdminUsers, adminOnly: true }
 ];
 
 /**
