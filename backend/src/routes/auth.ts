@@ -11,10 +11,12 @@ import {
   refreshToken,
   logoutAll,
   getSessions,
-  revokeSession
+  revokeSession,
+  forgotPassword,
+  resetPassword
 } from '../controllers/authController';
 import { protect } from '../middleware/auth';
-import { authLimiter, sensitiveLimiter } from '../config/rateLimits';
+import { authLimiter, sensitiveLimiter, passwordResetLimiter } from '../config/rateLimits';
 
 const router = express.Router();
 
@@ -248,5 +250,14 @@ router.put('/updatepassword', protect, sensitiveLimiter, [
   body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters long')
 ], updatePassword);
 router.get('/verify/:token', verifyEmail);
+
+// Forgot + reset password — public, rate-limited to prevent abuse
+router.post('/forgot-password', passwordResetLimiter, [
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required')
+], forgotPassword);
+
+router.post('/reset-password/:token', passwordResetLimiter, [
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+], resetPassword);
 
 export default router;

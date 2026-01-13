@@ -64,18 +64,25 @@ export const register = async (
     const { hashPassword } = await import('../utils/crypto');
     const passwordHash = await hashPassword(password);
 
-    // Create user
+    // Create user with verification token
+    const verificationToken = crypto.randomBytes(20).toString('hex');
     const user = await User.create({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       email: email.toLowerCase(),
       passwordHash,
-      emailVerificationToken: crypto.randomBytes(20).toString('hex')
+      emailVerificationToken: verificationToken
     });
 
-    // Generate email verification token (in production, send email)
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Email verification token for ${email}: ${user.emailVerificationToken}`);
+    // Send verification email (skipped if SMTP not configured)
+    try {
+      await emailService.sendVerificationEmail(user.email, user.getFullName(), verificationToken);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // in dev mode, log the token so you can still verify manually
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Dev only — verification token for ${email}: ${verificationToken}`);
+      }
     }
 
     // Send welcome email
@@ -641,7 +648,7 @@ export const revokeSession = async (
     });
   } catch (error) {
     console.error('Revoke session error:', error);
-    
+
     if (error instanceof Error && error.message.includes('not found')) {
       res.status(404).json({
         success: false,
@@ -649,7 +656,109 @@ export const revokeSession = async (
       });
       return;
     }
-    
+
+    next(error);
+  }
+};
+
+// @desc    Forgot password — generate reset token and email it
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export const forgotPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      res.status(400).json({ success: false, error: 'Email is required' });
+      return;
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordResetToken +passwordResetExpiresAt');
+
+    // always return 200 even if user not found — prevents email enumeration
+    if (!user) {
+      res.status(200).json({ success: true, message: 'If that email exists, a reset link has been sent' });
+      return;
+    }
+
+    // generate reset token (random hex) and hash it before storing
+    const { hashPassword } = await import('../utils/crypto');
+    const resetToken = crypto.randomBytes(20).toString('hex');
+    user.passwordResetToken = resetToken;
+    user.passwordResetExpiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await user.save();
+
+    // email the reset link (skipped if SMTP not configured)
+    try {
+      await emailService.sendPasswordResetEmail(user.email, user.getFullName(), resetToken);
+    } catch (emailError) {
+      console.error('Failed to send password reset email:', emailError);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Dev only — reset token for ${email}: ${resetToken}`);
+      }
+    }
+
+    res.status(200).json({ success: true, message: 'If that email exists, a reset link has been sent' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Reset password — verify token and set new password
+// @route   POST /api/auth/reset-password/:token
+// @access  Public
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!password || password.length < 6) {
+      res.status(400).json({ success: false, error: 'Password must be at least 6 characters' });
+      return;
+    }
+
+    const user = await User.findOne({
+      passwordResetToken: token,
+      passwordResetExpiresAt: { $gt: new Date() }
+    }).select('+passwordResetToken +passwordResetExpiresAt +passwordHash');
+
+    if (!user) {
+      res.status(400).json({ success: false, error: 'Invalid or expired reset token' });
+      return;
+    }
+
+    // set new password (hashes via argon2id)
+    await user.setPassword(password);
+    user.passwordResetToken = undefined;
+    user.passwordResetExpiresAt = undefined;
+    user.requiresPasswordChange = false;
+    await user.save();
+
+    // revoke all sessions — force re-login on all devices
+    try {
+      const Session = (await import('../models/Session')).default;
+      await Session.updateMany({ userId: user._id, isActive: true }, { $set: { isActive: false, revokedAt: new Date(), revokedReason: 'password_reset' } });
+    } catch (sessionErr) {
+      console.error('Failed to revoke sessions after password reset:', sessionErr);
+    }
+
+    // email confirmation
+    try {
+      await emailService.sendPasswordResetSuccessEmail(user.email, user.getFullName());
+    } catch (emailError) {
+      console.error('Failed to send reset success email:', emailError);
+    }
+
+    res.status(200).json({ success: true, message: 'Password reset successful. Please log in.' });
+  } catch (error) {
     next(error);
   }
 };

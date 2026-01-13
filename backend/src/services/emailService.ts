@@ -181,6 +181,85 @@ class EmailService {
       html
     });
   }
+
+  async sendVerificationEmail(userEmail: string, userName: string, token: string): Promise<void> {
+    const verifyUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/verify-email/${token}`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Verify Your Email</h2>
+        <p>Dear ${userName},</p>
+        <p>Please verify your email address to activate your account.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${verifyUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email</a>
+        </div>
+        
+        <p>Or copy this link into your browser:</p>
+        <p style="word-break: break-all; color: #2563eb;">${verifyUrl}</p>
+        
+        <p style="font-size: 12px; color: #666;">This link expires in 24 hours. If you didn't create an account, you can ignore this email.</p>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        <p style="font-size: 12px; color: #666;">This is an automated message. Please do not reply.</p>
+      </div>
+    `;
+
+    await this.sendEmail({
+      to: userEmail,
+      subject: 'Verify Your Email Address',
+      html
+    });
+  }
+
+  async sendPasswordResetEmail(userEmail: string, userName: string, token: string): Promise<void> {
+    const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password/${token}`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Reset Your Password</h2>
+        <p>Dear ${userName},</p>
+        <p>We received a request to reset your password. Click the button below to choose a new one.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+        </div>
+        
+        <p>Or copy this link into your browser:</p>
+        <p style="word-break: break-all; color: #2563eb;">${resetUrl}</p>
+        
+        <p style="font-size: 12px; color: #666;">This link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email.</p>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        <p style="font-size: 12px; color: #666;">This is an automated message. Please do not reply.</p>
+      </div>
+    `;
+
+    await this.sendEmail({
+      to: userEmail,
+      subject: 'Password Reset Request',
+      html
+    });
+  }
+
+  async sendPasswordResetSuccessEmail(userEmail: string, userName: string): Promise<void> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Password Reset Successful</h2>
+        <p>Dear ${userName},</p>
+        <p>Your password has been reset successfully. You can now log in with your new password.</p>
+        
+        <p>If you didn't make this change, please contact our support team immediately.</p>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        <p style="font-size: 12px; color: #666;">This is an automated message. Please do not reply.</p>
+      </div>
+    `;
+
+    await this.sendEmail({
+      to: userEmail,
+      subject: 'Your Password Was Reset',
+      html
+    });
+  }
 }
 
 export default new EmailService();

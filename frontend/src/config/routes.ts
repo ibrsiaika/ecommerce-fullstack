@@ -1,5 +1,7 @@
 import { lazy } from 'react';
 import { Home, Login, Register, Profile } from '../pages';
+import ForgotPassword from '../pages/Auth/ForgotPassword';
+import ResetPassword from '../pages/Auth/ResetPassword';
 
 // Lazy load heavy components
 const ProductList = lazy(() => import('../components/ProductList'));
@@ -37,7 +39,9 @@ export const publicRoutes: RouteConfig[] = [
   { path: '/products', component: ProductList },
   { path: '/products/:id', component: ProductDetail },
   { path: '/cart', component: Cart },
-  { path: '/seller/register', component: SellerRegistration }
+  { path: '/seller/register', component: SellerRegistration },
+  { path: '/forgot-password', component: ForgotPassword },
+  { path: '/reset-password/:token', component: ResetPassword }
 ];
 
 /**
