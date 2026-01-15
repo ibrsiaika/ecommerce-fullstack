@@ -53,8 +53,10 @@ const Checkout: React.FC = () => {
 
   // Calculate prices
   const itemsPrice = items.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0);
-  const shippingPrice = deliveryMethod === 'pickup' ? 0 : (itemsPrice > 100 ? 0 : 10);
-  const taxPrice = Number((0.15 * itemsPrice).toFixed(2));
+  // tax + shipping rates must match backend orderController.createOrder
+  // backend: TAX_RATE=0.08, SHIPPING_FLAT=9.99 (free over $100)
+  const shippingPrice = deliveryMethod === 'pickup' ? 0 : (itemsPrice > 100 ? 0 : 9.99);
+  const taxPrice = Number((0.08 * itemsPrice).toFixed(2));
   const totalPrice = Number((itemsPrice + shippingPrice + taxPrice).toFixed(2));
 
   useEffect(() => {

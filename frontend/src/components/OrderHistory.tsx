@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
+import api from '../services/api';
 import { FiPackage, FiArrowRight, FiCheck, FiClock, FiTruck, FiShoppingBag, FiCreditCard } from 'react-icons/fi';
 
 interface Order {
@@ -15,34 +16,28 @@ interface Order {
 }
 
 const OrderHistory: React.FC = () => {
-  const { user, token } = useAppSelector((state: any) => state.auth);
+  const { user } = useAppSelector((state: any) => state.auth);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
-      if (!user || !token) {
+      if (!user) {
         setLoading(false);
         return;
       }
 
       try {
-        const response = await fetch('/api/orders/myorders', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        if (response.ok) {
-          const result = await response.json();
+        const response = await api.get('/api/orders/myorders');
+        const result = response.data;
+        if (result.success) {
           setOrders(result.data);
         } else {
-          const errorData = await response.json();
-          setError(errorData.error || 'Failed to fetch orders');
+          setError(result.message || 'Failed to fetch orders');
         }
-      } catch (err) {
-        setError('Failed to fetch orders');
+      } catch (err: any) {
+        setError(err.response?.data?.message || 'Failed to fetch orders');
       } finally {
         setLoading(false);
       }

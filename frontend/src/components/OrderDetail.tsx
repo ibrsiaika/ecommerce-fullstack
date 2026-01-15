@@ -52,7 +52,7 @@ interface Order {
 const OrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
-  const { user, token } = useAppSelector((state: any) => state.auth);
+  const { user } = useAppSelector((state: any) => state.auth);
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,21 +62,15 @@ const OrderDetail: React.FC = () => {
 
   useEffect(() => {
     const fetchOrder = async () => {
-      if (!user || !id || !token) return;
+      if (!user || !id) return;
 
       try {
-        const response = await fetch(`/api/orders/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        if (response.ok) {
-          const result = await response.json();
+        const response = await api.get(`/api/orders/${id}`);
+        const result = response.data;
+        if (result.success) {
           setOrder(result.data);
         } else {
-          const errorData = await response.json();
-          setError(errorData.error || 'Failed to fetch order');
+          setError(result.message || 'Failed to fetch order');
         }
       } catch (err) {
         setError('Failed to fetch order');
