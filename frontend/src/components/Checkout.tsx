@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { AxiosError } from 'axios';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { clearCart } from '../store/slices/cartSlice';
 import { Spinner } from './Loading';
 import api from '../services/api';
-import { FiMapPin, FiCreditCard, FiCheck, FiArrowLeft, FiArrowRight, FiLoader, FiPackage } from 'react-icons/fi';
+import { FiMapPin, FiCreditCard, FiCheck, FiArrowLeft, FiArrowRight, FiLoader, FiPackage, FiTag, FiX, FiAlertCircle } from 'react-icons/fi';
 
 interface ShippingAddress {
   address: string;
@@ -29,6 +30,19 @@ interface OrderData {
   taxPrice: number;
   shippingPrice: number;
   totalPrice: number;
+  couponCode?: string;
+}
+
+type CouponStatus =
+  | { type: 'idle' }
+  | { type: 'loading' }
+  | { type: 'error'; message: string }
+  | { type: 'success'; message: string };
+
+interface CouponValidatePayload {
+  valid: boolean;
+  discountAmount?: number;
+  error?: string;
 }
 
 const Checkout: React.FC = () => {
@@ -51,13 +65,86 @@ const Checkout: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState('PayPal');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Coupon state
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountAmount: number;
+  } | null>(null);
+  const [couponStatus, setCouponStatus] = useState<CouponStatus>({ type: 'idle' });
+
   // Calculate prices
   const itemsPrice = items.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0);
   // tax + shipping rates must match backend orderController.createOrder
   // backend: TAX_RATE=0.08, SHIPPING_FLAT=9.99 (free over $100)
   const shippingPrice = deliveryMethod === 'pickup' ? 0 : (itemsPrice > 100 ? 0 : 9.99);
   const taxPrice = Number((0.08 * itemsPrice).toFixed(2));
-  const totalPrice = Number((itemsPrice + shippingPrice + taxPrice).toFixed(2));
+  const discountAmount = appliedCoupon?.discountAmount ?? 0;
+  const totalPrice = Number(
+    Math.max(0, itemsPrice + shippingPrice + taxPrice - discountAmount).toFixed(2),
+  );
+
+  // If the cart contents change after a coupon was applied, clear it so the
+  // discount does not go stale. The backend re-validates on order creation.
+  useEffect(() => {
+    if (appliedCoupon) {
+      setAppliedCoupon(null);
+      setCouponStatus({ type: 'idle' });
+      setCouponInput('');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemsPrice]);
+
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) {
+      setCouponStatus({ type: 'error', message: 'Enter a coupon code.' });
+      return;
+    }
+    setCouponStatus({ type: 'loading' });
+    try {
+      const response = await api.post('/api/coupons/validate', {
+        code,
+        itemsPrice,
+        categories: [],
+      });
+      const body = response.data;
+      const payload: CouponValidatePayload | undefined =
+        body && typeof body === 'object' && 'data' in body
+          ? (body.data as CouponValidatePayload)
+          : (body as CouponValidatePayload);
+      if (payload?.valid) {
+        const amount = Number(payload.discountAmount) || 0;
+        setAppliedCoupon({ code, discountAmount: amount });
+        setCouponStatus({
+          type: 'success',
+          message: `Coupon applied: -$${amount.toFixed(2)}`,
+        });
+      } else {
+        setAppliedCoupon(null);
+        setCouponStatus({
+          type: 'error',
+          message: payload?.error || 'This coupon is invalid.',
+        });
+      }
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ error?: string; message?: string }>;
+      setAppliedCoupon(null);
+      setCouponStatus({
+        type: 'error',
+        message:
+          axiosErr.response?.data?.error ||
+          axiosErr.response?.data?.message ||
+          'Unable to validate coupon. Please try again.',
+      });
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput('');
+    setCouponStatus({ type: 'idle' });
+  };
 
   useEffect(() => {
     if (!user) {
@@ -147,7 +234,8 @@ const Checkout: React.FC = () => {
         itemsPrice,
         taxPrice,
         shippingPrice,
-        totalPrice
+        totalPrice,
+        ...(appliedCoupon ? { couponCode: appliedCoupon.code } : {}),
       };
 
       // Create the order first
@@ -493,11 +581,87 @@ const Checkout: React.FC = () => {
             <span>Tax (15%)</span>
             <span>${taxPrice.toFixed(2)}</span>
           </div>
+          {appliedCoupon && discountAmount > 0 && (
+            <div className="flex justify-between text-base text-emerald-700">
+              <span>Discount ({appliedCoupon.code})</span>
+              <span className="font-semibold">-${discountAmount.toFixed(2)}</span>
+            </div>
+          )}
           <div className="flex justify-between items-center pt-4">
             <span className="text-lg font-bold text-gray-900">Total Amount</span>
             <span className="text-4xl font-bold text-gray-900">${totalPrice.toFixed(2)}</span>
           </div>
         </div>
+      </div>
+
+      {/* Coupon input */}
+      <div className="p-6 rounded-2xl border border-gray-200 bg-white">
+        <div className="flex items-center gap-2 mb-3">
+          <FiTag className="text-gray-700" size={18} />
+          <h3 className="text-base font-semibold text-gray-900">Have a coupon code?</h3>
+        </div>
+
+        {appliedCoupon ? (
+          <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+            <div className="flex items-center gap-2 min-w-0">
+              <FiCheck className="text-emerald-600 flex-shrink-0" size={16} />
+              <span className="text-sm text-emerald-800 truncate">
+                Coupon applied:{' '}
+                <span className="font-mono font-semibold">
+                  {appliedCoupon.code}
+                </span>{' '}
+                (-${appliedCoupon.discountAmount.toFixed(2)})
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleRemoveCoupon}
+              className="inline-flex items-center gap-1 text-sm text-red-600 hover:text-red-700 font-medium flex-shrink-0 ml-3"
+            >
+              <FiX size={14} />
+              Remove
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleApplyCoupon();
+                  }
+                }}
+                placeholder="Enter code"
+                className="flex-1 px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent font-mono uppercase tracking-wide placeholder:font-sans placeholder:normal-case placeholder:tracking-normal placeholder:text-gray-400"
+                disabled={couponStatus.type === 'loading'}
+              />
+              <button
+                type="button"
+                onClick={handleApplyCoupon}
+                disabled={
+                  couponStatus.type === 'loading' || !couponInput.trim()
+                }
+                className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold bg-black text-white rounded-lg hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {couponStatus.type === 'loading' ? (
+                  <FiLoader className="animate-spin" size={16} />
+                ) : (
+                  'Apply'
+                )}
+              </button>
+            </div>
+            {couponStatus.type === 'error' && couponStatus.message && (
+              <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                <FiAlertCircle size={14} className="flex-shrink-0" />
+                {couponStatus.message}
+              </p>
+            )}
+          </>
+        )}
       </div>
 
       <div className="flex gap-4">
