@@ -14,6 +14,7 @@ import sellerRoutes from '../routes/seller';
 import configRoutes from '../routes/config';
 import approvalRoutes from '../routes/approvalRoutes';
 import auditRoutes from '../routes/auditRoutes';
+import couponRoutes from '../routes/coupons';
 
 // Middleware
 import { errorHandler, notFound } from '../middleware/errorHandler';
@@ -37,6 +38,7 @@ const routes: RouteConfig[] = [
   { path: '/api/seller', router: sellerRoutes },
   { path: '/api/admin/approvals', router: approvalRoutes },
   { path: '/api/audit', router: auditRoutes },
+  { path: '/api/coupons', router: couponRoutes },
 ];
 
 /**

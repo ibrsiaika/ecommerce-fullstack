@@ -5,6 +5,7 @@ import Product from '../models/Product';
 import User from '../models/User';
 import ProcessedWebhookEvent from '../models/ProcessedWebhookEvent';
 import emailService from '../services/emailService';
+import { CouponService } from '../services/couponService';
 import Stripe from 'stripe';
 import mongoose from 'mongoose';
 
@@ -89,7 +90,55 @@ export const createOrder = async (req: Request, res: Response) => {
     const SHIPPING_FLAT = itemsPrice > 100 ? 0 : 9.99;
     const taxPrice = Math.round(itemsPrice * TAX_RATE * 100) / 100;
     const shippingPrice = SHIPPING_FLAT;
-    const totalPrice = Math.round((itemsPrice + taxPrice + shippingPrice) * 100) / 100;
+
+    // coupon validation + discount calculation (server-side, never trust client)
+    let discountPrice = 0;
+    let appliedCoupon: any = undefined;
+    let couponId: string | undefined;
+    const couponCode = req.body.couponCode;
+    if (couponCode) {
+      const couponService = new CouponService();
+      const categories = verifiedItems.map((_: any) => _.category);
+      const result = await couponService.validate(
+        couponCode,
+        itemsPrice,
+        (req as any).user.id,
+        categories
+      );
+      if (!result.valid) {
+        res.status(400).json({
+          success: false,
+          error: result.error || 'Invalid coupon'
+        });
+        return;
+      }
+      discountPrice = result.discountAmount || 0;
+      const validatedCoupon = result.coupon;
+      if (!validatedCoupon) {
+        res.status(400).json({ success: false, error: 'Coupon validation failed' });
+        return;
+      }
+      couponId = (validatedCoupon._id as mongoose.Types.ObjectId).toString();
+      appliedCoupon = {
+        code: validatedCoupon.code,
+        type: validatedCoupon.type,
+        value: validatedCoupon.value,
+        discountAmount: discountPrice
+      };
+    }
+
+    const totalPrice = Math.round(
+      (itemsPrice + taxPrice + shippingPrice - discountPrice) * 100
+    ) / 100;
+
+    // never allow negative total
+    if (totalPrice < 0) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid order total after discount'
+      });
+      return;
+    }
 
     // atomic order creation + stock decrement inside a transaction
     const session = await mongoose.startSession();
@@ -116,12 +165,26 @@ export const createOrder = async (req: Request, res: Response) => {
             orderItems: verifiedItems,
             shippingAddress,
             paymentMethod,
+            itemsPrice,
             taxPrice,
             shippingPrice,
+            discountPrice,
+            appliedCoupon,
             totalPrice
           }],
           { session }
         );
+
+        // redeem coupon atomically — increment usage count
+        if (appliedCoupon && couponId) {
+          const couponService = new CouponService();
+          try {
+            await couponService.redeem(couponId);
+          } catch (err) {
+            // if coupon redemption fails, abort the whole transaction
+            throw new Error(`Coupon redemption failed: ${(err as Error).message}`);
+          }
+        }
 
         return order;
       });
@@ -508,8 +571,10 @@ export const orderValidation = [
   body('paymentMethod')
     .notEmpty()
     .withMessage('Payment method is required'),
-  
+
+  // totalPrice is now computed server-side — no longer required from client
   body('totalPrice')
+    .optional()
     .isFloat({ min: 0 })
     .withMessage('Total price must be a positive number')
 ];

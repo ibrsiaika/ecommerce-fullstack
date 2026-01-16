@@ -22,20 +22,30 @@ interface IPaymentResult {
   email_address?: string;
 }
 
+export interface IAppliedCoupon {
+  code: string;
+  type: 'percentage' | 'flat';
+  value: number;
+  discountAmount: number;
+}
+
 export interface IOrder extends Document {
   user: mongoose.Types.ObjectId;
   orderItems: IOrderItem[];
   shippingAddress: IShippingAddress;
   paymentMethod: string;
   paymentResult: IPaymentResult;
+  itemsPrice: number;
   taxPrice: number;
   shippingPrice: number;
+  discountPrice: number;
+  appliedCoupon?: IAppliedCoupon;
   totalPrice: number;
   isPaid: boolean;
   paidAt?: Date;
   isDelivered: boolean;
   deliveredAt?: Date;
-  orderStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  orderStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
   trackingNumber?: string;
   notes?: string;
   createdAt: Date;
@@ -112,6 +122,13 @@ const orderSchema = new Schema<IOrder>({
     enum: ['PayPal', 'Stripe', 'Credit Card', 'Cash on Delivery']
   },
   paymentResult: paymentResultSchema,
+  itemsPrice: {
+    type: Number,
+    required: true,
+    default: 0.0,
+    min: 0,
+    set: (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
+  },
   taxPrice: {
     type: Number,
     required: true,
@@ -125,6 +142,18 @@ const orderSchema = new Schema<IOrder>({
     default: 0.0,
     min: 0,
     set: (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
+  },
+  discountPrice: {
+    type: Number,
+    default: 0.0,
+    min: 0,
+    set: (v: number) => Math.round((v + Number.EPSILON) * 100) / 100
+  },
+  appliedCoupon: {
+    code: { type: String, index: true },
+    type: { type: String, enum: ['percentage', 'flat'] },
+    value: Number,
+    discountAmount: Number
   },
   totalPrice: {
     type: Number,
@@ -150,7 +179,7 @@ const orderSchema = new Schema<IOrder>({
   },
   orderStatus: {
     type: String,
-    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
     default: 'pending'
   },
   trackingNumber: {
