@@ -1,6 +1,7 @@
 import { useEffect, Suspense, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
+import { Toaster } from 'react-hot-toast';
 
 // Store
 import { store } from './store';
@@ -167,6 +168,24 @@ function App() {
       <ErrorBoundary>
         <ConfigProvider>
           <AppContent />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 3500,
+              style: {
+                background: '#111827',
+                color: '#fff',
+                fontSize: '14px',
+                borderRadius: '8px',
+              },
+              success: {
+                iconTheme: { primary: '#10b981', secondary: '#fff' },
+              },
+              error: {
+                iconTheme: { primary: '#ef4444', secondary: '#fff' },
+              },
+            }}
+          />
         </ConfigProvider>
       </ErrorBoundary>
     </Provider>

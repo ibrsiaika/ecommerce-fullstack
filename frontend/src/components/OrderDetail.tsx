@@ -3,10 +3,10 @@ import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
 import Payment from './Payment';
 import api from '../services/api';
-import { 
-  FiPackage, FiTruck, FiCheck, FiClock, FiCreditCard, 
+import {
+  FiPackage, FiTruck, FiCheck, FiClock, FiCreditCard,
   FiMapPin, FiCalendar, FiArrowLeft, FiCopy, FiCheckCircle,
-  FiShoppingBag, FiBox
+  FiShoppingBag, FiBox, FiRotateCcw
 } from 'react-icons/fi';
 
 interface OrderItem {
@@ -217,6 +217,20 @@ const OrderDetail: React.FC = () => {
   const statusInfo = getStatusInfo(order.orderStatus);
   const StatusIcon = statusInfo.icon;
 
+  // Return eligibility: paid, not cancelled/refunded, within 7 days of
+  // delivery (or paid date / created date as fallback).
+  const returnCutoff = (() => {
+    const ref = order.deliveredAt || order.paidAt || order.createdAt;
+    if (!ref) return null;
+    const dt = new Date(ref).getTime();
+    if (Number.isNaN(dt)) return null;
+    return dt + 7 * 24 * 60 * 60 * 1000;
+  })();
+  const isReturnEligible =
+    order.isPaid === true &&
+    !['cancelled', 'refunded'].includes(order.orderStatus.toLowerCase()) &&
+    (returnCutoff ? Date.now() <= returnCutoff : false);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <div className="container max-w-5xl mx-auto px-4 py-6 sm:py-10">
@@ -274,8 +288,18 @@ const OrderDetail: React.FC = () => {
               </div>
             </div>
             
-            {/* Status Badge */}
-            <div className="flex items-center gap-3">
+            {/* Status Badge + Return action */}
+            <div className="flex flex-wrap items-center gap-2">
+              {isReturnEligible && (
+                <Link
+                  to={`/orders/${order._id}/return`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors"
+                  title="Request a return for this order"
+                >
+                  <FiRotateCcw size={16} />
+                  Request Return
+                </Link>
+              )}
               <span className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border ${statusInfo.color}`}>
                 <StatusIcon size={16} />
                 {statusInfo.label}

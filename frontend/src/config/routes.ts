@@ -16,6 +16,8 @@ const AdminProducts = lazy(() => import('../components/admin/AdminProducts'));
 const AdminOrders = lazy(() => import('../components/admin/AdminOrders'));
 const AdminUsers = lazy(() => import('../components/admin/AdminUsers'));
 const AdminCoupons = lazy(() => import('../components/admin/AdminCoupons'));
+const AdminReturns = lazy(() => import('../components/admin/AdminReturns'));
+const ReturnRequest = lazy(() => import('../components/ReturnRequest'));
 const SellerDashboard = lazy(() => import('../components/seller/SellerDashboard'));
 const SellerProducts = lazy(() => import('../components/seller/SellerProducts'));
 const SellerOrders = lazy(() => import('../components/seller/SellerOrders'));
@@ -60,7 +62,8 @@ export const protectedRoutes: RouteConfig[] = [
   { path: '/profile', component: Profile, protected: true },
   { path: '/checkout', component: Checkout, protected: true },
   { path: '/orders', component: OrderHistory, protected: true },
-  { path: '/order/:id', component: OrderDetail, protected: true }
+  { path: '/order/:id', component: OrderDetail, protected: true },
+  { path: '/orders/:id/return', component: ReturnRequest, protected: true }
 ];
 
 /**
@@ -74,6 +77,7 @@ export const adminRoutes: RouteConfig[] = [
   { path: '/admin/orders', component: AdminOrders, adminOnly: true },
   { path: '/admin/users', component: AdminUsers, adminOnly: true },
   { path: '/admin/coupons', component: AdminCoupons, adminOnly: true },
+  { path: '/admin/returns', component: AdminReturns, adminOnly: true },
 ];
 
 /**

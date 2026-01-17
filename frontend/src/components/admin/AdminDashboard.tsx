@@ -18,6 +18,7 @@ import {
   FiUserCheck,
   FiArrowRight,
   FiTag,
+  FiRotateCcw,
 } from 'react-icons/fi';
 
 // ---- Types matching the backend admin endpoints ----
@@ -502,6 +503,30 @@ const AdminDashboard: React.FC = () => {
                     </p>
                     <p className="text-xs text-gray-500">
                       Discount codes, usage limits, and validity
+                    </p>
+                  </div>
+                </div>
+                <FiArrowRight
+                  className="text-gray-300 group-hover:text-gray-500 transition-colors"
+                  size={16}
+                />
+              </div>
+            </Link>
+            <Link
+              to="/admin/returns"
+              className="group bg-white rounded-lg border border-gray-200 p-5 shadow-sm hover:border-gray-300 hover:shadow transition-all"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="p-2 rounded-lg bg-rose-50 text-rose-600">
+                    <FiRotateCcw size={18} />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">
+                      Manage Returns
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Approve or reject customer return requests
                     </p>
                   </div>
                 </div>
