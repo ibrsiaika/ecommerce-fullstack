@@ -16,6 +16,7 @@ import approvalRoutes from '../routes/approvalRoutes';
 import auditRoutes from '../routes/auditRoutes';
 import couponRoutes from '../routes/coupons';
 import returnRoutes from '../routes/returns';
+import reservationRoutes from '../routes/reservations';
 
 // Middleware
 import { errorHandler, notFound } from '../middleware/errorHandler';
@@ -41,6 +42,7 @@ const routes: RouteConfig[] = [
   { path: '/api/audit', router: auditRoutes },
   { path: '/api/coupons', router: couponRoutes },
   { path: '/api/returns', router: returnRoutes },
+  { path: '/api/reservations', router: reservationRoutes },
 ];
 
 /**

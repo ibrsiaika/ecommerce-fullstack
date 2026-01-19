@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 // enables async error forwarding to errorHandler for Express 4
 import 'express-async-errors';
+import cron from 'node-cron';
 
 // Configuration imports
 import {
@@ -88,6 +89,20 @@ if (process.env.NODE_ENV !== 'test') {
     logger.error({ msg: 'Uncaught exception', error: error.message, stack: error.stack });
     // give logger time to flush then exit — process state is now unreliable
     setTimeout(() => process.exit(1), 1000);
+  });
+
+  // release expired inventory reservations every 60 seconds
+  // TTL index is the safety net; this is the primary cleanup + restock
+  cron.schedule('*/60 * * * * *', async () => {
+    try {
+      const { default: reservationService } = await import('./services/reservationService');
+      const released = await reservationService.releaseExpired();
+      if (released > 0) {
+        logger.info({ msg: 'Released expired reservations', count: released });
+      }
+    } catch (err) {
+      logger.error({ msg: 'Reservation cleanup failed', error: (err as Error).message });
+    }
   });
 
   startServer();
