@@ -50,6 +50,8 @@ export interface IOrder extends Document {
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
+  // virtual
+  orderNumber: string;
 }
 
 const orderItemSchema = new Schema<IOrderItem>({

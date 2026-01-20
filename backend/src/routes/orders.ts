@@ -89,4 +89,26 @@ router.post('/:id/convert-reservations', protect, async (req: any, res: any) => 
   }
 });
 
+// @route   GET /api/orders/:id/invoice
+// @desc    Download PDF invoice for an order (owner or admin only)
+// @access  Private
+router.get('/:id/invoice', protect, async (req: any, res: any) => {
+  try {
+    const pdfService = (await import('../services/pdfService')).default;
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'super_admin';
+    const pdfBuffer = await pdfService.generateInvoiceForUser(
+      req.params.id,
+      req.user._id.toString(),
+      isAdmin
+    );
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="invoice-${req.params.id}.pdf"`);
+    res.send(pdfBuffer);
+  } catch (err: any) {
+    const status = err.statusCode || 500;
+    res.status(status).json({ success: false, error: err.message });
+  }
+});
+
 export default router;
