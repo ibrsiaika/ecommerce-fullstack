@@ -72,4 +72,21 @@ router.put('/:id/status', protect, authorize('admin'), updateOrderStatus);
 // @access  Private
 router.put('/:id/cancel', protect, cancelOrder);
 
+// @route   POST /api/orders/:id/convert-reservations
+// @desc    Convert checkout reservations to 'converted' after order placed
+// @access  Private
+router.post('/:id/convert-reservations', protect, async (req: any, res: any) => {
+  const { sessionId } = req.body;
+  if (!sessionId) {
+    return res.status(400).json({ success: false, error: 'sessionId required' });
+  }
+  try {
+    const reservationService = (await import('../services/reservationService')).default;
+    await reservationService.convertBySession(sessionId);
+    res.json({ success: true, message: 'Reservations converted' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 export default router;

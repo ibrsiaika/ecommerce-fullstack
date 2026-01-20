@@ -65,6 +65,9 @@ const Checkout: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState('PayPal');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Reservation session — holds stock during checkout
+  const [reservationSessionId, setReservationSessionId] = useState<string | null>(null);
+
   // Coupon state
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<{
@@ -154,6 +157,51 @@ const Checkout: React.FC = () => {
       navigate('/cart');
     }
   }, [user, items, navigate]);
+
+  // Hold stock when entering checkout, release on leave
+  useEffect(() => {
+    if (!user || items.length === 0) return;
+
+    let sessionId: string | null = null;
+    let released = false;
+
+    const holdStock = async () => {
+      try {
+        const sessionRes = await api.post('/api/reservations/session');
+        sessionId = sessionRes.data.data.sessionId;
+        setReservationSessionId(sessionId);
+
+        await api.post('/api/reservations/hold', {
+          sessionId,
+          items: items.map((item: any) => ({
+            productId: item.product || item._id,
+            quantity: item.quantity
+          }))
+        });
+      } catch (err) {
+        // if hold fails (insufficient stock), let user see the error but don't block
+        console.warn('Stock reservation failed:', err);
+      }
+    };
+
+    const releaseStock = async () => {
+      if (released || !sessionId) return;
+      released = true;
+      try {
+        await api.delete(`/api/reservations/session/${sessionId}`);
+      } catch {
+        // ignore — TTL will clean up
+      }
+    };
+
+    holdStock();
+
+    // release on unmount (leaving checkout without ordering)
+    return () => {
+      releaseStock();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Prefill from saved profile shipping address
   useEffect(() => {
@@ -245,10 +293,18 @@ const Checkout: React.FC = () => {
       // Create Stripe checkout session and redirect
       try {
         const checkoutResponse = await api.createCheckoutSession(orderId);
-        
+
         if (checkoutResponse.data.url) {
           // Clear cart before redirecting to payment
           dispatch(clearCart());
+          // Convert reservations (stock decrement happens in order transaction)
+          if (reservationSessionId) {
+            try {
+              await api.post(`/api/orders/${orderId}/convert-reservations`, { sessionId: reservationSessionId });
+            } catch {
+              // non-critical — reservations will expire + release via TTL
+            }
+          }
           // Redirect to Stripe checkout
           window.location.href = checkoutResponse.data.url;
         } else {
