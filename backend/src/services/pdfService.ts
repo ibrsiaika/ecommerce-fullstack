@@ -125,6 +125,132 @@ export class PdfService {
 
     return this.generateInvoice(order);
   }
+
+  // GST-compliant invoice for Indian orders
+  // splits tax into CGST+SGST (intra-state) or IGST (inter-state)
+  async generateGSTInvoice(order: IOrder, sellerState: string, sellerGstin: string): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      const doc = new PDFDocument({ size: 'A4', margin: 50 });
+
+      const writable = new Writable({
+        write(chunk, _encoding, callback) {
+          chunks.push(chunk);
+          callback();
+        }
+      });
+
+      doc.pipe(writable);
+      writable.on('finish', () => resolve(Buffer.concat(chunks)));
+      writable.on('error', reject);
+
+      this.renderGSTInvoice(doc, order, sellerState, sellerGstin);
+      doc.end();
+    });
+  }
+
+  private renderGSTInvoice(
+    doc: PDFKit.PDFDocument,
+    order: IOrder,
+    sellerState: string,
+    sellerGstin: string
+  ): void {
+    const pageWidth = doc.page.width;
+    const buyerState = order.shippingAddress.country === 'India'
+      ? (order.shippingAddress as any).state || 'Maharashtra'
+      : 'International';
+    const isIntraState = sellerState === buyerState;
+
+    // compute GST split
+    const baseTax = order.taxPrice;
+    const cgst = isIntraState ? Math.round(baseTax * 50) / 100 : 0;
+    const sgst = isIntraState ? Math.round(baseTax * 50) / 100 : 0;
+    const igst = isIntraState ? 0 : baseTax;
+
+    // Header
+    doc.fontSize(22).font('Helvetica-Bold').text('TAX INVOICE', 50, 50);
+    doc.fontSize(9).font('Helvetica').text(`Invoice #: ${order.orderNumber}`, 50, 82);
+    doc.text(`Date: ${order.createdAt.toLocaleDateString('en-IN')}`, 50, 96);
+
+    // Seller (top right) with GSTIN
+    doc.fontSize(9).font('Helvetica-Bold').text('Seller:', pageWidth - 250, 50);
+    doc.font('Helvetica').text('E-Shop Marketplace', pageWidth - 250, 65);
+    doc.text(`${sellerState}, India`, pageWidth - 250, 80);
+    doc.text(`GSTIN: ${sellerGstin}`, pageWidth - 250, 95);
+
+    // Buyer
+    doc.font('Helvetica-Bold').text('Bill To:', 50, 130);
+    doc.font('Helvetica').text(order.shippingAddress.address, 50, 145);
+    doc.text(`${order.shippingAddress.city}, ${buyerState}`, 50, 160);
+    doc.text(order.shippingAddress.country, 50, 175);
+
+    // Items table with HSN
+    const tableTop = 210;
+    doc.font('Helvetica-Bold').fontSize(9);
+    doc.text('Item', 50, tableTop);
+    doc.text('HSN', 240, tableTop);
+    doc.text('Qty', 290, tableTop);
+    doc.text('Rate', 330, tableTop);
+    doc.text('Tax%', 380, tableTop);
+    doc.text('Total', 430, tableTop);
+    doc.moveTo(50, tableTop + 14).lineTo(pageWidth - 50, tableTop + 14).stroke();
+
+    let y = tableTop + 28;
+    doc.font('Helvetica');
+    order.orderItems.forEach((item) => {
+      doc.text(item.name.substring(0, 30), 50, y, { width: 180 });
+      doc.text('9988', 240, y); // placeholder HSN
+      doc.text(item.quantity.toString(), 290, y);
+      doc.text(`Rs.${item.price.toFixed(2)}`, 330, y);
+      doc.text('8%', 380, y);
+      doc.text(`Rs.${(item.price * item.quantity).toFixed(2)}`, 430, y);
+      y += 20;
+    });
+
+    // GST breakdown
+    y += 20;
+    doc.moveTo(290, y).lineTo(pageWidth - 50, y).stroke();
+    y += 15;
+    doc.font('Helvetica');
+    doc.text('Subtotal:', 290, y);
+    doc.text(`Rs.${(order.itemsPrice || 0).toFixed(2)}`, 430, y);
+    y += 18;
+
+    if (isIntraState) {
+      doc.text('CGST (4%):', 290, y);
+      doc.text(`Rs.${cgst.toFixed(2)}`, 430, y);
+      y += 16;
+      doc.text('SGST (4%):', 290, y);
+      doc.text(`Rs.${sgst.toFixed(2)}`, 430, y);
+    } else {
+      doc.text('IGST (8%):', 290, y);
+      doc.text(`Rs.${igst.toFixed(2)}`, 430, y);
+    }
+
+    y += 18;
+    doc.text('Shipping:', 290, y);
+    doc.text(`Rs.${order.shippingPrice.toFixed(2)}`, 430, y);
+
+    if (order.discountPrice > 0) {
+      y += 16;
+      doc.text('Discount:', 290, y);
+      doc.text(`-Rs.${order.discountPrice.toFixed(2)}`, 430, y);
+    }
+
+    y += 25;
+    doc.font('Helvetica-Bold').fontSize(11);
+    doc.text('Grand Total:', 290, y);
+    doc.text(`Rs.${order.totalPrice.toFixed(2)}`, 430, y);
+
+    // Footer
+    doc.font('Helvetica').fontSize(7).fillColor('#999999');
+    doc.text(
+      `This is a computer-generated tax invoice. GSTIN: ${sellerGstin}. Place of Supply: ${buyerState}.`,
+      50,
+      doc.page.height - 50,
+      { align: 'center', width: pageWidth - 100 }
+    );
+  }
 }
 
 export default new PdfService();

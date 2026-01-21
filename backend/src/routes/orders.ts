@@ -111,4 +111,33 @@ router.get('/:id/invoice', protect, async (req: any, res: any) => {
   }
 });
 
+// @route   GET /api/orders/:id/invoice/gst
+// @desc    Download GST-compliant PDF invoice (Indian tax format)
+// @access  Private
+router.get('/:id/invoice/gst', protect, async (req: any, res: any) => {
+  try {
+    const pdfService = (await import('../services/pdfService')).default;
+    const Order = (await import('../models/Order')).default;
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, error: 'Order not found' });
+    }
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'super_admin';
+    if (!isAdmin && order.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, error: 'Not authorized' });
+    }
+
+    const sellerState = process.env.SELLER_STATE || 'Maharashtra';
+    const sellerGstin = process.env.SELLER_GSTIN || '27ABCDE1234F1Z5';
+    const pdfBuffer = await pdfService.generateGSTInvoice(order, sellerState, sellerGstin);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="gst-invoice-${req.params.id}.pdf"`);
+    res.send(pdfBuffer);
+  } catch (err: any) {
+    const status = err.statusCode || 500;
+    res.status(status).json({ success: false, error: err.message });
+  }
+});
+
 export default router;
