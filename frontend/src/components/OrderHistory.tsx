@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
 import api from '../services/api';
-import { FiPackage, FiArrowRight, FiCheck, FiClock, FiTruck, FiShoppingBag, FiCreditCard } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import { FiPackage, FiArrowRight, FiCheck, FiClock, FiTruck, FiShoppingBag, FiCreditCard, FiDownload, FiLoader } from 'react-icons/fi';
 
 interface Order {
   _id: string;
@@ -20,6 +21,7 @@ const OrderHistory: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -81,6 +83,29 @@ const OrderHistory: React.FC = () => {
     if (diffInHours < 48) return 'Yesterday';
     if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
     return formatDate(dateString);
+  };
+
+  const handleDownloadInvoice = async (orderId: string) => {
+    setDownloadingId(orderId);
+    try {
+      const url = `/api/orders/${orderId}/invoice`;
+      const response = await api.get(url, { responseType: 'blob' });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `invoice-${orderId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      toast.success('Invoice downloaded');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to download invoice';
+      toast.error(message);
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   if (loading) {
@@ -195,6 +220,19 @@ const OrderHistory: React.FC = () => {
                         >
                           View Details
                         </Link>
+                        {order.isPaid && (
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadInvoice(order._id)}
+                            disabled={downloadingId === order._id}
+                            title="Download Invoice"
+                            className="flex items-center justify-center w-11 h-11 rounded-xl font-semibold text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                          >
+                            {downloadingId === order._id
+                              ? <FiLoader className="animate-spin" size={16} />
+                              : <FiDownload size={16} />}
+                          </button>
+                        )}
                         {!order.isPaid && (
                           <Link
                             to={`/order/${order._id}?pay=true`}
@@ -258,6 +296,19 @@ const OrderHistory: React.FC = () => {
                           View
                           <FiArrowRight size={16} />
                         </Link>
+                        {order.isPaid && (
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadInvoice(order._id)}
+                            disabled={downloadingId === order._id}
+                            title="Download Invoice"
+                            className="flex items-center justify-center w-11 h-11 rounded-xl font-semibold text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                          >
+                            {downloadingId === order._id
+                              ? <FiLoader className="animate-spin" size={16} />
+                              : <FiDownload size={16} />}
+                          </button>
+                        )}
                         {!order.isPaid && (
                           <Link
                             to={`/order/${order._id}?pay=true`}

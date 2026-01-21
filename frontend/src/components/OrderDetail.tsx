@@ -3,10 +3,11 @@ import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
 import Payment from './Payment';
 import api from '../services/api';
+import toast from 'react-hot-toast';
 import {
   FiPackage, FiTruck, FiCheck, FiClock, FiCreditCard,
   FiMapPin, FiCalendar, FiArrowLeft, FiCopy, FiCheckCircle,
-  FiShoppingBag, FiBox, FiRotateCcw
+  FiShoppingBag, FiBox, FiRotateCcw, FiDownload, FiFileText, FiLoader
 } from 'react-icons/fi';
 
 interface OrderItem {
@@ -58,6 +59,7 @@ const OrderDetail: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState(false);
+  const [invoiceLoading, setInvoiceLoading] = useState<'standard' | 'gst' | null>(null);
   const paymentSectionRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -158,6 +160,31 @@ const OrderDetail: React.FC = () => {
     setTimeout(() => setCopiedId(false), 2000);
   };
 
+  const handleDownloadInvoice = async (gst: boolean = false) => {
+    if (!id) return;
+    const kind: 'standard' | 'gst' = gst ? 'gst' : 'standard';
+    setInvoiceLoading(kind);
+    try {
+      const url = `/api/orders/${id}/invoice${gst ? '/gst' : ''}`;
+      const response = await api.get(url, { responseType: 'blob' });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `invoice-${id}${gst ? '-gst' : ''}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      toast.success(gst ? 'GST invoice downloaded' : 'Invoice downloaded');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to download invoice';
+      toast.error(message);
+    } finally {
+      setInvoiceLoading(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
@@ -230,6 +257,10 @@ const OrderDetail: React.FC = () => {
     order.isPaid === true &&
     !['cancelled', 'refunded'].includes(order.orderStatus.toLowerCase()) &&
     (returnCutoff ? Date.now() <= returnCutoff : false);
+
+  // GST invoice only makes sense for orders shipped within India.
+  const isIndianOrder =
+    order.shippingAddress?.country?.toLowerCase() === 'india';
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -306,6 +337,36 @@ const OrderDetail: React.FC = () => {
               </span>
             </div>
           </div>
+
+          {/* Invoice Downloads - only for paid orders */}
+          {order.isPaid && (
+            <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleDownloadInvoice(false)}
+                disabled={invoiceLoading !== null}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-black text-white hover:bg-gray-800 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {invoiceLoading === 'standard'
+                  ? <FiLoader className="animate-spin" size={16} />
+                  : <FiDownload size={16} />}
+                Download Invoice
+              </button>
+              {isIndianOrder && (
+                <button
+                  type="button"
+                  onClick={() => handleDownloadInvoice(true)}
+                  disabled={invoiceLoading !== null}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {invoiceLoading === 'gst'
+                    ? <FiLoader className="animate-spin" size={16} />
+                    : <FiFileText size={16} />}
+                  Download GST Invoice
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Tracking Number */}
           {order.trackingNumber && (

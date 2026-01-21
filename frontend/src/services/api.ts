@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AxiosInstance, AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import type { AxiosInstance, AxiosError, AxiosResponse, InternalAxiosRequestConfig, AxiosRequestConfig } from 'axios';
 import type { AuthResponse, Product, Order, ApiResponse } from '../types';
 
 class ApiClient {
@@ -172,8 +172,8 @@ class ApiClient {
   }
 
   // Generic HTTP methods
-  get(url: string) {
-    return this.client.get(url);
+  get(url: string, config?: AxiosRequestConfig) {
+    return this.client.get(url, config);
   }
 
   post(url: string, data?: unknown) {
