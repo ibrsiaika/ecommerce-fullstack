@@ -52,6 +52,7 @@
     "pdfkit": "^0.19.1",
     "pino": "^8.17.2",
     "pino-http": "^8.6.1",
+    "razorpay": "^2.9.8",
     "slugify": "^1.6.6",
     "stripe": "^14.9.0",
     "swagger-jsdoc": "^6.2.8",

@@ -121,7 +121,7 @@ const orderSchema = new Schema<IOrder>({
   paymentMethod: {
     type: String,
     required: true,
-    enum: ['PayPal', 'Stripe', 'Credit Card', 'Cash on Delivery']
+    enum: ['PayPal', 'Stripe', 'Credit Card', 'Cash on Delivery', 'Razorpay']
   },
   paymentResult: paymentResultSchema,
   itemsPrice: {

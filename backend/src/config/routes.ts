@@ -17,6 +17,7 @@ import auditRoutes from '../routes/auditRoutes';
 import couponRoutes from '../routes/coupons';
 import returnRoutes from '../routes/returns';
 import reservationRoutes from '../routes/reservations';
+import razorpayRoutes from '../routes/razorpay';
 
 // Middleware
 import { errorHandler, notFound } from '../middleware/errorHandler';
@@ -43,6 +44,7 @@ const routes: RouteConfig[] = [
   { path: '/api/coupons', router: couponRoutes },
   { path: '/api/returns', router: returnRoutes },
   { path: '/api/reservations', router: reservationRoutes },
+  { path: '/api/razorpay', router: razorpayRoutes },
 ];
 
 /**
