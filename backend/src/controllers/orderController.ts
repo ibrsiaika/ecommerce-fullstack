@@ -89,7 +89,23 @@ export const createOrder = async (req: Request, res: Response) => {
     const TAX_RATE = 0.08; // 8% — move to config/SiteConfig later
     const SHIPPING_FLAT = itemsPrice > 100 ? 0 : 9.99;
     const taxPrice = Math.round(itemsPrice * TAX_RATE * 100) / 100;
-    const shippingPrice = SHIPPING_FLAT;
+    let shippingPrice = SHIPPING_FLAT;
+
+    // COD handling — add COD fee and verify pincode serviceability
+    let codFee = 0;
+    if (paymentMethod === 'Cash on Delivery') {
+      const { default: pincodeService } = await import('../services/pincodeService');
+      const codCheck = pincodeService.isCodEligible(shippingAddress.postalCode, itemsPrice);
+      if (!codCheck.eligible) {
+        res.status(400).json({
+          success: false,
+          error: codCheck.reason || 'COD not available for this order'
+        });
+        return;
+      }
+      codFee = 50; // flat COD fee
+      shippingPrice += codFee;
+    }
 
     // coupon validation + discount calculation (server-side, never trust client)
     let discountPrice = 0;
