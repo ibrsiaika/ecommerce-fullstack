@@ -1,4 +1,4 @@
-import { useEffect, Suspense, useState } from 'react';
+import { useEffect, useRef, Suspense, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { Toaster } from 'react-hot-toast';
@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast';
 import { store } from './store';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { getCurrentUser } from './store/slices/authSlice';
+import { mergeGuestCart, fetchServerCart, resetCart } from './store/slices/cartSlice';
 
 // Layout
 import { Layout } from './components/Layout';
@@ -42,6 +43,10 @@ function AppContent() {
   const { token, isAuthenticated, isLoading: authLoading } = useAppSelector((state) => state.auth);
   const [appReady, setAppReady] = useState(false);
 
+  // Track whether we've already synced the cart for the current auth session
+  // so we merge + fetch exactly once on login (and reload guest state on logout).
+  const cartSyncedRef = useRef(false);
+
   // Get current user on mount if token exists
   useEffect(() => {
     if (token && !isAuthenticated) {
@@ -52,6 +57,30 @@ function AppContent() {
       setAppReady(true);
     }
   }, [dispatch, token, isAuthenticated]);
+
+  // Sync cart with the server whenever the auth state transitions.
+  //   false → true (login / session restore): push any guest cart to the
+  //     server via mergeGuestCart, then fetch the authoritative server cart.
+  //   true → false (logout): reload the cart from localStorage so the guest
+  //     cart reappears if one existed before authentication.
+  useEffect(() => {
+    if (isAuthenticated && !cartSyncedRef.current) {
+      cartSyncedRef.current = true;
+      const syncCart = async () => {
+        try {
+          await dispatch(mergeGuestCart()).unwrap();
+        } catch {
+          // Merge may fail (e.g. empty cart or transient error); still
+          // pull the server cart so the UI reflects the source of truth.
+        }
+        dispatch(fetchServerCart());
+      };
+      void syncCart();
+    } else if (!isAuthenticated && cartSyncedRef.current) {
+      cartSyncedRef.current = false;
+      dispatch(resetCart());
+    }
+  }, [isAuthenticated, dispatch]);
 
   /**
    * Render route with appropriate guards
