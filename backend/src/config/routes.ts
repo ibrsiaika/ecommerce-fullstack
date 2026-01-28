@@ -20,6 +20,8 @@ import reservationRoutes from '../routes/reservations';
 import razorpayRoutes from '../routes/razorpay';
 import pincodeRoutes from '../routes/pincode';
 import cartRoutes from '../routes/cart';
+import wishlistRoutes from '../routes/wishlist';
+import searchRoutes from '../routes/search';
 
 // Middleware
 import { errorHandler, notFound } from '../middleware/errorHandler';
@@ -49,6 +51,8 @@ const routes: RouteConfig[] = [
   { path: '/api/razorpay', router: razorpayRoutes },
   { path: '/api/pincode', router: pincodeRoutes },
   { path: '/api/cart', router: cartRoutes },
+  { path: '/api/wishlist', router: wishlistRoutes },
+  { path: '/api/search', router: searchRoutes }
 ];
 
 /**
