@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppSelector } from '../store/hooks';
 import { Navigate } from 'react-router-dom';
 import { 
@@ -20,6 +20,15 @@ const AdminConfig: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ConfigTab>('theme');
   const [maintenanceMessage, setMaintenanceMessage] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Auto-dismiss the success banner after 3s. Previously this was a
+  // setTimeout call rendered directly in JSX, which leaked a Timeout object
+  // into the React tree and scheduled a new timer on every render.
+  useEffect(() => {
+    if (!saveSuccess) return;
+    const timer = setTimeout(() => setSaveSuccess(false), 3000);
+    return () => clearTimeout(timer);
+  }, [saveSuccess]);
 
   if (!isAuthenticated || user?.role !== 'admin') {
     return <Navigate to="/" replace />;

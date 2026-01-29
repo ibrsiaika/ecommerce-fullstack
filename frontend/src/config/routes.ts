@@ -7,6 +7,7 @@ import ResetPassword from '../pages/Auth/ResetPassword';
 const ProductList = lazy(() => import('../components/ProductList'));
 const ProductDetail = lazy(() => import('../components/ProductDetail'));
 const Cart = lazy(() => import('../components/Cart'));
+const Wishlist = lazy(() => import('../components/Wishlist'));
 const Checkout = lazy(() => import('../components/Checkout'));
 const OrderHistory = lazy(() => import('../components/OrderHistory'));
 const OrderDetail = lazy(() => import('../components/OrderDetail'));
@@ -63,7 +64,8 @@ export const protectedRoutes: RouteConfig[] = [
   { path: '/checkout', component: Checkout, protected: true },
   { path: '/orders', component: OrderHistory, protected: true },
   { path: '/order/:id', component: OrderDetail, protected: true },
-  { path: '/orders/:id/return', component: ReturnRequest, protected: true }
+  { path: '/orders/:id/return', component: ReturnRequest, protected: true },
+  { path: '/wishlist', component: Wishlist, protected: true }
 ];
 
 /**

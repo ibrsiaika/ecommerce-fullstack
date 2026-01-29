@@ -1,4 +1,5 @@
-import { Component, ErrorInfo, ReactNode } from 'react';
+import { Component } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
 
 // catches render errors so the whole app doesn't white-screen
 export class ErrorBoundary extends Component<

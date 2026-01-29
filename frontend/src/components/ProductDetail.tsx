@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import Reviews from './Reviews';
+import WishlistButton from './WishlistButton';
 import api from '../services/api';
 import { FiShoppingBag, FiCheck, FiTruck, FiArrowRight } from 'react-icons/fi';
 
@@ -244,6 +245,13 @@ const ProductDetail: React.FC = () => {
                 </button>
               </div>
             )}
+
+            {/* Wishlist toggle — always available, even when out of stock */}
+            <WishlistButton
+              productId={product._id}
+              variant="button"
+              className="w-full"
+            />
 
             {/* Trust Badges */}
             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">

@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { logout } from '../../store/slices/authSlice';
-import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX, FiSearch } from 'react-icons/fi';
+import { fetchWishlist, resetWishlist } from '../../store/slices/wishlistSlice';
+import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX, FiSearch, FiHeart } from 'react-icons/fi';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ const Header: React.FC = () => {
   const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const { items } = useAppSelector((state) => state.cart);
+  const wishlistCount = useAppSelector((state) => state.wishlist.items.length);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,6 +40,17 @@ const Header: React.FC = () => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [searchOpen]);
+
+  // Sync wishlist with server on auth transitions.
+  //   false -> true: fetch the server wishlist so the heart icon and badge reflect truth.
+  //   true  -> false: clear local wishlist so stale items don't leak across sessions.
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchWishlist());
+    } else {
+      dispatch(resetWishlist());
+    }
+  }, [isAuthenticated, dispatch]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -125,6 +138,23 @@ const Header: React.FC = () => {
               <span className="hidden sm:inline text-sm font-medium">Bag</span>
             </Link>
 
+            {/* Wishlist — only when authenticated */}
+            {isAuthenticated && (
+              <Link
+                to="/wishlist"
+                className="relative flex items-center gap-2 px-2.5 py-2 text-neutral-500 hover:text-neutral-900 transition-colors"
+                aria-label={`Wishlist with ${wishlistCount} ${wishlistCount === 1 ? 'item' : 'items'}`}
+              >
+                <FiHeart className="w-5 h-5" />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-0.5 left-5 bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                    {wishlistCount > 9 ? '9+' : wishlistCount}
+                  </span>
+                )}
+                <span className="hidden sm:inline text-sm font-medium">Wishlist</span>
+              </Link>
+            )}
+
             {/* Auth Actions - Desktop */}
             {isAuthenticated ? (
               <div className="hidden md:flex items-center gap-1 ml-2">
@@ -193,6 +223,19 @@ const Header: React.FC = () => {
             <div className="border-t border-neutral-100 mt-4 pt-4 space-y-1">
               {isAuthenticated ? (
                 <>
+                  <Link
+                    to="/wishlist"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50 rounded-lg transition-colors"
+                  >
+                    <FiHeart className="w-5 h-5" />
+                    Wishlist
+                    {wishlistCount > 0 && (
+                      <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-5 px-1.5 flex items-center justify-center">
+                        {wishlistCount > 9 ? '9+' : wishlistCount}
+                      </span>
+                    )}
+                  </Link>
                   <Link
                     to="/profile"
                     onClick={() => setMobileMenuOpen(false)}

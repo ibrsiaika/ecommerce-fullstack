@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
+import WishlistButton from './WishlistButton';
 import api from '../services/api';
 import { FiArrowRight, FiCheck, FiPlus, FiSearch, FiRefreshCw, FiLoader } from 'react-icons/fi';
 
@@ -283,7 +284,7 @@ const ProductList: React.FC = () => {
           {products.map((product, index) => (
             <div
               key={product._id}
-              className="card card-interactive p-0 overflow-hidden group animate-fade-in"
+              className="card card-interactive relative p-0 overflow-hidden group animate-fade-in"
               style={{ animationDelay: `${(index % 12) * 30}ms` }}
             >
               {/* Image */}
@@ -304,7 +305,7 @@ const ProductList: React.FC = () => {
                   
                   {/* Stock Status */}
                   {product.countInStock > 0 ? (
-                    <div className="absolute top-3 right-3">
+                    <div className="absolute bottom-3 right-3">
                       <span className="pill bg-neutral-900/90 text-white text-xs shadow-sm">
                         <FiCheck className="w-3 h-3" />
                         In Stock
@@ -326,6 +327,12 @@ const ProductList: React.FC = () => {
                   )}
                 </div>
               </Link>
+
+              {/* Wishlist heart — top-right corner, sibling of Link so the
+                  button stays valid HTML (not nested inside an <a>). */}
+              <div className="absolute top-3 right-3 z-10">
+                <WishlistButton productId={product._id} variant="icon" />
+              </div>
 
               {/* Content */}
               <div className="p-4 sm:p-5">
