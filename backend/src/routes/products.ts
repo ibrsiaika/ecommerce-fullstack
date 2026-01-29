@@ -13,6 +13,7 @@ import {
   productValidation,
   reviewValidation
 } from '../controllers/productController';
+import { getRecommendations, getRelated } from '../controllers/searchController';
 import { protect, authorize } from '../middleware/auth';
 
 const router = express.Router();
@@ -24,6 +25,8 @@ router.get('/brands', getBrands);
 router.get('/search', searchProducts);
 router.get('/featured', getFeaturedProducts);
 router.get('/:id', getProduct);
+router.get('/:id/recommendations', getRecommendations);
+router.get('/:id/related', getRelated);
 
 // Protected routes
 router.post('/:id/reviews', protect, reviewValidation, addProductReview);
