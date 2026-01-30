@@ -224,6 +224,26 @@ export const createOrder = async (req: Request, res: Response) => {
       // Don't fail the order creation if email fails
     }
 
+    // Create in-app notification for the user
+    try {
+      const { default: inAppNotificationService } = await import('../services/inAppNotificationService');
+      const { NotificationType } = await import('../models/Notification');
+      await inAppNotificationService.create(
+        (req as any).user.id,
+        NotificationType.ORDER_STATUS,
+        'Order Placed Successfully',
+        `Your order ${(createdOrder as any).orderNumber} for $${createdOrder.totalPrice} has been placed.`,
+        {
+          actionUrl: `/orders/${(createdOrder as any)._id}`,
+          actionText: 'View Order',
+          relatedResourceType: 'order',
+          relatedResourceId: (createdOrder as any)._id.toString()
+        }
+      );
+    } catch (_notifErr) {
+      // don't fail order if notification fails
+    }
+
     res.status(201).json({
       success: true,
       data: createdOrder
@@ -476,6 +496,28 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     } catch (emailError) {
       console.error('Failed to send order status update email:', emailError);
       // Don't fail the order update if email fails
+    }
+
+    // in-app notification for order status change
+    if (status) {
+      try {
+        const { default: inAppNotificationService } = await import('../services/inAppNotificationService');
+        const { NotificationType } = await import('../models/Notification');
+        await inAppNotificationService.create(
+          order.user.toString(),
+          NotificationType.ORDER_STATUS,
+          `Order ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+          `Your order ${(updatedOrder as any).orderNumber} status has been updated to: ${status}${trackingNumber ? ` (Tracking: ${trackingNumber})` : ''}.`,
+          {
+            actionUrl: `/orders/${updatedOrder._id}`,
+            actionText: 'View Order',
+            relatedResourceType: 'order',
+            relatedResourceId: (updatedOrder._id as any).toString()
+          }
+        );
+      } catch (_err) {
+        // non-critical
+      }
     }
 
     res.json({

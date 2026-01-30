@@ -20,6 +20,7 @@ import reservationRoutes from '../routes/reservations';
 import razorpayRoutes from '../routes/razorpay';
 import pincodeRoutes from '../routes/pincode';
 import cartRoutes from '../routes/cart';
+import notificationRoutes from '../routes/notifications';
 import wishlistRoutes from '../routes/wishlist';
 import searchRoutes from '../routes/search';
 
@@ -51,6 +52,7 @@ const routes: RouteConfig[] = [
   { path: '/api/razorpay', router: razorpayRoutes },
   { path: '/api/pincode', router: pincodeRoutes },
   { path: '/api/cart', router: cartRoutes },
+  { path: '/api/notifications', router: notificationRoutes },
   { path: '/api/wishlist', router: wishlistRoutes },
   { path: '/api/search', router: searchRoutes }
 ];
