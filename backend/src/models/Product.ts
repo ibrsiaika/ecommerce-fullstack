@@ -1,11 +1,23 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+export interface ISellerReply {
+  comment: string;
+  repliedAt: Date;
+  repliedBy: mongoose.Types.ObjectId;
+}
+
 export interface IReview {
   user: mongoose.Types.ObjectId;
   name: string;
   rating: number;
   comment: string;
+  photos: string[];
+  helpfulVotes: number;
+  votedBy: mongoose.Types.ObjectId[];
+  isVerifiedPurchase: boolean;
+  sellerReply?: ISellerReply;
   createdAt: Date;
+  updatedAt?: Date;
 }
 
 export interface IProduct extends Document {
@@ -42,6 +54,23 @@ export interface IProduct extends Document {
   updatedAt: Date;
 }
 
+const sellerReplySchema: Schema = new Schema({
+  comment: {
+    type: String,
+    required: true,
+    maxlength: [1000, 'Reply cannot exceed 1000 characters']
+  },
+  repliedAt: {
+    type: Date,
+    default: Date.now
+  },
+  repliedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  }
+}, { _id: false });
+
 const reviewSchema: Schema = new Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -62,7 +91,32 @@ const reviewSchema: Schema = new Schema({
     type: String,
     required: true,
     maxlength: [500, 'Comment cannot be more than 500 characters']
-  }
+  },
+  photos: {
+    type: [String],
+    default: [],
+    validate: {
+      validator: function(photos: string[]) {
+        return photos.length <= 5;
+      },
+      message: 'A review can have at most 5 photos'
+    }
+  },
+  helpfulVotes: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  votedBy: {
+    type: [mongoose.Schema.Types.ObjectId],
+    default: [],
+    ref: 'User'
+  },
+  isVerifiedPurchase: {
+    type: Boolean,
+    default: false
+  },
+  sellerReply: sellerReplySchema
 }, {
   timestamps: true
 });

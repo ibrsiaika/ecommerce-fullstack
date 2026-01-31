@@ -152,23 +152,97 @@ export const addProductReview = asyncHandler(async (req: Request, res: Response)
     throw new AppError('Unauthorized', 401);
   }
 
+  // optional photos array (max 5, validated in service too)
+  const photos = Array.isArray(req.body.photos) ? req.body.photos : [];
+
+  // mark as verified purchase if the buyer has a delivered order for this product
+  const isVerifiedPurchase = await productService.checkVerifiedPurchase(
+    req.params.id,
+    user.id
+  );
+
   const product = await productService.addReview(
     req.params.id,
     user.id,
     user.getFullName(),
     Number(req.body.rating),
-    req.body.comment
+    req.body.comment,
+    photos,
+    isVerifiedPurchase
   );
+
+  const newReview = product.reviews[product.reviews.length - 1];
 
   return sendSuccess(
     res,
     201,
     {
-      reviews: product.reviews,
+      review: newReview,
       rating: product.rating,
       numReviews: product.numReviews
     },
     'Review added successfully'
+  );
+});
+
+// @desc    Vote a review as helpful
+// @route   POST /api/products/:id/reviews/:reviewId/vote
+// @access  Private
+export const voteReviewHelpful = asyncHandler(async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  if (!user) {
+    throw new AppError('Unauthorized', 401);
+  }
+
+  const product = await productService.voteReviewHelpful(
+    req.params.id,
+    req.params.reviewId,
+    user.id
+  );
+
+  const review = (product.reviews as any).id(req.params.reviewId);
+
+  return sendSuccess(
+    res,
+    200,
+    {
+      helpfulVotes: review?.get('helpfulVotes') || 0
+    },
+    'Vote recorded'
+  );
+});
+
+// @desc    Seller/admin reply to a review
+// @route   POST /api/products/:id/reviews/:reviewId/reply
+// @access  Private (seller/admin)
+export const replyToReview = asyncHandler(async (req: Request, res: Response) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return sendValidationError(res, errors.array().map(err => err.msg));
+  }
+
+  const user = (req as any).user;
+  if (!user) {
+    throw new AppError('Unauthorized', 401);
+  }
+
+  const product = await productService.replyToReview(
+    req.params.id,
+    req.params.reviewId,
+    user.id,
+    user.role,
+    req.body.comment
+  );
+
+  const review = (product.reviews as any).id(req.params.reviewId);
+
+  return sendSuccess(
+    res,
+    200,
+    {
+      sellerReply: review?.get('sellerReply')
+    },
+    'Reply added'
   );
 });
 
@@ -223,5 +297,19 @@ export const reviewValidation = [
     .notEmpty()
     .withMessage('Review comment is required')
     .isLength({ max: 500 })
-    .withMessage('Review comment cannot exceed 500 characters')
+    .withMessage('Review comment cannot exceed 500 characters'),
+
+  body('photos')
+    .optional()
+    .isArray({ max: 5 })
+    .withMessage('Photos must be an array of at most 5 URLs')
+];
+
+// Validation rules for a seller reply to a review
+export const replyValidation = [
+  body('comment')
+    .notEmpty()
+    .withMessage('Reply comment is required')
+    .isLength({ max: 1000 })
+    .withMessage('Reply cannot exceed 1000 characters')
 ];

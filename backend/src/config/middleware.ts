@@ -45,7 +45,9 @@ export const securityMiddleware = [
 export const rateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 150, // max 150 requests per window
-  message: 'Too many requests, please try again later.'
+  message: 'Too many requests, please try again later.',
+  // don't throttle the test suite
+  skip: () => process.env.NODE_ENV === 'test'
 });
 
 /**

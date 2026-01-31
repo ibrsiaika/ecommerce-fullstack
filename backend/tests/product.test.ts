@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import app from '../src/server';
 import User from '../src/models/User';
 import Product from '../src/models/Product';
+import Order from '../src/models/Order';
 
 // product endpoint tests — uses shared in-memory MongoDB from setup.ts
 
@@ -246,6 +247,248 @@ describe('Product Endpoints', () => {
 
       expect(response.body.success).toBe(false);
       expect(response.body.message).toBe('Product already reviewed');
+    });
+
+    it('should persist photos when provided', async () => {
+      const reviewData = {
+        rating: 4,
+        comment: 'Looks good',
+        photos: ['photo1.jpg', 'photo2.jpg']
+      };
+
+      const response = await request(app)
+        .post(`/api/products/${productId}/reviews`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(reviewData)
+        .expect(201);
+
+      expect(response.body.data.review.photos).toEqual(['photo1.jpg', 'photo2.jpg']);
+    });
+
+    it('should default photos to empty array when not provided', async () => {
+      const reviewData = {
+        rating: 4,
+        comment: 'No photos here'
+      };
+
+      const response = await request(app)
+        .post(`/api/products/${productId}/reviews`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(reviewData)
+        .expect(201);
+
+      expect(response.body.data.review.photos).toEqual([]);
+    });
+
+    it('should mark isVerifiedPurchase=false when user has no delivered order', async () => {
+      const response = await request(app)
+        .post(`/api/products/${productId}/reviews`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ rating: 5, comment: 'Nice' })
+        .expect(201);
+
+      expect(response.body.data.review.isVerifiedPurchase).toBe(false);
+    });
+
+    it('should mark isVerifiedPurchase=true when user has a delivered order', async () => {
+      // look up the buyer's _id
+      const buyer = await User.findOne({ email: 'user@example.com' });
+
+      // create a paid + delivered order for this product
+      await Order.create({
+        user: buyer!._id,
+        orderItems: [{
+          product: productId,
+          name: 'Test Product',
+          quantity: 1,
+          price: 99.99,
+          image: 'test-image.jpg'
+        }],
+        shippingAddress: {
+          address: '1 Main St',
+          city: 'Mumbai',
+          postalCode: '400001',
+          country: 'India'
+        },
+        paymentMethod: 'Cash on Delivery',
+        itemsPrice: 99.99,
+        taxPrice: 0,
+        shippingPrice: 0,
+        totalPrice: 99.99,
+        isPaid: true,
+        isDelivered: true,
+        orderStatus: 'delivered'
+      } as any);
+
+      const response = await request(app)
+        .post(`/api/products/${productId}/reviews`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ rating: 5, comment: 'Bought and love it' })
+        .expect(201);
+
+      expect(response.body.data.review.isVerifiedPurchase).toBe(true);
+    });
+
+    it('should recompute product rating after a review', async () => {
+      await request(app)
+        .post(`/api/products/${productId}/reviews`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ rating: 4, comment: 'Good' })
+        .expect(201);
+
+      const product = await Product.findById(productId);
+      expect(product!.numReviews).toBe(1);
+      expect(product!.rating).toBe(4);
+    });
+  });
+
+  describe('POST /api/products/:id/reviews/:reviewId/vote', () => {
+    let reviewId: string;
+    let voterToken: string;
+
+    beforeEach(async () => {
+      // primary buyer leaves a review
+      const reviewRes = await request(app)
+        .post(`/api/products/${productId}/reviews`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ rating: 5, comment: 'Great' })
+        .expect(201);
+      reviewId = reviewRes.body.data.review._id;
+
+      // a second buyer to cast the helpful vote
+      const voterRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+          name: 'Voter User',
+          email: 'voter@example.com',
+          password: 'password123'
+        });
+      voterToken = voterRes.body.token;
+    });
+
+    it('should increment helpfulVotes when another user votes', async () => {
+      const response = await request(app)
+        .post(`/api/products/${productId}/reviews/${reviewId}/vote`)
+        .set('Authorization', `Bearer ${voterToken}`)
+        .send()
+        .expect(200);
+
+      expect(response.body.data.helpfulVotes).toBe(1);
+    });
+
+    it('should not allow a user to vote twice on the same review', async () => {
+      await request(app)
+        .post(`/api/products/${productId}/reviews/${reviewId}/vote`)
+        .set('Authorization', `Bearer ${voterToken}`)
+        .send()
+        .expect(200);
+
+      const response = await request(app)
+        .post(`/api/products/${productId}/reviews/${reviewId}/vote`)
+        .set('Authorization', `Bearer ${voterToken}`)
+        .send()
+        .expect(400);
+
+      expect(response.body.message).toBe('You have already voted on this review');
+    });
+
+    it('should not allow voting on your own review', async () => {
+      const response = await request(app)
+        .post(`/api/products/${productId}/reviews/${reviewId}/vote`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send()
+        .expect(400);
+
+      expect(response.body.message).toBe('Cannot vote on your own review');
+    });
+
+    it('should require authentication to vote', async () => {
+      const response = await request(app)
+        .post(`/api/products/${productId}/reviews/${reviewId}/vote`)
+        .send()
+        .expect(401);
+
+      expect(response.body.status).toBe('error');
+    });
+
+    it('should return 404 for a non-existent review', async () => {
+      const fakeId = new mongoose.Types.ObjectId().toString();
+      const response = await request(app)
+        .post(`/api/products/${productId}/reviews/${fakeId}/vote`)
+        .set('Authorization', `Bearer ${voterToken}`)
+        .send()
+        .expect(404);
+
+      expect(response.body.message).toBe('Review not found');
+    });
+  });
+
+  describe('POST /api/products/:id/reviews/:reviewId/reply', () => {
+    let reviewId: string;
+
+    beforeEach(async () => {
+      const reviewRes = await request(app)
+        .post(`/api/products/${productId}/reviews`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ rating: 3, comment: 'Could be better' })
+        .expect(201);
+      reviewId = reviewRes.body.data.review._id;
+    });
+
+    it('should let an admin reply to a review', async () => {
+      const response = await request(app)
+        .post(`/api/products/${productId}/reviews/${reviewId}/reply`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ comment: 'Sorry to hear that, reach out to support' })
+        .expect(200);
+
+      expect(response.body.data.sellerReply).toBeDefined();
+      expect(response.body.data.sellerReply.comment).toBe('Sorry to hear that, reach out to support');
+    });
+
+    it('should not let a buyer reply to a review', async () => {
+      const response = await request(app)
+        .post(`/api/products/${productId}/reviews/${reviewId}/reply`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ comment: 'self reply' })
+        .expect(403);
+
+      expect(response.body.status).toBe('error');
+    });
+
+    it('should not allow a second reply on the same review', async () => {
+      await request(app)
+        .post(`/api/products/${productId}/reviews/${reviewId}/reply`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ comment: 'first reply' })
+        .expect(200);
+
+      const response = await request(app)
+        .post(`/api/products/${productId}/reviews/${reviewId}/reply`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ comment: 'second reply' })
+        .expect(400);
+
+      expect(response.body.message).toBe('Review already has a seller reply');
+    });
+
+    it('should require a comment', async () => {
+      const response = await request(app)
+        .post(`/api/products/${productId}/reviews/${reviewId}/reply`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({})
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+    });
+
+    it('should require authentication', async () => {
+      const response = await request(app)
+        .post(`/api/products/${productId}/reviews/${reviewId}/reply`)
+        .send({ comment: 'anon' })
+        .expect(401);
+
+      expect(response.body.status).toBe('error');
     });
   });
 });

@@ -10,8 +10,11 @@ import {
   searchProducts,
   getFeaturedProducts,
   addProductReview,
+  voteReviewHelpful,
+  replyToReview,
   productValidation,
-  reviewValidation
+  reviewValidation,
+  replyValidation
 } from '../controllers/productController';
 import { getRecommendations, getRelated } from '../controllers/searchController';
 import { protect, authorize } from '../middleware/auth';
@@ -30,6 +33,8 @@ router.get('/:id/related', getRelated);
 
 // Protected routes
 router.post('/:id/reviews', protect, reviewValidation, addProductReview);
+router.post('/:id/reviews/:reviewId/vote', protect, voteReviewHelpful);
+router.post('/:id/reviews/:reviewId/reply', protect, authorize('seller', 'admin', 'super_admin'), replyValidation, replyToReview);
 
 // Admin only routes
 router.post('/', protect, authorize('admin'), productValidation, createProduct);
