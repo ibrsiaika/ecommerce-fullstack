@@ -23,6 +23,7 @@ import cartRoutes from '../routes/cart';
 import notificationRoutes from '../routes/notifications';
 import wishlistRoutes from '../routes/wishlist';
 import searchRoutes from '../routes/search';
+import addressRoutes from '../routes/addresses';
 
 // Middleware
 import { errorHandler, notFound } from '../middleware/errorHandler';
@@ -54,7 +55,8 @@ const routes: RouteConfig[] = [
   { path: '/api/cart', router: cartRoutes },
   { path: '/api/notifications', router: notificationRoutes },
   { path: '/api/wishlist', router: wishlistRoutes },
-  { path: '/api/search', router: searchRoutes }
+  { path: '/api/search', router: searchRoutes },
+  { path: '/api/addresses', router: addressRoutes }
 ];
 
 /**
