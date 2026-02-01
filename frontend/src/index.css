@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* enable class-based dark mode for Tailwind v4 (toggled on <html class="dark">) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
 
 /* 
@@ -41,6 +44,24 @@
     --space-16: 64px;
     --space-20: 80px;
     --space-24: 96px;
+  }
+
+  /* Dark theme — invert the ink scale + backgrounds so existing
+     var(--ink-*) usage adapts automatically. */
+  .dark {
+    --ink-50: #1a1a1a;
+    --ink-100: #222222;
+    --ink-200: #2e2e2e;
+    --ink-300: #3f3f3f;
+    --ink-400: #6b6b6b;
+    --ink-500: #9a9a9a;
+    --ink-600: #b5b5b5;
+    --ink-700: #d4d4d4;
+    --ink-800: #ececec;
+    --ink-900: #fafafa;
+
+    --bg-primary: #0f0f0f;
+    --bg-secondary: #171717;
   }
 
   * {

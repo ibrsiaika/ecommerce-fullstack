@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { logout } from '../../store/slices/authSlice';
 import { fetchWishlist, resetWishlist } from '../../store/slices/wishlistSlice';
+import ThemeToggle from '../ThemeToggle';
 import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX, FiSearch, FiHeart } from 'react-icons/fi';
 
 const Header: React.FC = () => {
@@ -84,15 +85,15 @@ const Header: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-neutral-200">
+    <header className="sticky top-0 z-50 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 transition-colors">
       <div className="container">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link 
             to="/" 
-            className="flex items-center gap-2.5 font-semibold text-neutral-900 hover:opacity-70 transition-opacity"
+            className="flex items-center gap-2.5 font-semibold text-neutral-900 dark:text-neutral-100 hover:opacity-70 transition-opacity"
           >
-            <div className="h-8 w-8 rounded-lg bg-neutral-900 flex items-center justify-center text-white text-sm font-bold">
+            <div className="h-8 w-8 rounded-lg bg-neutral-900 dark:bg-neutral-100 flex items-center justify-center text-white dark:text-neutral-900 text-sm font-bold">
               E
             </div>
             <span className="hidden sm:inline tracking-tight">E-Shop</span>
@@ -104,7 +105,7 @@ const Header: React.FC = () => {
               <Link
                 key={item.href}
                 to={item.href}
-                className="px-4 py-2 text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
               >
                 {item.label}
               </Link>
@@ -123,6 +124,9 @@ const Header: React.FC = () => {
                 <FiSearch className="w-5 h-5" />
               </button>
             )}
+
+            {/* Theme toggle */}
+            <ThemeToggle />
 
             {/* Cart */}
             <Link
