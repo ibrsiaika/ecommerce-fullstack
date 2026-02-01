@@ -293,9 +293,24 @@ class ApiClient {
 
   async addProductReview(
     productId: string,
-    data: { rating: number; comment: string }
+    data: { rating: number; comment: string; photos?: string[] }
   ) {
     return this.client.post(`/api/products/${productId}/reviews`, data);
+  }
+
+  // mark a review as helpful (one vote per user, enforced server-side)
+  async voteReviewHelpful(productId: string, reviewId: string) {
+    return this.client.post(
+      `/api/products/${productId}/reviews/${reviewId}/vote`
+    );
+  }
+
+  // seller/admin reply to a review (one reply per review)
+  async replyToReview(productId: string, reviewId: string, comment: string) {
+    return this.client.post(
+      `/api/products/${productId}/reviews/${reviewId}/reply`,
+      { comment }
+    );
   }
 
   // Order endpoints
@@ -366,6 +381,35 @@ class ApiClient {
 
   async deleteUser(id: string) {
     return this.client.delete(`/api/users/${id}`);
+  }
+
+  // Address Book endpoints
+  async getAddresses() {
+    return this.client.get('/api/addresses');
+  }
+
+  async getAddress(id: string) {
+    return this.client.get(`/api/addresses/${id}`);
+  }
+
+  async createAddress(data: Record<string, unknown>) {
+    return this.client.post('/api/addresses', data);
+  }
+
+  async updateAddress(id: string, data: Record<string, unknown>) {
+    return this.client.put(`/api/addresses/${id}`, data);
+  }
+
+  async deleteAddress(id: string) {
+    return this.client.delete(`/api/addresses/${id}`);
+  }
+
+  async setDefaultShippingAddress(id: string) {
+    return this.client.put(`/api/addresses/${id}/default-shipping`);
+  }
+
+  async setDefaultBillingAddress(id: string) {
+    return this.client.put(`/api/addresses/${id}/default-billing`);
   }
 }
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { getCurrentUser, updateProfile, clearError } from '../../store/slices/authSlice';
-import api from '../../services/api';
-import { FiUser, FiMail, FiCalendar, FiSave, FiLock, FiEdit2, FiTrash2, FiAlertCircle, FiCheck } from 'react-icons/fi';
+import AddressBook from '../../components/AddressBook';
+import { FiUser, FiMail, FiCalendar, FiSave, FiLock, FiEdit2, FiAlertCircle, FiCheck } from 'react-icons/fi';
 
 const Profile: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -11,21 +11,10 @@ const Profile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [addressSaveSuccess, setAddressSaveSuccess] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
   });
-
-  const [shippingAddress, setShippingAddress] = useState({
-    address: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  });
-
-  const [isEditingAddress, setIsEditingAddress] = useState(false);
-  const [isSavingAddress, setIsSavingAddress] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -34,13 +23,6 @@ const Profile: React.FC = () => {
       setFormData({
         name: user.name,
         email: user.email,
-      });
-
-      setShippingAddress({
-        address: user.shippingAddress?.address || '',
-        city: user.shippingAddress?.city || '',
-        postalCode: user.shippingAddress?.postalCode || '',
-        country: user.shippingAddress?.country || ''
       });
     }
   }, [user, dispatch]);
@@ -52,13 +34,6 @@ const Profile: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [saveSuccess]);
-
-  useEffect(() => {
-    if (addressSaveSuccess) {
-      const timer = setTimeout(() => setAddressSaveSuccess(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [addressSaveSuccess]);
 
   // Clear error when component unmounts
   useEffect(() => {
@@ -100,23 +75,6 @@ const Profile: React.FC = () => {
     }
     setIsEditing(false);
     dispatch(clearError());
-  };
-
-  const handleAddressSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSavingAddress(true);
-    setAddressSaveSuccess(false);
-
-    try {
-      await api.updateProfile({ shippingAddress });
-      await dispatch(getCurrentUser()).unwrap();
-      setAddressSaveSuccess(true);
-      setIsEditingAddress(false);
-    } catch (err) {
-      console.error('Shipping address update failed:', err);
-    } finally {
-      setIsSavingAddress(false);
-    }
   };
 
   if (isLoading) {
@@ -168,13 +126,6 @@ const Profile: React.FC = () => {
               <div className="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 flex items-center gap-3">
                 <FiCheck className="text-green-600 flex-shrink-0" size={20} />
                 <p className="text-green-800 font-medium">Profile updated successfully!</p>
-              </div>
-            )}
-
-            {addressSaveSuccess && (
-              <div className="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 flex items-center gap-3">
-                <FiCheck className="text-green-600 flex-shrink-0" size={20} />
-                <p className="text-green-800 font-medium">Shipping address saved!</p>
               </div>
             )}
 
@@ -349,112 +300,8 @@ const Profile: React.FC = () => {
             </div>
           </div>
 
-          {/* Shipping Address */}
-          <div className="p-6 sm:p-8 lg:p-12 rounded-2xl lg:rounded-3xl shadow-lg border border-gray-200 bg-white">
-            <div className="flex items-center justify-between gap-4 mb-8">
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Shipping Address</h2>
-                <p className="text-sm sm:text-base text-gray-600 mt-2">Used to prefill checkout for faster ordering.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsEditingAddress((v) => !v)}
-                className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold bg-white border-2 border-gray-300 text-gray-900 hover:border-gray-400 transition-colors"
-              >
-                <FiEdit2 size={16} />
-                {isEditingAddress ? 'Cancel' : 'Edit'}
-              </button>
-            </div>
-
-            <form onSubmit={handleAddressSave} className="space-y-6">
-              <div>
-                <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-widest">Street Address</label>
-                <input
-                  type="text"
-                  value={shippingAddress.address}
-                  onChange={(e) => setShippingAddress((p) => ({ ...p, address: e.target.value }))}
-                  disabled={!isEditingAddress}
-                  className={`w-full px-4 py-4 text-base border-2 rounded-xl transition-all ${
-                    isEditingAddress
-                      ? 'border-gray-300 focus:border-black focus:outline-none hover:border-gray-400 bg-white'
-                      : 'border-gray-200 bg-gray-50 cursor-not-allowed'
-                  }`}
-                  placeholder="123 Main Street"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-widest">City</label>
-                  <input
-                    type="text"
-                    value={shippingAddress.city}
-                    onChange={(e) => setShippingAddress((p) => ({ ...p, city: e.target.value }))}
-                    disabled={!isEditingAddress}
-                    className={`w-full px-4 py-4 text-base border-2 rounded-xl transition-all ${
-                      isEditingAddress
-                        ? 'border-gray-300 focus:border-black focus:outline-none hover:border-gray-400 bg-white'
-                        : 'border-gray-200 bg-gray-50 cursor-not-allowed'
-                    }`}
-                    placeholder="New York"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-widest">Postal Code</label>
-                  <input
-                    type="text"
-                    value={shippingAddress.postalCode}
-                    onChange={(e) => setShippingAddress((p) => ({ ...p, postalCode: e.target.value }))}
-                    disabled={!isEditingAddress}
-                    className={`w-full px-4 py-4 text-base border-2 rounded-xl transition-all ${
-                      isEditingAddress
-                        ? 'border-gray-300 focus:border-black focus:outline-none hover:border-gray-400 bg-white'
-                        : 'border-gray-200 bg-gray-50 cursor-not-allowed'
-                    }`}
-                    placeholder="10001"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-widest">Country</label>
-                <input
-                  type="text"
-                  value={shippingAddress.country}
-                  onChange={(e) => setShippingAddress((p) => ({ ...p, country: e.target.value }))}
-                  disabled={!isEditingAddress}
-                  className={`w-full px-4 py-4 text-base border-2 rounded-xl transition-all ${
-                    isEditingAddress
-                      ? 'border-gray-300 focus:border-black focus:outline-none hover:border-gray-400 bg-white'
-                      : 'border-gray-200 bg-gray-50 cursor-not-allowed'
-                  }`}
-                  placeholder="United States"
-                />
-              </div>
-
-              {isEditingAddress && (
-                <div className="pt-4 border-t border-gray-200">
-                  <button
-                    type="submit"
-                    disabled={isSavingAddress}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-7 py-4 rounded-xl font-bold text-base bg-black text-white hover:bg-gray-900 active:scale-95 transition-all duration-200 shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {isSavingAddress ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                        Saving…
-                      </>
-                    ) : (
-                      <>
-                        <FiSave size={18} />
-                        Save Address
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
-            </form>
-          </div>
+          {/* Address Book — multiple saved addresses with default shipping/billing */}
+          <AddressBook />
 
           {/* Account Actions - Danger Zone */}
           <div className="p-6 sm:p-8 lg:p-10 rounded-2xl border-2 border-red-300 bg-gradient-to-br from-red-50 to-red-100">

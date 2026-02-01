@@ -28,6 +28,14 @@ interface ProductApiResponse {
     rating: number;
     comment: string;
     createdAt: string;
+    photos?: string[];
+    helpfulVotes?: number;
+    isVerifiedPurchase?: boolean;
+    sellerReply?: {
+      comment: string;
+      repliedAt: string;
+      repliedBy: string | { name?: string };
+    } | null;
   }>;
 }
 
