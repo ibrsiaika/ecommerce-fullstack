@@ -5,7 +5,21 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { clearCart } from '../store/slices/cartSlice';
 import { Spinner } from './Loading';
 import api from '../services/api';
-import { FiMapPin, FiCreditCard, FiCheck, FiArrowLeft, FiArrowRight, FiLoader, FiPackage, FiTag, FiX, FiAlertCircle } from 'react-icons/fi';
+import { FiMapPin, FiCreditCard, FiCheck, FiArrowLeft, FiArrowRight, FiLoader, FiPackage, FiTag, FiX, FiAlertCircle, FiHome, FiBriefcase } from 'react-icons/fi';
+
+interface SavedAddress {
+  _id: string;
+  label: 'Home' | 'Work' | 'Other';
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  isDefaultShipping: boolean;
+}
 
 interface ShippingAddress {
   address: string;
@@ -62,6 +76,9 @@ const Checkout: React.FC = () => {
   const [saveAddressForNextTime, setSaveAddressForNextTime] = useState(true);
   const [isSavingAddress, setIsSavingAddress] = useState(false);
   const [addressSaved, setAddressSaved] = useState(false);
+  // saved addresses from the address book — used to prefill the shipping form
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedSavedId, setSelectedSavedId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState('PayPal');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -218,6 +235,47 @@ const Checkout: React.FC = () => {
       country: saved.country || ''
     });
   }, [user]);
+
+  // Load saved addresses from the address book. The default-shipping entry
+  // auto-fills the form so a returning buyer can skip typing.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await api.getAddresses();
+        if (cancelled) return;
+        const list: SavedAddress[] = res.data.data || [];
+        setSavedAddresses(list);
+        const def = list.find((a) => a.isDefaultShipping) || list[0];
+        if (def && !shippingAddress.address) {
+          setSelectedSavedId(def._id);
+          setShippingAddress({
+            address: [def.line1, def.line2].filter(Boolean).join(', '),
+            city: def.city,
+            postalCode: def.postalCode,
+            country: def.country
+          });
+        }
+      } catch (_err) {
+        // non-blocking — user can still type manually
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const selectSavedAddress = (addr: SavedAddress) => {
+    setSelectedSavedId(addr._id);
+    setShippingAddress({
+      address: [addr.line1, addr.line2].filter(Boolean).join(', '),
+      city: addr.city,
+      postalCode: addr.postalCode,
+      country: addr.country
+    });
+  };
 
   useEffect(() => {
     if (!addressSaved) return;
@@ -425,6 +483,56 @@ const Checkout: React.FC = () => {
         </div>
         
         <div className="space-y-6">
+          {/* Saved address picker — only for delivery, hidden for pickup */}
+          {deliveryMethod === 'delivery' && savedAddresses.length > 0 && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-3">
+                Saved Addresses
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+                {savedAddresses.map((addr) => {
+                  const active = selectedSavedId === addr._id;
+                  const LabelIcon = addr.label === 'Home' ? FiHome : addr.label === 'Work' ? FiBriefcase : FiMapPin;
+                  return (
+                    <button
+                      key={addr._id}
+                      type="button"
+                      onClick={() => selectSavedAddress(addr)}
+                      className={`text-left p-4 rounded-xl border-2 transition-all ${
+                        active
+                          ? 'border-black bg-black/5 shadow-sm'
+                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                          <LabelIcon size={12} />
+                          {addr.label}
+                        </span>
+                        {addr.isDefaultShipping && (
+                          <span className="text-[10px] font-bold bg-neutral-900 text-white px-1.5 py-0.5 rounded">
+                            DEFAULT
+                          </span>
+                        )}
+                        {active && <FiCheck className="text-black" size={16} />}
+                      </div>
+                      <p className="text-sm font-semibold text-gray-900">{addr.fullName}</p>
+                      <p className="text-xs text-gray-600 mt-0.5">
+                        {addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        {addr.city}, {addr.state} {addr.postalCode}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-gray-400">
+                Pick a saved address to autofill, or edit the fields below.
+              </p>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-3">Street Address</label>
             <input
