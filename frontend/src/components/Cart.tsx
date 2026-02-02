@@ -164,7 +164,7 @@ const Cart: React.FC = () => {
 
           {/* Order Summary - Sticky on Desktop */}
           <div className="lg:col-span-1">
-            <div className="p-8 lg:sticky lg:top-24 shadow-xl rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
+            <div className="p-8 lg:sticky lg:top-24 shadow-xl rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-neutral-900 dark:to-neutral-800 border border-gray-200 dark:border-neutral-800">
               <h2 className="text-3xl font-bold text-gray-900 mb-8">Order Summary</h2>
               
               <div className="space-y-6 mb-10">
@@ -218,7 +218,7 @@ const Cart: React.FC = () => {
               </div>
 
               {totalPrice < 100 && (
-                <div className="p-5 rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200">
+                <div className="p-5 rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-2 border-blue-200 dark:border-blue-800">
                   <p className="text-sm text-blue-900 font-semibold mb-3">
                     🎉 Free shipping unlocked! Add ${(100 - totalPrice).toFixed(2)} more.
                   </p>
@@ -232,7 +232,7 @@ const Cart: React.FC = () => {
               )}
               
               {totalPrice >= 100 && (
-                <div className="p-5 rounded-xl bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200">
+                <div className="p-5 rounded-xl bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-2 border-green-200 dark:border-green-800">
                   <p className="text-sm text-green-900 font-semibold flex items-center gap-2">
                     <FiCheckCircle size={18} />
                     You qualify for free shipping!

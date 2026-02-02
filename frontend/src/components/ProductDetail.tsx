@@ -210,7 +210,7 @@ const ProductDetail: React.FC = () => {
             </div>
 
             {/* Price Section */}
-            <div className="space-y-4 p-8 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
+            <div className="space-y-4 p-8 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-neutral-900 dark:to-neutral-800 border border-gray-200 dark:border-neutral-800">
               <div className="flex items-baseline gap-4 flex-wrap">
                 <span className="text-5xl sm:text-6xl font-bold text-gray-900">
                   ${product.price.toFixed(2)}

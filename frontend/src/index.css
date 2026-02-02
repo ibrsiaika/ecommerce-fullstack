@@ -107,6 +107,71 @@
   }
 }
 
+/*
+ * Dark mode utility overrides
+ * ===========================
+ * Many pages use hardcoded light utilities (bg-white, text-gray-900, etc.)
+ * instead of the --ink-* variables. These rules map the most common ones to
+ * dark equivalents when inside .dark, so the whole app adapts without editing
+ * every className.
+ *
+ * Specificity note: :where(.dark) contributes 0, so each rule is (0,1,0) —
+ * equal to a single utility class. Explicit dark: variants live in the
+ * utilities layer (which comes after base), so they still win over these.
+ */
+@layer base {
+  :where(.dark) .bg-white { background-color: #171717; }
+  :where(.dark) .bg-gray-50,
+  :where(.dark) .bg-gray-100,
+  :where(.dark) .bg-neutral-50 { background-color: #0f0f0f; }
+  :where(.dark) .bg-gray-200 { background-color: #222222; }
+
+  :where(.dark) .text-gray-900,
+  :where(.dark) .text-gray-800,
+  :where(.dark) .text-neutral-900,
+  :where(.dark) .text-neutral-950 { color: #fafafa; }
+  :where(.dark) .text-gray-700,
+  :where(.dark) .text-gray-600,
+  :where(.dark) .text-neutral-700,
+  :where(.dark) .text-neutral-600 { color: #b5b5b5; }
+  :where(.dark) .text-gray-500,
+  :where(.dark) .text-gray-400,
+  :where(.dark) .text-neutral-500,
+  :where(.dark) .text-neutral-400 { color: #8a8a8a; }
+
+  :where(.dark) .border-gray-100,
+  :where(.dark) .border-gray-200,
+  :where(.dark) .border-neutral-100,
+  :where(.dark) .border-neutral-200 { border-color: #2e2e2e; }
+  :where(.dark) .border-gray-300,
+  :where(.dark) .border-gray-400,
+  :where(.dark) .border-neutral-300 { border-color: #3f3f3f; }
+
+  /* hover states that reference light surfaces */
+  :where(.dark) .hover\:bg-gray-50:hover,
+  :where(.dark) .hover\:bg-gray-100:hover,
+  :where(.dark) .hover\:bg-neutral-50:hover { background-color: #1f1f1f; }
+  :where(.dark) .hover\:bg-gray-200:hover { background-color: #2a2a2a; }
+  :where(.dark) .hover\:text-gray-900:hover,
+  :where(.dark) .hover\:text-neutral-900:hover { color: #fafafa; }
+  :where(.dark) .hover\:text-gray-700:hover,
+  :where(.dark) .hover\:text-gray-600:hover { color: #d4d4d4; }
+  :where(.dark) .hover\:border-gray-300:hover,
+  :where(.dark) .hover\:border-gray-400:hover { border-color: #525252; }
+
+  /* native inputs that default to white */
+  :where(.dark) input,
+  :where(.dark) textarea,
+  :where(.dark) select {
+    background-color: #171717;
+    color: #fafafa;
+  }
+  :where(.dark) input::placeholder,
+  :where(.dark) textarea::placeholder {
+    color: #6b6b6b;
+  }
+}
+
 @layer components {
   /* Container */
   .container {
