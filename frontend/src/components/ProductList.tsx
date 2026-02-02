@@ -3,8 +3,9 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import WishlistButton from './WishlistButton';
+import QuickViewModal from './QuickViewModal';
 import api from '../services/api';
-import { FiArrowRight, FiCheck, FiPlus, FiSearch, FiRefreshCw, FiLoader } from 'react-icons/fi';
+import { FiArrowRight, FiCheck, FiPlus, FiSearch, FiRefreshCw, FiLoader, FiEye } from 'react-icons/fi';
 
 // Default fallback image for products without images
 const FALLBACK_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
@@ -88,7 +89,8 @@ const ProductList: React.FC = () => {
     limit: 12,
   });
   const [addedToCart, setAddedToCart] = useState<string | null>(null);
-  
+  const [quickViewId, setQuickViewId] = useState<string | null>(null);
+
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -325,6 +327,22 @@ const ProductList: React.FC = () => {
                       </span>
                     </div>
                   )}
+
+                  {/* Quick View button — appears on hover */}
+                  {product.countInStock > 0 && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setQuickViewId(product._id);
+                      }}
+                      className="absolute left-1/2 bottom-3 -translate-x-1/2 translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-200 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-neutral-900 text-gray-900 dark:text-neutral-100 text-xs font-semibold shadow-lg border border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-800"
+                      aria-label={`Quick view ${product.name}`}
+                    >
+                      <FiEye size={14} />
+                      Quick View
+                    </button>
+                  )}
                 </div>
               </Link>
 
@@ -499,6 +517,9 @@ const ProductList: React.FC = () => {
         {/* Products */}
         {renderProducts()}
       </div>
+
+      {/* Quick view modal */}
+      <QuickViewModal productId={quickViewId} onClose={() => setQuickViewId(null)} />
     </div>
   );
 };
