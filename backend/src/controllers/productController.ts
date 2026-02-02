@@ -138,6 +138,25 @@ export const getFeaturedProducts = asyncHandler(async (req: Request, res: Respon
   return sendSuccess(res, 200, products.map(mapProductPreview));
 });
 
+// @desc    Get a set of products by id (for recently-viewed widgets)
+// @route   GET /api/products/bulk?ids=id1,id2,...
+// @access  Public
+export const getProductsByIds = asyncHandler(async (req: Request, res: Response) => {
+  const raw = (req.query.ids as string) || '';
+  const ids = raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 20); // cap to keep the query bounded
+
+  if (ids.length === 0) {
+    return sendSuccess(res, 200, []);
+  }
+
+  const products = await productService.getByIds(ids);
+  return sendSuccess(res, 200, products.map(mapProductPreview));
+});
+
 // @desc    Add product review
 // @route   POST /api/products/:id/reviews
 // @access  Private

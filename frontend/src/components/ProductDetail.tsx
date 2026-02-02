@@ -4,6 +4,8 @@ import { useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import Reviews from './Reviews';
 import WishlistButton from './WishlistButton';
+import RecentlyViewed from './RecentlyViewed';
+import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import api from '../services/api';
 import { FiShoppingBag, FiCheck, FiTruck, FiArrowRight } from 'react-icons/fi';
 
@@ -42,6 +44,7 @@ interface ProductApiResponse {
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const dispatch = useAppDispatch();
+  const { trackView } = useRecentlyViewed();
   const [product, setProduct] = useState<ProductApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +65,8 @@ const ProductDetail: React.FC = () => {
       const productData = response.data.data;
       if (productData && typeof productData === 'object' && '_id' in productData) {
         setProduct(productData as ProductApiResponse);
+        // record this view for the recently-viewed widget
+        trackView((productData as any)._id);
       }
       setError(null);
     } catch (err) {
@@ -290,6 +295,9 @@ const ProductDetail: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* Recently viewed — excludes the current product */}
+      <RecentlyViewed excludeId={product._id} limit={6} />
     </div>
   );
 };

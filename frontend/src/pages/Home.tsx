@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import api from '../services/api';
+import RecentlyViewed from '../components/RecentlyViewed';
 import {
   FiArrowRight,
   FiShoppingBag,
@@ -243,6 +244,9 @@ const Home: React.FC = () => {
           )}
         </div>
       </section>
+
+      {/* Recently Viewed — only renders when the visitor has browsing history */}
+      <RecentlyViewed />
 
       {/* Features Section */}
       <section className="py-16 lg:py-20 bg-gray-50 border-t border-gray-100">

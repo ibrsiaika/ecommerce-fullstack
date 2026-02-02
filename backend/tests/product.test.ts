@@ -108,6 +108,54 @@ describe('Product Endpoints', () => {
     });
   });
 
+  describe('GET /api/products/bulk', () => {
+    it('should return products matching the given ids in order', async () => {
+      // create a second product
+      const second = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Second Product',
+          description: 'desc',
+          price: 25,
+          category: 'Books',
+          countInStock: 3,
+          images: ['img.jpg'],
+          sku: 'TEST-SKU-002'
+        })
+        .expect(201);
+      const secondId = second.body.data._id;
+
+      const response = await request(app)
+        .get(`/api/products/bulk?ids=${secondId},${productId}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveLength(2);
+      // order should match the requested order
+      expect(response.body.data[0]._id).toBe(secondId);
+      expect(response.body.data[1]._id).toBe(productId);
+    });
+
+    it('should return empty array when no ids provided', async () => {
+      const response = await request(app)
+        .get('/api/products/bulk')
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toEqual([]);
+    });
+
+    it('should silently drop invalid ids', async () => {
+      const response = await request(app)
+        .get(`/api/products/bulk?ids=not-an-id,${productId}`)
+        .expect(200);
+
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0]._id).toBe(productId);
+    });
+  });
+
   describe('GET /api/products/:id', () => {
     it('should get product by ID', async () => {
       const response = await request(app)

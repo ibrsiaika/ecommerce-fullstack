@@ -271,6 +271,13 @@ class ApiClient {
     return this.client.get('/api/products/featured', { params: { limit } });
   }
 
+  // fetch a set of products by id (used by the recently-viewed widget)
+  async getProductsByIds(ids: string[]) {
+    return this.client.get('/api/products/bulk', {
+      params: { ids: ids.join(',') }
+    });
+  }
+
   async getCategories() {
     return this.client.get('/api/products/categories');
   }

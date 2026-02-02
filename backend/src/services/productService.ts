@@ -258,6 +258,34 @@ export class ProductService {
       .sort({ score: { $meta: 'textScore' } })
       .limit(limit);
   }
+
+  // Fetch a set of products by id (used by the recently-viewed widget).
+  // Preserves the order of the input ids so the caller controls sorting.
+  // Invalid / soft-deleted ids are silently dropped.
+  async getByIds(ids: string[]) {
+    const objectIds = ids
+      .map((id) => {
+        try {
+          return new mongoose.Types.ObjectId(id);
+        } catch {
+          return null;
+        }
+      })
+      .filter((v): v is mongoose.Types.ObjectId => v !== null);
+
+    if (objectIds.length === 0) return [];
+
+    const docs = await Product.find({
+      _id: { $in: objectIds },
+      isActive: true
+    }).select('name slug price comparePrice images category brand countInStock rating numReviews');
+
+    // re-sort to match the requested order
+    const byId = new Map(docs.map((d: any) => [d._id.toString(), d]));
+    return ids
+      .map((id) => byId.get(id))
+      .filter((d): d is NonNullable<typeof d> => Boolean(d));
+  }
 }
 
 export default new ProductService();
