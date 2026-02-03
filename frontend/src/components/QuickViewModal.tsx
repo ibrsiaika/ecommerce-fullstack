@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
+import CompareButton from './CompareButton';
 import {
   FiX,
   FiStar,
@@ -300,15 +301,24 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ productId, onClose }) =
                 </div>
               )}
 
-              {/* view full details */}
-              <Link
-                to={`/products/${product._id}`}
-                onClick={onClose}
-                className="mt-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm border-2 border-gray-200 dark:border-neutral-700 text-gray-700 dark:text-neutral-200 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors"
-              >
-                View full details
-                <FiArrowRight size={16} />
-              </Link>
+              {/* compare + view full details */}
+              <div className="mt-auto flex items-center gap-2">
+                <CompareButton
+                  productId={product._id}
+                  name={product.name}
+                  price={product.price}
+                  image={product.images?.[0] || ''}
+                  variant="pill"
+                />
+                <Link
+                  to={`/products/${product._id}`}
+                  onClick={onClose}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm border-2 border-gray-200 dark:border-neutral-700 text-gray-700 dark:text-neutral-200 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors"
+                >
+                  View full details
+                  <FiArrowRight size={16} />
+                </Link>
+              </div>
             </div>
           </div>
         ) : null}

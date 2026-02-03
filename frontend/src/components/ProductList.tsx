@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import WishlistButton from './WishlistButton';
+import CompareButton from './CompareButton';
 import QuickViewModal from './QuickViewModal';
 import api from '../services/api';
 import { FiArrowRight, FiCheck, FiPlus, FiSearch, FiRefreshCw, FiLoader, FiEye } from 'react-icons/fi';
@@ -348,8 +349,15 @@ const ProductList: React.FC = () => {
 
               {/* Wishlist heart — top-right corner, sibling of Link so the
                   button stays valid HTML (not nested inside an <a>). */}
-              <div className="absolute top-3 right-3 z-10">
+              <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5">
                 <WishlistButton productId={product._id} variant="icon" />
+                <CompareButton
+                  productId={product._id}
+                  name={product.name}
+                  price={product.price}
+                  image={product.images?.[0] || ''}
+                  variant="icon"
+                />
               </div>
 
               {/* Content */}

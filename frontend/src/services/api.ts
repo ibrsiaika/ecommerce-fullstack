@@ -278,6 +278,13 @@ class ApiClient {
     });
   }
 
+  // fetch fuller projections for side-by-side comparison (max 4)
+  async getProductsForCompare(ids: string[]) {
+    return this.client.get('/api/products/compare', {
+      params: { ids: ids.join(',') }
+    });
+  }
+
   async getCategories() {
     return this.client.get('/api/products/categories');
   }

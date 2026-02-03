@@ -4,6 +4,7 @@ import { useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import Reviews from './Reviews';
 import WishlistButton from './WishlistButton';
+import CompareButton from './CompareButton';
 import RecentlyViewed from './RecentlyViewed';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import api from '../services/api';
@@ -264,6 +265,15 @@ const ProductDetail: React.FC = () => {
               productId={product._id}
               variant="button"
               className="w-full"
+            />
+
+            {/* Compare toggle */}
+            <CompareButton
+              productId={product._id}
+              name={product.name}
+              price={product.price}
+              image={product.images?.[0] || ''}
+              variant="pill"
             />
 
             {/* Trust Badges */}
