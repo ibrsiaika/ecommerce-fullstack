@@ -156,6 +156,76 @@ describe('Product Endpoints', () => {
     });
   });
 
+  describe('GET /api/products/compare', () => {
+    it('should return fuller projection for comparison', async () => {
+      // create a second product with weight + dimensions
+      const second = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Compare Product',
+          description: 'desc',
+          price: 49,
+          category: 'Electronics',
+          subcategory: 'Audio',
+          countInStock: 7,
+          images: ['img.jpg'],
+          sku: 'TEST-SKU-CMP',
+          weight: 0.5,
+          dimensions: { length: 10, width: 8, height: 4 }
+        })
+        .expect(201);
+      const secondId = second.body.data._id;
+
+      const response = await request(app)
+        .get(`/api/products/compare?ids=${productId},${secondId}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveLength(2);
+      // compare projection includes weight + dimensions on the product that set them
+      const cmp = response.body.data.find((p: any) => p._id === secondId);
+      expect(cmp).toBeDefined();
+      expect(cmp.weight).toBe(0.5);
+      expect(cmp.dimensions).toMatchObject({ length: 10, width: 8, height: 4 });
+    });
+
+    it('should cap at 4 unique ids', async () => {
+      // create 5 products
+      const ids = [productId];
+      for (let i = 0; i < 4; i++) {
+        const res = await request(app)
+          .post('/api/products')
+          .set('Authorization', `Bearer ${adminToken}`)
+          .send({
+            name: `Extra ${i}`,
+            description: 'desc',
+            price: 10 + i,
+            category: 'Misc',
+            countInStock: 1,
+            images: ['img.jpg'],
+            sku: `TEST-SKU-X${i}`
+          })
+          .expect(201);
+        ids.push(res.body.data._id);
+      }
+
+      const response = await request(app)
+        .get(`/api/products/compare?ids=${ids.join(',')}`)
+        .expect(200);
+
+      expect(response.body.data.length).toBeLessThanOrEqual(4);
+    });
+
+    it('should return empty array when no ids provided', async () => {
+      const response = await request(app)
+        .get('/api/products/compare')
+        .expect(200);
+
+      expect(response.body.data).toEqual([]);
+    });
+  });
+
   describe('GET /api/products/:id', () => {
     it('should get product by ID', async () => {
       const response = await request(app)

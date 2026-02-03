@@ -10,6 +10,7 @@ import {
   searchProducts,
   getFeaturedProducts,
   getProductsByIds,
+  getProductsForCompare,
   addProductReview,
   voteReviewHelpful,
   replyToReview,
@@ -29,6 +30,7 @@ router.get('/brands', getBrands);
 router.get('/search', searchProducts);
 router.get('/featured', getFeaturedProducts);
 router.get('/bulk', getProductsByIds);
+router.get('/compare', getProductsForCompare);
 router.get('/:id', getProduct);
 router.get('/:id/recommendations', getRecommendations);
 router.get('/:id/related', getRelated);

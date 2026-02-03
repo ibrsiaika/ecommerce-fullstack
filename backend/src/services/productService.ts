@@ -286,6 +286,39 @@ export class ProductService {
       .map((id) => byId.get(id))
       .filter((d): d is NonNullable<typeof d> => Boolean(d));
   }
+
+  // Fetch products for side-by-side comparison. Returns a fuller projection
+  // than getByIds (weight, dimensions, tags, subcategory) so the comparison
+  // table has real specs to show. Capped at 4 to keep the UI readable.
+  async getForCompare(ids: string[]) {
+    const uniqueIds = Array.from(new Set(ids)).slice(0, 4);
+
+    const objectIds = uniqueIds
+      .map((id) => {
+        try {
+          return new mongoose.Types.ObjectId(id);
+        } catch {
+          return null;
+        }
+      })
+      .filter((v): v is mongoose.Types.ObjectId => v !== null);
+
+    if (objectIds.length === 0) return [];
+
+    const docs = await Product.find({
+      _id: { $in: objectIds },
+      isActive: true
+    }).select(
+      'name slug price comparePrice images category subcategory brand ' +
+      'countInStock rating numReviews sku weight dimensions tags'
+    );
+
+    // preserve the requested order
+    const byId = new Map(docs.map((d: any) => [d._id.toString(), d]));
+    return uniqueIds
+      .map((id) => byId.get(id))
+      .filter((d): d is NonNullable<typeof d> => Boolean(d));
+  }
 }
 
 export default new ProductService();

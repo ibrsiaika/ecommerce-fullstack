@@ -157,6 +157,24 @@ export const getProductsByIds = asyncHandler(async (req: Request, res: Response)
   return sendSuccess(res, 200, products.map(mapProductPreview));
 });
 
+// @desc    Get products for side-by-side comparison (fuller projection)
+// @route   GET /api/products/compare?ids=id1,id2,id3,id4
+// @access  Public
+export const getProductsForCompare = asyncHandler(async (req: Request, res: Response) => {
+  const raw = (req.query.ids as string) || '';
+  const ids = raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  if (ids.length === 0) {
+    return sendSuccess(res, 200, []);
+  }
+
+  const products = await productService.getForCompare(ids);
+  return sendSuccess(res, 200, products);
+});
+
 // @desc    Add product review
 // @route   POST /api/products/:id/reviews
 // @access  Private
