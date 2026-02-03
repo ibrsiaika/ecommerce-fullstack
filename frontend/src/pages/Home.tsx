@@ -12,6 +12,12 @@ import {
   FiAward,
   FiTruck,
   FiRefreshCcw,
+  FiShield,
+  FiMail,
+  FiSend,
+  FiTrendingUp,
+  FiUsers,
+  FiPackage,
 } from 'react-icons/fi';
 
 // Import local hero image
@@ -252,7 +258,7 @@ const Home: React.FC = () => {
       <section className="py-16 lg:py-20 bg-gray-50 border-t border-gray-100">
         <div className="container">
           {/* Section header */}
-          <div className="text-center mb-10">
+          <div className="text-center mb-12">
             <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">WHY E-SHOP</p>
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">A better shopping experience</h2>
             <p className="text-gray-500 max-w-2xl mx-auto mt-3">
@@ -260,43 +266,153 @@ const Home: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {[
               {
                 title: 'Premium Quality',
-                description: 'Every product is carefully selected for exceptional quality and durability.',
-                icon: <FiAward className="text-gray-900" size={18} />,
+                description: 'Carefully selected for exceptional quality and durability.',
+                icon: <FiAward size={20} />,
+                accent: 'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400',
               },
               {
                 title: 'Fast Delivery',
-                description: 'Free shipping on orders over $50. Quick and reliable delivery to your door.',
-                icon: <FiTruck className="text-gray-900" size={18} />,
+                description: 'Free shipping on orders over $50. Quick and reliable.',
+                icon: <FiTruck size={20} />,
+                accent: 'bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400',
               },
               {
                 title: 'Easy Returns',
-                description: '30-day hassle-free returns. Shop with confidence knowing you are covered.',
-                icon: <FiRefreshCcw className="text-gray-900" size={18} />,
+                description: '30-day hassle-free returns. Shop with confidence.',
+                icon: <FiRefreshCcw size={20} />,
+                accent: 'bg-green-50 text-green-600 dark:bg-green-950 dark:text-green-400',
+              },
+              {
+                title: 'Secure Payment',
+                description: 'Encrypted checkout with Stripe and Razorpay.',
+                icon: <FiShield size={20} />,
+                accent: 'bg-purple-50 text-purple-600 dark:bg-purple-950 dark:text-purple-400',
               },
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200"
+                className="group bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-lg hover:border-gray-300 hover:-translate-y-1 transition-all duration-200"
               >
-                <div className="flex items-start gap-4">
-                  <div className="h-10 w-10 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center shrink-0">
-                    {feature.icon}
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-base font-bold text-gray-900">{feature.title}</h3>
-                    <p className="text-gray-600 text-sm leading-relaxed mt-1">{feature.description}</p>
-                  </div>
+                <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 mb-4 ${feature.accent}`}>
+                  {feature.icon}
                 </div>
+                <h3 className="text-base font-bold text-gray-900 mb-1.5">{feature.title}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
+
+      {/* Stats band */}
+      <section className="bg-neutral-900 dark:bg-black py-12">
+        <div className="container">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+            {[
+              { value: '10K+', label: 'Happy Customers', icon: <FiUsers size={20} /> },
+              { value: '500+', label: 'Products', icon: <FiPackage size={20} /> },
+              { value: '4.8★', label: 'Average Rating', icon: <FiStar size={20} /> },
+              { value: '99%', label: 'On-time Delivery', icon: <FiTrendingUp size={20} /> },
+            ].map((stat) => (
+              <div key={stat.label} className="flex flex-col items-center">
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white mb-3">
+                  {stat.icon}
+                </div>
+                <span className="text-3xl sm:text-4xl font-bold text-white">{stat.value}</span>
+                <span className="text-sm text-neutral-400 mt-1">{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter Section */}
+      <NewsletterSection />
     </div>
+  );
+};
+
+// Newsletter signup section with inline success state (no backend needed —
+// this is a presentational CTA that captures intent locally).
+const NewsletterSection: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+    setSubmitted(true);
+    setEmail('');
+    setTimeout(() => setSubmitted(false), 4000);
+  };
+
+  return (
+    <section className="py-16 lg:py-24 bg-white dark:bg-neutral-950">
+      <div className="container">
+        <div className="relative max-w-4xl mx-auto rounded-3xl overflow-hidden bg-gradient-to-br from-neutral-900 to-neutral-800 dark:from-neutral-900 dark:to-black p-8 sm:p-12 lg:p-16">
+          {/* decorative blobs */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full -ml-24 -mb-24 pointer-events-none" />
+
+          <div className="relative flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+            <div className="flex-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white/80 text-xs font-semibold mb-4">
+                <FiMail size={12} />
+                Newsletter
+              </div>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 leading-tight">
+                Get 10% off your first order
+              </h2>
+              <p className="text-neutral-300 text-sm sm:text-base max-w-md">
+                Subscribe for new arrivals, exclusive deals, and early access to sales. No spam, unsubscribe anytime.
+              </p>
+            </div>
+
+            <div className="w-full lg:w-auto lg:min-w-[360px]">
+              {submitted ? (
+                <div className="flex items-center gap-3 p-5 rounded-2xl bg-green-500/20 border border-green-400/30">
+                  <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                    <FiCheck className="text-white" size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-white">You're subscribed!</p>
+                    <p className="text-sm text-green-100">Check your inbox for the 10% off code.</p>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      required
+                      className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-neutral-400 focus:outline-none focus:bg-white/15 focus:border-white/40 transition-all"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white text-neutral-900 font-bold text-sm hover:bg-neutral-100 active:scale-95 transition-all whitespace-nowrap"
+                  >
+                    Subscribe
+                    <FiSend size={16} />
+                  </button>
+                </form>
+              )}
+              <p className="text-xs text-neutral-400 mt-3 text-center sm:text-left">
+                By subscribing you agree to our Privacy Policy.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 };
 
