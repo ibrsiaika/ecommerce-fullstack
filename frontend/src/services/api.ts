@@ -246,13 +246,21 @@ class ApiClient {
     category?: string,
     minPrice?: number,
     maxPrice?: number,
-    search?: string
+    search?: string,
+    sort?: string,
+    brand?: string,
+    minRating?: number,
+    inStock?: boolean
   ) {
     const params: Record<string, unknown> = { page, limit };
     if (category) params.category = category;
     if (minPrice !== undefined) params.minPrice = minPrice;
     if (maxPrice !== undefined) params.maxPrice = maxPrice;
     if (search) params.search = search;
+    if (sort) params.sort = sort;
+    if (brand) params.brand = brand;
+    if (minRating !== undefined) params.minRating = minRating;
+    if (inStock) params.inStock = 'true';
 
     return this.client.get('/api/products', { params });
   }

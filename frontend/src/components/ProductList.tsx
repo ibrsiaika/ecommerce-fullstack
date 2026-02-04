@@ -5,8 +5,9 @@ import { addToCart } from '../store/slices/cartSlice';
 import WishlistButton from './WishlistButton';
 import CompareButton from './CompareButton';
 import QuickViewModal from './QuickViewModal';
+import FilterSidebar, { type FilterState } from './FilterSidebar';
 import api from '../services/api';
-import { FiArrowRight, FiCheck, FiPlus, FiSearch, FiRefreshCw, FiLoader, FiEye } from 'react-icons/fi';
+import { FiArrowRight, FiCheck, FiPlus, FiSearch, FiRefreshCw, FiLoader, FiEye, FiSliders, FiX } from 'react-icons/fi';
 
 // Default fallback image for products without images
 const FALLBACK_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
@@ -69,7 +70,7 @@ const ProductList: React.FC = () => {
   const dispatch = useAppDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
+
   const [status, setStatus] = useState<'idle' | 'loading' | 'loadingMore' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -84,13 +85,20 @@ const ProductList: React.FC = () => {
   // Get initial search from URL params
   const urlSearch = searchParams.get('search') || '';
   
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<FilterState & { search: string; limit: number }>({
     search: urlSearch,
     category: '',
+    brand: '',
+    minPrice: undefined,
+    maxPrice: undefined,
+    minRating: undefined,
+    inStock: false,
+    sort: 'newest',
     limit: 12,
   });
   const [addedToCart, setAddedToCart] = useState<string | null>(null);
   const [quickViewId, setQuickViewId] = useState<string | null>(null);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -120,9 +128,13 @@ const ProductList: React.FC = () => {
         pageNum,
         filters.limit,
         filters.category || undefined,
-        undefined,
-        undefined,
-        filters.search || undefined
+        filters.minPrice,
+        filters.maxPrice,
+        filters.search || undefined,
+        filters.sort,
+        filters.brand || undefined,
+        filters.minRating,
+        filters.inStock
       );
 
       const payload = response.data;
@@ -149,17 +161,13 @@ const ProductList: React.FC = () => {
       setStatus('error');
       setError(err.response?.data?.error || 'Unable to load products');
     }
-  }, [filters.limit, filters.category, filters.search]);
+  }, [filters.limit, filters.category, filters.search, filters.sort, filters.brand, filters.minPrice, filters.maxPrice, filters.minRating, filters.inStock]);
 
   useEffect(() => {
     setPage(1);
     setProducts([]);
     fetchProducts(1, false);
-  }, [filters.search, filters.category, filters.limit, fetchProducts]);
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  }, [fetchProducts]);
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
@@ -188,15 +196,6 @@ const ProductList: React.FC = () => {
       }
     };
   }, [hasMore, status, page, fetchProducts]);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await api.getCategories();
-      setCategories(response.data.data || response.data);
-    } catch (err) {
-      // Silent fail for categories
-    }
-  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -463,8 +462,8 @@ const ProductList: React.FC = () => {
           <p className="text-body">Browse our curated selection of quality products</p>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-8">
+        {/* Search + mobile filter toggle */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md">
             <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             <input
@@ -475,55 +474,97 @@ const ProductList: React.FC = () => {
               className="input pl-10"
             />
           </form>
-          <select
-            value={filters.category}
-            onChange={(e) => {
-              setFilters({ ...filters, category: e.target.value });
-              setPage(1);
-            }}
-            className="input w-full sm:w-48"
+          {/* mobile filter toggle */}
+          <button
+            onClick={() => setMobileFiltersOpen(true)}
+            className="lg:hidden inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-neutral-700 text-sm font-semibold text-gray-700 dark:text-neutral-200 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors"
           >
-            <option value="">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+            <FiSliders size={16} />
+            Filters
+          </button>
         </div>
 
-        {/* Results Info */}
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-sm text-neutral-500">
-            {pagination.total > 0 ? (
-              <>Showing {products.length} of {pagination.total} products</>
-            ) : (
-              'No products found'
-            )}
-          </p>
-          {status === 'loading' && products.length > 0 && (
-            <span className="flex items-center gap-2 text-sm text-neutral-500">
-              <FiLoader className="w-4 h-4 animate-spin" />
-              Refreshing...
-            </span>
+        {/* Sidebar + products layout */}
+        <div className="flex gap-8">
+          {/* desktop sidebar */}
+          <aside className="hidden lg:block w-64 flex-shrink-0">
+            <div className="sticky top-24 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl p-5">
+              <FilterSidebar
+                filters={filters}
+                onChange={(next) => {
+                  setFilters({ ...filters, ...next });
+                }}
+              />
+            </div>
+          </aside>
+
+          {/* mobile filter drawer */}
+          {mobileFiltersOpen && (
+            <div className="lg:hidden fixed inset-0 z-50 flex">
+              <div
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                onClick={() => setMobileFiltersOpen(false)}
+              />
+              <div className="relative ml-auto w-80 max-w-[85vw] bg-white dark:bg-neutral-900 h-full overflow-y-auto p-5 shadow-2xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-neutral-100">Filters</h2>
+                  <button
+                    onClick={() => setMobileFiltersOpen(false)}
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-500"
+                  >
+                    <FiX size={18} />
+                  </button>
+                </div>
+                <FilterSidebar
+                  filters={filters}
+                  onChange={(next) => setFilters({ ...filters, ...next })}
+                />
+                <button
+                  onClick={() => setMobileFiltersOpen(false)}
+                  className="mt-6 w-full px-4 py-3 rounded-xl bg-black text-white dark:bg-neutral-100 dark:text-neutral-900 font-semibold text-sm"
+                >
+                  Show {pagination.total} results
+                </button>
+              </div>
+            </div>
           )}
-        </div>
 
-        {/* Error State */}
-        {status === 'error' && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 animate-fade-in">
-            <p className="text-sm text-red-700">{error}</p>
-            <button
-              onClick={() => fetchProducts(1, false)}
-              className="mt-2 text-sm text-red-600 font-medium hover:text-red-800 underline underline-offset-2"
-            >
-              Try again
-            </button>
+          {/* products column */}
+          <div className="flex-1 min-w-0">
+            {/* Results Info */}
+            <div className="flex items-center justify-between mb-6">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                {pagination.total > 0 ? (
+                  <>Showing {products.length} of {pagination.total} products</>
+                ) : (
+                  'No products found'
+                )}
+              </p>
+              {status === 'loading' && products.length > 0 && (
+                <span className="flex items-center gap-2 text-sm text-neutral-500">
+                  <FiLoader className="w-4 h-4 animate-spin" />
+                  Refreshing...
+                </span>
+              )}
+            </div>
+
+            {/* Error State */}
+            {status === 'error' && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 animate-fade-in">
+                <p className="text-sm text-red-700">{error}</p>
+                <button
+                  onClick={() => fetchProducts(1, false)}
+                  className="mt-2 text-sm text-red-600 font-medium hover:text-red-800 underline underline-offset-2"
+                >
+                  Try again
+                </button>
+              </div>
+            )}
+
+            {/* Products */}
+            {renderProducts()}
           </div>
-        )}
-
-        {/* Products */}
-        {renderProducts()}
+        </div>
       </div>
 
       {/* Quick view modal */}
