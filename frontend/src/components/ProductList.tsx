@@ -532,7 +532,7 @@ const ProductList: React.FC = () => {
           {/* products column */}
           <div className="flex-1 min-w-0">
             {/* Results Info */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 {pagination.total > 0 ? (
                   <>Showing {products.length} of {pagination.total} products</>
@@ -547,6 +547,9 @@ const ProductList: React.FC = () => {
                 </span>
               )}
             </div>
+
+            {/* Active filter chips */}
+            <ActiveFilterChips filters={filters} onChange={(next) => setFilters({ ...filters, ...next })} />
 
             {/* Error State */}
             {status === 'error' && (
@@ -569,6 +572,96 @@ const ProductList: React.FC = () => {
 
       {/* Quick view modal */}
       <QuickViewModal productId={quickViewId} onClose={() => setQuickViewId(null)} />
+    </div>
+  );
+};
+
+// Active filter chips — removable pills showing the current filter state.
+// Renders above the grid; "Clear all" resets everything except search.
+const ActiveFilterChips: React.FC<{
+  filters: FilterState & { search: string; limit: number };
+  onChange: (next: Partial<FilterState & { search: string; limit: number }>) => void;
+}> = ({ filters, onChange }) => {
+  const chips: { label: string; clear: () => void }[] = [];
+
+  if (filters.category) {
+    chips.push({
+      label: filters.category,
+      clear: () => onChange({ category: '' }),
+    });
+  }
+  if (filters.brand) {
+    filters.brand.split(',').filter(Boolean).forEach((b) => {
+      const remaining = filters.brand.split(',').filter((x) => x.trim() !== b.trim()).join(',');
+      chips.push({
+        label: b.trim(),
+        clear: () => onChange({ brand: remaining }),
+      });
+    });
+  }
+  if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
+    const min = filters.minPrice !== undefined ? `$${filters.minPrice}` : '$0';
+    const max = filters.maxPrice !== undefined ? `$${filters.maxPrice}` : '∞';
+    chips.push({
+      label: `${min} – ${max}`,
+      clear: () => onChange({ minPrice: undefined, maxPrice: undefined }),
+    });
+  }
+  if (filters.minRating !== undefined) {
+    chips.push({
+      label: `${filters.minRating}★ & up`,
+      clear: () => onChange({ minRating: undefined }),
+    });
+  }
+  if (filters.inStock) {
+    chips.push({
+      label: 'In stock',
+      clear: () => onChange({ inStock: false }),
+    });
+  }
+  if (filters.sort && filters.sort !== 'newest') {
+    const sortLabels: Record<string, string> = {
+      'price-asc': 'Price ↑',
+      'price-desc': 'Price ↓',
+      'rating': 'Top Rated',
+      'oldest': 'Oldest',
+    };
+    chips.push({
+      label: `Sort: ${sortLabels[filters.sort] || filters.sort}`,
+      clear: () => onChange({ sort: 'newest' }),
+    });
+  }
+
+  if (chips.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 mb-6">
+      {chips.map((chip, i) => (
+        <button
+          key={i}
+          onClick={chip.clear}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-neutral-200 text-xs font-semibold hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors group"
+        >
+          {chip.label}
+          <FiX size={12} className="text-gray-400 group-hover:text-red-500 transition-colors" />
+        </button>
+      ))}
+      <button
+        onClick={() =>
+          onChange({
+            category: '',
+            brand: '',
+            minPrice: undefined,
+            maxPrice: undefined,
+            minRating: undefined,
+            inStock: false,
+            sort: 'newest',
+          })
+        }
+        className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors underline underline-offset-2 ml-1"
+      >
+        Clear all
+      </button>
     </div>
   );
 };
