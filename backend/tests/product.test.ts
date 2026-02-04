@@ -106,6 +106,117 @@ describe('Product Endpoints', () => {
       expect(response.body.data).toBeInstanceOf(Array);
       expect(response.body.data.length).toBe(0);
     });
+
+    it('should sort products by price ascending', async () => {
+      // add a cheaper product so order is observable
+      await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Cheaper Item',
+          description: 'desc',
+          price: 9.99,
+          category: 'Electronics',
+          countInStock: 5,
+          images: ['img.jpg'],
+          sku: 'TEST-SKU-CHEAP'
+        })
+        .expect(201);
+
+      const response = await request(app)
+        .get('/api/products?sort=price-asc')
+        .expect(200);
+
+      const prices = response.body.data.map((p: any) => p.price);
+      expect(prices.length).toBeGreaterThanOrEqual(2);
+      // first should be the cheapest
+      expect(prices[0]).toBeLessThanOrEqual(prices[prices.length - 1]);
+    });
+
+    it('should sort products by price descending', async () => {
+      await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Cheaper Item',
+          description: 'desc',
+          price: 9.99,
+          category: 'Electronics',
+          countInStock: 5,
+          images: ['img.jpg'],
+          sku: 'TEST-SKU-CHEAP2'
+        })
+        .expect(201);
+
+      const response = await request(app)
+        .get('/api/products?sort=price-desc')
+        .expect(200);
+
+      const prices = response.body.data.map((p: any) => p.price);
+      expect(prices[0]).toBeGreaterThanOrEqual(prices[prices.length - 1]);
+    });
+
+    it('should filter by brand', async () => {
+      await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Branded Item',
+          description: 'desc',
+          price: 19.99,
+          category: 'Electronics',
+          brand: 'Acme',
+          countInStock: 5,
+          images: ['img.jpg'],
+          sku: 'TEST-SKU-BRAND'
+        })
+        .expect(201);
+
+      const response = await request(app)
+        .get('/api/products?brand=Acme')
+        .expect(200);
+
+      expect(response.body.data.length).toBeGreaterThanOrEqual(1);
+      expect(response.body.data.every((p: any) => p.brand === 'Acme')).toBe(true);
+    });
+
+    it('should filter by minimum rating', async () => {
+      // attach a 5-star review to the test product
+      await request(app)
+        .post(`/api/products/${productId}/reviews`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ rating: 5, comment: 'Excellent product loved it' })
+        .expect(201);
+
+      const response = await request(app)
+        .get('/api/products?minRating=4')
+        .expect(200);
+
+      expect(response.body.data.length).toBeGreaterThanOrEqual(1);
+      expect(response.body.data.every((p: any) => p.rating >= 4)).toBe(true);
+    });
+
+    it('should filter in-stock products only', async () => {
+      await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Out of Stock Item',
+          description: 'desc',
+          price: 15,
+          category: 'Misc',
+          countInStock: 0,
+          images: ['img.jpg'],
+          sku: 'TEST-SKU-OOS'
+        })
+        .expect(201);
+
+      const response = await request(app)
+        .get('/api/products?inStock=true')
+        .expect(200);
+
+      expect(response.body.data.every((p: any) => p.countInStock > 0)).toBe(true);
+    });
   });
 
   describe('GET /api/products/bulk', () => {

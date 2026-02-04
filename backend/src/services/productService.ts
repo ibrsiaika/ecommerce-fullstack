@@ -10,7 +10,11 @@ export class ProductService {
     category?: string,
     minPrice?: number,
     maxPrice?: number,
-    search?: string
+    search?: string,
+    sort?: string,
+    brand?: string,
+    minRating?: number,
+    inStock?: boolean
   ) {
     const skip = (page - 1) * limit;
     const filter: any = { isActive: true };
@@ -21,14 +25,39 @@ export class ProductService {
       if (minPrice) filter.price.$gte = minPrice;
       if (maxPrice) filter.price.$lte = maxPrice;
     }
+    if (brand) {
+      // support comma-separated brands (OR)
+      const brands = brand.split(',').map((b) => b.trim()).filter(Boolean);
+      if (brands.length === 1) {
+        filter.brand = brands[0];
+      } else if (brands.length > 1) {
+        filter.brand = { $in: brands };
+      }
+    }
+    if (minRating) {
+      filter.rating = { $gte: minRating };
+    }
+    if (inStock) {
+      filter.countInStock = { $gt: 0 };
+    }
     if (search) {
       filter.$text = { $search: search };
     }
 
+    // map sort param to a mongo sort object
+    const sortMap: Record<string, Record<string, 1 | -1>> = {
+      'price-asc': { price: 1 },
+      'price-desc': { price: -1 },
+      'rating': { rating: -1 },
+      'newest': { createdAt: -1 },
+      'oldest': { createdAt: 1 }
+    };
+    const sortOption = sortMap[sort || 'newest'] || sortMap['newest'];
+
     const [products, total] = await Promise.all([
       Product.find(filter)
         .populate('reviews.user', 'firstName lastName email avatar')
-        .sort({ createdAt: -1 })
+        .sort(sortOption)
         .skip(skip)
         .limit(limit),
       Product.countDocuments(filter)

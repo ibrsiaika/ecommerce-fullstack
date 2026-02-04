@@ -32,7 +32,7 @@ const parseNumber = (value?: string | string[], fallback: number = 0) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
-// @desc    Get all products with filtering, search, and pagination
+// @desc    Get all products with filtering, search, sorting, and pagination
 // @route   GET /api/products
 // @access  Public
 export const getProducts = asyncHandler(async (req: Request, res: Response) => {
@@ -45,7 +45,11 @@ export const getProducts = asyncHandler(async (req: Request, res: Response) => {
     req.query.category as string,
     parseNumber(req.query.minPrice as string),
     parseNumber(req.query.maxPrice as string),
-    req.query.search as string
+    req.query.search as string,
+    req.query.sort as string,
+    req.query.brand as string,
+    parseNumber(req.query.minRating as string),
+    req.query.inStock === 'true'
   );
 
   const curated = products.map(mapProductPreview);
