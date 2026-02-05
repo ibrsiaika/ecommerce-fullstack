@@ -77,6 +77,70 @@ describe('Product Endpoints', () => {
       expect(response.body.data[0]).toHaveProperty('name', 'Test Product');
     });
 
+    it('should include computed badges array on each product', async () => {
+      const response = await request(app)
+        .get('/api/products')
+        .expect(200);
+
+      expect(response.body.data[0]).toHaveProperty('badges');
+      expect(Array.isArray(response.body.data[0].badges)).toBe(true);
+    });
+
+    it('should compute New badge for recently created products', async () => {
+      const response = await request(app)
+        .get('/api/products')
+        .expect(200);
+
+      // the beforeEach product is created moments ago, so "New" should apply
+      expect(response.body.data[0].badges).toContain('New');
+    });
+
+    it('should compute Sale badge when comparePrice exceeds price', async () => {
+      await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'On Sale Item',
+          description: 'desc',
+          price: 30,
+          comparePrice: 50,
+          category: 'Electronics',
+          countInStock: 8,
+          images: ['img.jpg'],
+          sku: 'TEST-SKU-SALE'
+        })
+        .expect(201);
+
+      const response = await request(app)
+        .get('/api/products?search=On Sale')
+        .expect(200);
+
+      expect(response.body.data.length).toBeGreaterThanOrEqual(1);
+      expect(response.body.data[0].badges).toContain('Sale');
+    });
+
+    it('should compute Low Stock badge when countInStock is between 1 and 5', async () => {
+      await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Low Stock Item',
+          description: 'desc',
+          price: 20,
+          category: 'Misc',
+          countInStock: 3,
+          images: ['img.jpg'],
+          sku: 'TEST-SKU-LOW'
+        })
+        .expect(201);
+
+      const response = await request(app)
+        .get('/api/products?search=Low Stock')
+        .expect(200);
+
+      expect(response.body.data[0].badges).toContain('Low Stock');
+    });
+
     it('should search products by name', async () => {
       const response = await request(app)
         .get('/api/products?search=Test')

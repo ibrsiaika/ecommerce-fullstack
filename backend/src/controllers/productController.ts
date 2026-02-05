@@ -4,6 +4,42 @@ import { asyncHandler, AppError } from '../middleware/errorHandler';
 import productService from '../services/productService';
 import { sendPaginatedSuccess, sendSuccess, sendValidationError } from '../utils/response';
 
+// Compute merchandising badges from product attributes at read time.
+// Badges are derived (not stored) so they stay in sync with data changes
+// without a separate model or admin UI.
+const computeBadges = (product: any): string[] => {
+  const badges: string[] = [];
+  const now = Date.now();
+
+  // "New" — created within the last 14 days
+  const createdAt = product.createdAt ? new Date(product.createdAt).getTime() : 0;
+  if (now - createdAt < 14 * 24 * 60 * 60 * 1000) {
+    badges.push('New');
+  }
+
+  // "Sale" — has a comparePrice higher than the current price
+  if (product.comparePrice && product.comparePrice > product.price) {
+    badges.push('Sale');
+  }
+
+  // "Top Rated" — rating >= 4.5 with at least 5 reviews
+  if (product.rating >= 4.5 && product.numReviews >= 5) {
+    badges.push('Top Rated');
+  }
+
+  // "Bestseller" — high review count signals popularity
+  if (product.numReviews >= 25) {
+    badges.push('Bestseller');
+  }
+
+  // "Low Stock" — running low, creates urgency
+  if (product.countInStock > 0 && product.countInStock <= 5) {
+    badges.push('Low Stock');
+  }
+
+  return badges;
+};
+
 const mapProductPreview = (product: any) => ({
   _id: product._id,
   id: product._id,
@@ -22,6 +58,7 @@ const mapProductPreview = (product: any) => ({
   sku: product.sku,
   isFeatured: product.isFeatured,
   createdBy: product.createdBy,
+  badges: computeBadges(product),
   createdAt: product.createdAt,
   updatedAt: product.updatedAt
 });
