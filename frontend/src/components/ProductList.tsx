@@ -8,7 +8,7 @@ import QuickViewModal from './QuickViewModal';
 import FilterSidebar, { type FilterState } from './FilterSidebar';
 import ProductBadges from './ProductBadges';
 import api from '../services/api';
-import { FiArrowRight, FiCheck, FiPlus, FiSearch, FiRefreshCw, FiLoader, FiEye, FiSliders, FiX } from 'react-icons/fi';
+import { FiArrowRight, FiCheck, FiPlus, FiSearch, FiRefreshCw, FiLoader, FiEye, FiSliders, FiX, FiLink } from 'react-icons/fi';
 
 // Default fallback image for products without images
 const FALLBACK_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
@@ -85,42 +85,82 @@ const ProductList: React.FC = () => {
   });
   
   // Get initial search from URL params
-  const urlSearch = searchParams.get('search') || '';
-  
-  const [filters, setFilters] = useState<FilterState & { search: string; limit: number }>({
-    search: urlSearch,
-    category: '',
-    brand: '',
-    minPrice: undefined,
-    maxPrice: undefined,
-    minRating: undefined,
-    inStock: false,
-    sort: 'newest',
-    limit: 12,
+  // Read all filters from the URL on mount / back-forward navigation so filter
+  // state is shareable and survives reloads. Falls back to defaults.
+  const readFiltersFromUrl = (): FilterState & { search: string; limit: number } => ({
+    search: searchParams.get('search') || '',
+    category: searchParams.get('category') || '',
+    brand: searchParams.get('brand') || '',
+    minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
+    maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
+    minRating: searchParams.get('minRating') ? Number(searchParams.get('minRating')) : undefined,
+    inStock: searchParams.get('inStock') === 'true',
+    sort: searchParams.get('sort') || 'newest',
+    limit: Number(searchParams.get('limit')) || 12,
   });
+
+  const [filters, setFilters] = useState<FilterState & { search: string; limit: number }>(readFiltersFromUrl);
   const [addedToCart, setAddedToCart] = useState<string | null>(null);
   const [quickViewId, setQuickViewId] = useState<string | null>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [copiedShare, setCopiedShare] = useState(false);
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopiedShare(true);
+      setTimeout(() => setCopiedShare(false), 2000);
+    } catch {
+      // clipboard may be blocked — non-fatal
+    }
+  };
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // Sync filters with URL search params
+  // Build the canonical URL param object from the current filter state.
+  // Empty/default values are omitted so URLs stay clean.
+  const buildUrlParams = (f: typeof filters): Record<string, string> => {
+    const params: Record<string, string> = {};
+    if (f.search) params.search = f.search;
+    if (f.category) params.category = f.category;
+    if (f.brand) params.brand = f.brand;
+    if (f.minPrice !== undefined) params.minPrice = String(f.minPrice);
+    if (f.maxPrice !== undefined) params.maxPrice = String(f.maxPrice);
+    if (f.minRating !== undefined) params.minRating = String(f.minRating);
+    if (f.inStock) params.inStock = 'true';
+    if (f.sort && f.sort !== 'newest') params.sort = f.sort;
+    return params;
+  };
+
+  // Sync filters from URL on back/forward navigation. We compare the URL's
+  // canonical params to what the state would produce to avoid loops with the
+  // write effect below.
   useEffect(() => {
-    const searchFromUrl = searchParams.get('search') || '';
-    if (searchFromUrl !== filters.search) {
-      setFilters(prev => ({ ...prev, search: searchFromUrl }));
+    const urlParams = buildUrlParams(readFiltersFromUrl());
+    const stateParams = buildUrlParams(filters);
+    const urlStr = new URLSearchParams(urlParams).toString();
+    const stateStr = new URLSearchParams(stateParams).toString();
+    if (urlStr !== stateStr) {
+      setFilters(readFiltersFromUrl());
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  // Update URL when search filter changes
+  // Write the filter state to the URL whenever it changes so filter URLs are
+  // shareable. Uses replace to avoid polluting browser history on every keystroke.
+  useEffect(() => {
+    const params = buildUrlParams(filters);
+    const next = new URLSearchParams(params);
+    const current = new URLSearchParams(searchParams);
+    if (next.toString() !== current.toString()) {
+      setSearchParams(params, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.search, filters.category, filters.brand, filters.minPrice, filters.maxPrice, filters.minRating, filters.inStock, filters.sort]);
+
   const handleSearchChange = (newSearch: string) => {
     setFilters(prev => ({ ...prev, search: newSearch }));
-    if (newSearch) {
-      setSearchParams({ search: newSearch });
-    } else {
-      setSearchParams({});
-    }
   };
 
   const fetchProducts = useCallback(async (pageNum: number = 1, append: boolean = false) => {
@@ -545,12 +585,34 @@ const ProductList: React.FC = () => {
                   'No products found'
                 )}
               </p>
-              {status === 'loading' && products.length > 0 && (
-                <span className="flex items-center gap-2 text-sm text-neutral-500">
-                  <FiLoader className="w-4 h-4 animate-spin" />
-                  Refreshing...
-                </span>
-              )}
+              <div className="flex items-center gap-3">
+                {status === 'loading' && products.length > 0 && (
+                  <span className="flex items-center gap-2 text-sm text-neutral-500">
+                    <FiLoader className="w-4 h-4 animate-spin" />
+                    Refreshing...
+                  </span>
+                )}
+                {/* Share filtered URL — only show when there are active filters */}
+                {(filters.category || filters.brand || filters.minPrice !== undefined || filters.maxPrice !== undefined || filters.minRating !== undefined || filters.inStock || filters.sort !== 'newest') && (
+                  <button
+                    onClick={handleShare}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+                    title="Copy filtered URL"
+                  >
+                    {copiedShare ? (
+                      <>
+                        <FiCheck size={13} className="text-green-500" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <FiLink size={13} />
+                        Share
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Active filter chips */}
