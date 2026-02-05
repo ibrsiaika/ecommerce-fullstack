@@ -6,6 +6,7 @@ import WishlistButton from './WishlistButton';
 import CompareButton from './CompareButton';
 import QuickViewModal from './QuickViewModal';
 import FilterSidebar, { type FilterState } from './FilterSidebar';
+import ProductBadges from './ProductBadges';
 import api from '../services/api';
 import { FiArrowRight, FiCheck, FiPlus, FiSearch, FiRefreshCw, FiLoader, FiEye, FiSliders, FiX } from 'react-icons/fi';
 
@@ -26,6 +27,7 @@ interface Product {
   sku: string;
   slug?: string;
   comparePrice?: number;
+  badges?: string[];
 }
 
 // Lazy loaded image component with loading state
@@ -297,7 +299,10 @@ const ProductList: React.FC = () => {
                     alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  
+
+                  {/* Merchandising badges */}
+                  <ProductBadges badges={product.badges} variant="overlay" className="top-9" />
+
                   {/* Category */}
                   <div className="absolute top-3 left-3">
                     <span className="pill bg-white/90 backdrop-blur-sm text-neutral-700 text-xs shadow-sm">

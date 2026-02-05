@@ -4,6 +4,7 @@ import api from '../services/api';
 import { useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import CompareButton from './CompareButton';
+import ProductBadges from './ProductBadges';
 import {
   FiX,
   FiStar,
@@ -29,6 +30,7 @@ interface QuickViewProduct {
   rating: number;
   numReviews: number;
   sku?: string;
+  badges?: string[];
 }
 
 interface QuickViewModalProps {
@@ -201,6 +203,9 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ productId, onClose }) =
               <h2 className="text-2xl font-bold text-gray-900 dark:text-neutral-100 mb-3 leading-tight">
                 {product.name}
               </h2>
+
+              {/* merchandising badges */}
+              <ProductBadges badges={product.badges} variant="inline" className="mb-4" />
 
               {/* rating */}
               <div className="flex items-center gap-2 mb-4">

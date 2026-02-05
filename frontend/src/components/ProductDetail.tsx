@@ -5,6 +5,7 @@ import { addToCart } from '../store/slices/cartSlice';
 import Reviews from './Reviews';
 import WishlistButton from './WishlistButton';
 import CompareButton from './CompareButton';
+import ProductBadges from './ProductBadges';
 import RecentlyViewed from './RecentlyViewed';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import api from '../services/api';
@@ -23,6 +24,7 @@ interface ProductApiResponse {
   numReviews: number;
   sku: string;
   slug: string;
+  badges?: string[];
   reviews: Array<{
     _id?: string;
     id?: string;
@@ -195,6 +197,7 @@ const ProductDetail: React.FC = () => {
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-4">
                 {product.name}
               </h1>
+              <ProductBadges badges={product.badges} variant="inline" className="mb-4" />
               <p className="text-lg text-gray-600 leading-relaxed">
                 {product.description}
               </p>
