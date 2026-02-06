@@ -7,6 +7,7 @@ import WishlistButton from './WishlistButton';
 import CompareButton from './CompareButton';
 import ProductBadges from './ProductBadges';
 import ImageZoom from './ImageZoom';
+import ProductDetailSkeleton from './ProductDetailSkeleton';
 import RecentlyViewed from './RecentlyViewed';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import api from '../services/api';
@@ -98,25 +99,16 @@ const ProductDetail: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block mb-6">
-            <div className="animate-spin rounded-full h-20 w-20 border-4 border-gray-200 border-t-black"></div>
-          </div>
-          <p className="text-xl text-gray-600 font-semibold">Loading product details...</p>
-        </div>
-      </div>
-    );
+    return <ProductDetailSkeleton />;
   }
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-neutral-950 flex items-center justify-center">
         <div className="text-center max-w-md px-4">
           <div className="text-7xl mb-6">📦</div>
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Product not found</h2>
-          <p className="text-lg text-gray-600 mb-8">{error || 'The product you are looking for does not exist.'}</p>
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-neutral-100 mb-4">Product not found</h2>
+          <p className="text-lg text-gray-600 dark:text-neutral-400 mb-8">{error || 'The product you are looking for does not exist.'}</p>
         </div>
       </div>
     );
