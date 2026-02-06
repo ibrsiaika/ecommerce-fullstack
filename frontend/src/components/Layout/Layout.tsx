@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import Header from './Header';
 import Footer from './Footer';
-import CompareDrawer from '../CompareDrawer';
+
+// Lazy-load the compare drawer so it isn't in the eager bundle — it only
+// matters once a buyer actually adds products to compare.
+const CompareDrawer = lazy(() => import('../CompareDrawer'));
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,7 +17,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Header />
         <main className="flex-grow">{children}</main>
         <Footer />
-        <CompareDrawer />
+        {/* Suspense fallback is null — the drawer renders nothing until loaded */}
+        <Suspense fallback={null}>
+          <CompareDrawer />
+        </Suspense>
       </div>
     </div>
   );
