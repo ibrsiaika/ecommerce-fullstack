@@ -6,6 +6,7 @@ import Reviews from './Reviews';
 import WishlistButton from './WishlistButton';
 import CompareButton from './CompareButton';
 import ProductBadges from './ProductBadges';
+import ImageZoom from './ImageZoom';
 import RecentlyViewed from './RecentlyViewed';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import api from '../services/api';
@@ -130,15 +131,18 @@ const ProductDetail: React.FC = () => {
         <div className="grid grid-cols-1 gap-8 sm:gap-10 lg:gap-16 lg:grid-cols-2">
           {/* Image Gallery */}
           <div className="space-y-4 sm:space-y-6">
-            {/* Main Image */}
-            <div className="relative overflow-hidden rounded-2xl bg-gray-100 aspect-square shadow-xl group">
-              <img
+            {/* Main Image with hover-zoom + lightbox */}
+            <div className="relative rounded-2xl bg-gray-100 aspect-square shadow-xl">
+              <ImageZoom
                 src={product.images[selectedImage] || 'https://picsum.photos/600'}
                 alt={product.name}
-                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                images={product.images}
+                currentIndex={selectedImage}
+                onIndexChange={setSelectedImage}
+                className="absolute inset-0 rounded-2xl"
               />
               {/* Category & SKU Badges */}
-              <div className="absolute bottom-4 left-4 flex gap-3 flex-wrap">
+              <div className="absolute bottom-4 left-4 flex gap-3 flex-wrap z-10 pointer-events-none">
                 <span className="px-4 py-2 rounded-full bg-white text-gray-900 font-semibold text-sm shadow-lg backdrop-blur-sm">
                   {product.category}
                 </span>
@@ -148,7 +152,7 @@ const ProductDetail: React.FC = () => {
               </div>
               
               {/* Stock Badge */}
-              <div className="absolute top-4 right-4">
+              <div className="absolute top-4 right-4 z-10 pointer-events-none">
                 {product.countInStock > 0 ? (
                   <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/90 text-white font-semibold text-sm backdrop-blur-sm shadow-lg">
                     <FiCheck size={18} />
