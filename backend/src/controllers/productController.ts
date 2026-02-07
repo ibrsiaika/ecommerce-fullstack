@@ -86,7 +86,8 @@ export const getProducts = asyncHandler(async (req: Request, res: Response) => {
     req.query.sort as string,
     req.query.brand as string,
     parseNumber(req.query.minRating as string),
-    req.query.inStock === 'true'
+    req.query.inStock === 'true',
+    req.query.badges as string
   );
 
   const curated = products.map(mapProductPreview);

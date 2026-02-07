@@ -14,7 +14,8 @@ export class ProductService {
     sort?: string,
     brand?: string,
     minRating?: number,
-    inStock?: boolean
+    inStock?: boolean,
+    badges?: string
   ) {
     const skip = (page - 1) * limit;
     const filter: any = { isActive: true };
@@ -42,6 +43,46 @@ export class ProductService {
     }
     if (search) {
       filter.$text = { $search: search };
+    }
+
+    // Translate requested badge names into the underlying query predicates.
+    // Badges are derived at read time (see computeBadges in the controller),
+    // so we map each badge to the conditions that would produce it.
+    if (badges) {
+      const requested = badges.split(',').map((b) => b.trim()).filter(Boolean);
+      const now = Date.now();
+      const fourteenDaysMs = 14 * 24 * 60 * 60 * 1000;
+      const badgeConditions: any[] = [];
+
+      for (const badge of requested) {
+        switch (badge) {
+          case 'New':
+            badgeConditions.push({ createdAt: { $gte: new Date(now - fourteenDaysMs) } });
+            break;
+          case 'Sale':
+            badgeConditions.push({
+              comparePrice: { $gt: 0, $exists: true },
+              $expr: { $gt: ['$comparePrice', '$price'] }
+            });
+            break;
+          case 'Top Rated':
+            badgeConditions.push({ rating: { $gte: 4.5 }, numReviews: { $gte: 5 } });
+            break;
+          case 'Bestseller':
+            badgeConditions.push({ numReviews: { $gte: 25 } });
+            break;
+          case 'Low Stock':
+            badgeConditions.push({ countInStock: { $gt: 0, $lte: 5 } });
+            break;
+        }
+      }
+
+      // multiple badges = OR (show products matching any requested badge)
+      if (badgeConditions.length === 1) {
+        Object.assign(filter, badgeConditions[0]);
+      } else if (badgeConditions.length > 1) {
+        filter.$or = badgeConditions;
+      }
     }
 
     // map sort param to a mongo sort object

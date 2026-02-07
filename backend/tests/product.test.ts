@@ -281,6 +281,99 @@ describe('Product Endpoints', () => {
 
       expect(response.body.data.every((p: any) => p.countInStock > 0)).toBe(true);
     });
+
+    it('should filter by Sale badge (comparePrice > price)', async () => {
+      // a non-sale product (the beforeEach Test Product has no comparePrice)
+      // + a sale product
+      await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Discounted Item',
+          description: 'desc',
+          price: 30,
+          comparePrice: 60,
+          category: 'Electronics',
+          countInStock: 8,
+          images: ['img.jpg'],
+          sku: 'TEST-SKU-BADGE-SALE'
+        })
+        .expect(201);
+
+      const response = await request(app)
+        .get('/api/products?badges=Sale')
+        .expect(200);
+
+      expect(response.body.data.length).toBeGreaterThanOrEqual(1);
+      // every returned product should actually carry the Sale badge
+      expect(response.body.data.every((p: any) => p.badges.includes('Sale'))).toBe(true);
+    });
+
+    it('should filter by Low Stock badge', async () => {
+      await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Almost Gone Item',
+          description: 'desc',
+          price: 20,
+          category: 'Misc',
+          countInStock: 2,
+          images: ['img.jpg'],
+          sku: 'TEST-SKU-BADGE-LOW'
+        })
+        .expect(201);
+
+      const response = await request(app)
+        .get('/api/products?badges=Low%20Stock')
+        .expect(200);
+
+      expect(response.body.data.length).toBeGreaterThanOrEqual(1);
+      expect(response.body.data.every((p: any) => p.badges.includes('Low Stock'))).toBe(true);
+    });
+
+    it('should filter by multiple badges (OR)', async () => {
+      // Sale product + Low Stock product
+      await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Multi Sale',
+          description: 'desc',
+          price: 25,
+          comparePrice: 50,
+          category: 'Misc',
+          countInStock: 10,
+          images: ['img.jpg'],
+          sku: 'TEST-SKU-BADGE-MULTI1'
+        })
+        .expect(201);
+      await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Multi Low',
+          description: 'desc',
+          price: 25,
+          category: 'Misc',
+          countInStock: 3,
+          images: ['img.jpg'],
+          sku: 'TEST-SKU-BADGE-MULTI2'
+        })
+        .expect(201);
+
+      const response = await request(app)
+        .get('/api/products?badges=Sale,Low%20Stock')
+        .expect(200);
+
+      // every returned product matches at least one of the requested badges
+      expect(response.body.data.length).toBeGreaterThanOrEqual(2);
+      expect(
+        response.body.data.every(
+          (p: any) => p.badges.includes('Sale') || p.badges.includes('Low Stock')
+        )
+      ).toBe(true);
+    });
   });
 
   describe('GET /api/products/bulk', () => {
