@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
 import api from '../services/api';
+import OrderHistorySkeleton from './OrderHistorySkeleton';
 import toast from 'react-hot-toast';
 import { FiPackage, FiArrowRight, FiCheck, FiClock, FiTruck, FiShoppingBag, FiCreditCard, FiDownload, FiLoader } from 'react-icons/fi';
 
@@ -109,17 +110,7 @@ const OrderHistory: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
-        <div className="text-center px-4">
-          <div className="relative inline-block mb-6">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-black"></div>
-            <FiPackage className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-400" size={24} />
-          </div>
-          <p className="text-lg text-gray-600 font-medium">Loading your orders...</p>
-        </div>
-      </div>
-    );
+    return <OrderHistorySkeleton />;
   }
 
   if (error) {
