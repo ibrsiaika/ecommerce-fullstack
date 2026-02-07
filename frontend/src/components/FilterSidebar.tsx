@@ -19,6 +19,7 @@ export interface FilterState {
   minRating?: number;
   inStock: boolean;
   sort: string;
+  badges: string; // comma-separated badge names (OR)
 }
 
 interface FilterSidebarProps {
@@ -63,6 +64,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
     brand: true,
     rating: true,
     availability: true,
+    badges: true,
   });
 
   const toggleSection = (key: string) =>
@@ -109,6 +111,26 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
   const setRating = (r: number | undefined) => {
     onChange({ ...filters, minRating: filters.minRating === r ? undefined : r });
+  };
+
+  // badge filter — matches the backend computeBadges names
+  const BADGE_OPTIONS = [
+    { value: 'Sale', label: 'On Sale', color: 'bg-red-500' },
+    { value: 'New', label: 'New Arrivals', color: 'bg-blue-500' },
+    { value: 'Top Rated', label: 'Top Rated', color: 'bg-amber-500' },
+    { value: 'Bestseller', label: 'Bestseller', color: 'bg-neutral-900' },
+    { value: 'Low Stock', label: 'Low Stock', color: 'bg-orange-500' },
+  ];
+
+  const selectedBadges = filters.badges
+    ? filters.badges.split(',').map((b) => b.trim()).filter(Boolean)
+    : [];
+
+  const toggleBadge = (badge: string) => {
+    const set = new Set(selectedBadges);
+    if (set.has(badge)) set.delete(badge);
+    else set.add(badge);
+    onChange({ ...filters, badges: Array.from(set).join(',') });
   };
 
   const inputClass =
@@ -324,7 +346,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
       </div>
 
       {/* Availability */}
-      <div className="py-3">
+      <div className="py-3 border-b border-gray-100 dark:border-neutral-800">
         <SectionHeader label="Availability" sectionKey="availability" />
         {openSections.availability && (
           <div className="pt-2">
@@ -337,6 +359,33 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
               />
               <span className="text-sm text-gray-700 dark:text-neutral-200">In stock only</span>
             </label>
+          </div>
+        )}
+      </div>
+
+      {/* Badges */}
+      <div className="py-3">
+        <SectionHeader label="Highlights" sectionKey="badges" />
+        {openSections.badges && (
+          <div className="pt-2 space-y-1">
+            {BADGE_OPTIONS.map((badge) => {
+              const checked = selectedBadges.includes(badge.value);
+              return (
+                <label
+                  key={badge.value}
+                  className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-800 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleBadge(badge.value)}
+                    className="w-4 h-4 accent-neutral-900 dark:accent-neutral-100"
+                  />
+                  <span className={`w-2 h-2 rounded-full ${badge.color}`} />
+                  <span className="text-sm text-gray-700 dark:text-neutral-200">{badge.label}</span>
+                </label>
+              );
+            })}
           </div>
         )}
       </div>

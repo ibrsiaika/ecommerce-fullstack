@@ -250,7 +250,8 @@ class ApiClient {
     sort?: string,
     brand?: string,
     minRating?: number,
-    inStock?: boolean
+    inStock?: boolean,
+    badges?: string
   ) {
     const params: Record<string, unknown> = { page, limit };
     if (category) params.category = category;
@@ -261,6 +262,7 @@ class ApiClient {
     if (brand) params.brand = brand;
     if (minRating !== undefined) params.minRating = minRating;
     if (inStock) params.inStock = 'true';
+    if (badges) params.badges = badges;
 
     return this.client.get('/api/products', { params });
   }

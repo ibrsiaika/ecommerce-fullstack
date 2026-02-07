@@ -96,6 +96,7 @@ const ProductList: React.FC = () => {
     minRating: searchParams.get('minRating') ? Number(searchParams.get('minRating')) : undefined,
     inStock: searchParams.get('inStock') === 'true',
     sort: searchParams.get('sort') || 'newest',
+    badges: searchParams.get('badges') || '',
     limit: Number(searchParams.get('limit')) || 12,
   });
 
@@ -130,6 +131,7 @@ const ProductList: React.FC = () => {
     if (f.minRating !== undefined) params.minRating = String(f.minRating);
     if (f.inStock) params.inStock = 'true';
     if (f.sort && f.sort !== 'newest') params.sort = f.sort;
+    if (f.badges) params.badges = f.badges;
     return params;
   };
 
@@ -157,7 +159,7 @@ const ProductList: React.FC = () => {
       setSearchParams(params, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.search, filters.category, filters.brand, filters.minPrice, filters.maxPrice, filters.minRating, filters.inStock, filters.sort]);
+  }, [filters.search, filters.category, filters.brand, filters.minPrice, filters.maxPrice, filters.minRating, filters.inStock, filters.sort, filters.badges]);
 
   const handleSearchChange = (newSearch: string) => {
     setFilters(prev => ({ ...prev, search: newSearch }));
@@ -176,7 +178,8 @@ const ProductList: React.FC = () => {
         filters.sort,
         filters.brand || undefined,
         filters.minRating,
-        filters.inStock
+        filters.inStock,
+        filters.badges || undefined
       );
 
       const payload = response.data;
@@ -203,7 +206,7 @@ const ProductList: React.FC = () => {
       setStatus('error');
       setError(err.response?.data?.error || 'Unable to load products');
     }
-  }, [filters.limit, filters.category, filters.search, filters.sort, filters.brand, filters.minPrice, filters.maxPrice, filters.minRating, filters.inStock]);
+  }, [filters.limit, filters.category, filters.search, filters.sort, filters.brand, filters.minPrice, filters.maxPrice, filters.minRating, filters.inStock, filters.badges]);
 
   useEffect(() => {
     setPage(1);
@@ -593,7 +596,7 @@ const ProductList: React.FC = () => {
                   </span>
                 )}
                 {/* Share filtered URL — only show when there are active filters */}
-                {(filters.category || filters.brand || filters.minPrice !== undefined || filters.maxPrice !== undefined || filters.minRating !== undefined || filters.inStock || filters.sort !== 'newest') && (
+                {(filters.category || filters.brand || filters.minPrice !== undefined || filters.maxPrice !== undefined || filters.minRating !== undefined || filters.inStock || filters.sort !== 'newest' || filters.badges) && (
                   <button
                     onClick={handleShare}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
@@ -686,6 +689,22 @@ const ActiveFilterChips: React.FC<{
       clear: () => onChange({ inStock: false }),
     });
   }
+  if (filters.badges) {
+    filters.badges.split(',').filter(Boolean).forEach((badge) => {
+      const remaining = filters.badges.split(',').filter((x) => x.trim() !== badge.trim()).join(',');
+      const badgeLabels: Record<string, string> = {
+        'Sale': 'On Sale',
+        'New': 'New',
+        'Top Rated': 'Top Rated',
+        'Bestseller': 'Bestseller',
+        'Low Stock': 'Low Stock',
+      };
+      chips.push({
+        label: badgeLabels[badge.trim()] || badge.trim(),
+        clear: () => onChange({ badges: remaining }),
+      });
+    });
+  }
   if (filters.sort && filters.sort !== 'newest') {
     const sortLabels: Record<string, string> = {
       'price-asc': 'Price ↑',
@@ -723,6 +742,7 @@ const ActiveFilterChips: React.FC<{
             minRating: undefined,
             inStock: false,
             sort: 'newest',
+            badges: '',
           })
         }
         className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors underline underline-offset-2 ml-1"
