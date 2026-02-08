@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import Header from './Header';
 import Footer from './Footer';
+import BackToTop from '../BackToTop';
 
 // Lazy-load the compare drawer so it isn't in the eager bundle — it only
 // matters once a buyer actually adds products to compare.
@@ -21,6 +22,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Suspense fallback={null}>
           <CompareDrawer />
         </Suspense>
+        <BackToTop />
       </div>
     </div>
   );

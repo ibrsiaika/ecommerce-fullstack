@@ -16,9 +16,28 @@ const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [scrolled, setScrolled] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const totalItems = items.reduce((total: number, item: any) => total + item.quantity, 0);
+
+  // Add a shadow to the sticky header once the user scrolls past the top.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    let ticking = false;
+    const handler = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          onScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', handler, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', handler);
+  }, []);
 
   // Check if currently on products page
   const isOnProductsPage = location.pathname === '/products';
@@ -85,7 +104,7 @@ const Header: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 transition-colors">
+    <header className={`sticky top-0 z-50 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 transition-all duration-300 ${scrolled ? 'shadow-md' : ''}`}>
       <div className="container">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
