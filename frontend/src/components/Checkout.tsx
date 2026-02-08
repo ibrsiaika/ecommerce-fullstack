@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { clearCart } from '../store/slices/cartSlice';
 import { Spinner } from './Loading';
 import api from '../services/api';
+import toast from 'react-hot-toast';
 import { FiMapPin, FiCreditCard, FiCheck, FiArrowLeft, FiArrowRight, FiLoader, FiPackage, FiTag, FiX, FiAlertCircle, FiHome, FiBriefcase } from 'react-icons/fi';
 
 interface SavedAddress {
@@ -377,7 +378,7 @@ const Checkout: React.FC = () => {
     } catch (error: any) {
       console.error('Order creation error:', error);
       const errorMsg = error.response?.data?.error || error.message || 'Failed to create order';
-      alert(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }

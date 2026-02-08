@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
 import Payment from './Payment';
+import OrderDetailSkeleton from './OrderDetailSkeleton';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import {
@@ -186,17 +187,7 @@ const OrderDetail: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
-        <div className="text-center px-4">
-          <div className="relative inline-block mb-6">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-black"></div>
-            <FiPackage className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-400" size={24} />
-          </div>
-          <p className="text-lg text-gray-600 font-medium">Loading order details...</p>
-        </div>
-      </div>
-    );
+    return <OrderDetailSkeleton />;
   }
 
   if (error) {
