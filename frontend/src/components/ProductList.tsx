@@ -8,7 +8,8 @@ import QuickViewModal from './QuickViewModal';
 import FilterSidebar, { type FilterState } from './FilterSidebar';
 import ProductBadges from './ProductBadges';
 import api from '../services/api';
-import { FiArrowRight, FiCheck, FiPlus, FiSearch, FiRefreshCw, FiLoader, FiEye, FiSliders, FiX, FiLink } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import { FiArrowRight, FiCheck, FiPlus, FiSearch, FiRefreshCw, FiLoader, FiEye, FiSliders, FiX, FiLink, FiShoppingCart } from 'react-icons/fi';
 
 // Default fallback image for products without images
 const FALLBACK_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
@@ -262,6 +263,32 @@ const ProductList: React.FC = () => {
     );
     setAddedToCart(product._id);
     setTimeout(() => setAddedToCart(null), 2000);
+
+    // rich toast with a view-cart action
+    toast(
+      (t) => (
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+            <FiCheck className="text-white" size={18} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-white text-sm">Added to bag</p>
+            <p className="text-xs text-neutral-300 truncate">{product.name}</p>
+          </div>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              window.location.href = '/cart';
+            }}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white text-neutral-900 text-xs font-semibold hover:bg-neutral-100 transition-colors flex-shrink-0"
+          >
+            <FiShoppingCart size={12} />
+            View
+          </button>
+        </div>
+      ),
+      { duration: 3500 }
+    );
   };
 
   const renderProducts = () => {

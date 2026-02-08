@@ -11,7 +11,8 @@ import ProductDetailSkeleton from './ProductDetailSkeleton';
 import RecentlyViewed from './RecentlyViewed';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import api from '../services/api';
-import { FiShoppingBag, FiCheck, FiTruck, FiArrowRight } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import { FiShoppingBag, FiCheck, FiTruck, FiArrowRight, FiShoppingCart } from 'react-icons/fi';
 
 // Product response from MongoDB API (uses _id)
 interface ProductApiResponse {
@@ -94,8 +95,33 @@ const ProductDetail: React.FC = () => {
       countInStock: product.countInStock
     }));
 
-    // Show success message
-    alert(`Added ${quantity} ${product.name} to cart!`);
+    // rich toast with a view-cart action
+    toast(
+      (t) => (
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+            <FiCheck className="text-white" size={18} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-white text-sm">
+              Added {quantity} to bag
+            </p>
+            <p className="text-xs text-neutral-300 truncate">{product.name}</p>
+          </div>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              window.location.href = '/cart';
+            }}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white text-neutral-900 text-xs font-semibold hover:bg-neutral-100 transition-colors flex-shrink-0"
+          >
+            <FiShoppingCart size={12} />
+            View
+          </button>
+        </div>
+      ),
+      { duration: 3500 }
+    );
   };
 
   if (loading) {
