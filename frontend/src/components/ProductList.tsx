@@ -1,15 +1,32 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, Suspense, lazy } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import WishlistButton from './WishlistButton';
 import CompareButton from './CompareButton';
 import QuickViewModal from './QuickViewModal';
-import FilterSidebar, { type FilterState } from './FilterSidebar';
+import { type FilterState } from './FilterSidebar';
 import ProductBadges from './ProductBadges';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { FiArrowRight, FiCheck, FiPlus, FiSearch, FiRefreshCw, FiLoader, FiEye, FiSliders, FiX, FiLink, FiShoppingCart } from 'react-icons/fi';
+
+// Lazy-load the FilterSidebar — it's a heavy component (fetches categories +
+// brands, renders many sections) and only matters on the products page.
+const FilterSidebar = lazy(() => import('./FilterSidebar'));
+
+// Lightweight skeleton shown while the FilterSidebar chunk loads.
+const FilterSidebarFallback = () => (
+  <div className="space-y-4">
+    <div className="skeleton h-10 w-full rounded-lg" />
+    <div className="skeleton h-4 w-20" />
+    <div className="skeleton h-8 w-full rounded-lg" />
+    <div className="skeleton h-4 w-16" />
+    <div className="skeleton h-8 w-full rounded-lg" />
+    <div className="skeleton h-4 w-16" />
+    <div className="skeleton h-8 w-full rounded-lg" />
+  </div>
+);
 
 // Default fallback image for products without images
 const FALLBACK_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
@@ -564,12 +581,14 @@ const ProductList: React.FC = () => {
           {/* desktop sidebar */}
           <aside className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-24 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl p-5">
-              <FilterSidebar
-                filters={filters}
-                onChange={(next) => {
-                  setFilters({ ...filters, ...next });
-                }}
-              />
+              <Suspense fallback={<FilterSidebarFallback />}>
+                <FilterSidebar
+                  filters={filters}
+                  onChange={(next) => {
+                    setFilters({ ...filters, ...next });
+                  }}
+                />
+              </Suspense>
             </div>
           </aside>
 
@@ -590,10 +609,12 @@ const ProductList: React.FC = () => {
                     <FiX size={18} />
                   </button>
                 </div>
-                <FilterSidebar
-                  filters={filters}
-                  onChange={(next) => setFilters({ ...filters, ...next })}
-                />
+                <Suspense fallback={<FilterSidebarFallback />}>
+                  <FilterSidebar
+                    filters={filters}
+                    onChange={(next) => setFilters({ ...filters, ...next })}
+                  />
+                </Suspense>
                 <button
                   onClick={() => setMobileFiltersOpen(false)}
                   className="mt-6 w-full px-4 py-3 rounded-xl bg-black text-white dark:bg-neutral-100 dark:text-neutral-900 font-semibold text-sm"
