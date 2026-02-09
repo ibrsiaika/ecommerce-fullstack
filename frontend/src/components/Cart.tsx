@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { removeFromCart, updateQuantity, addToCart, clearCart } from '../store/slices/cartSlice';
+import RecentlyViewed from './RecentlyViewed';
 import toast from 'react-hot-toast';
 import { FiTrash2, FiPlus, FiMinus, FiShoppingBag, FiArrowRight, FiTruck, FiCheckCircle, FiRotateCcw } from 'react-icons/fi';
 
@@ -61,19 +62,19 @@ const Cart: React.FC = () => {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen bg-white dark:bg-neutral-950 flex flex-col">
         {/* Decorative background */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gray-50 rounded-full -mr-48 -mt-48 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gray-50 dark:bg-neutral-900 rounded-full -mr-48 -mt-48 pointer-events-none" />
         
-        <div className="container px-4 sm:px-6 lg:px-8 py-12 sm:py-20 lg:py-32 relative flex-1 flex items-center justify-center">
+        <div className="container px-4 sm:px-6 lg:px-8 py-12 sm:py-20 lg:py-24 relative flex-1 flex items-center justify-center">
           <div className="text-center max-w-md">
             <div className="flex justify-center mb-8">
-              <div className="w-24 h-24 rounded-2xl bg-gray-100 flex items-center justify-center shadow-lg">
-                <FiShoppingBag className="h-12 w-12 text-gray-400" />
+              <div className="w-24 h-24 rounded-2xl bg-gray-100 dark:bg-neutral-800 flex items-center justify-center shadow-lg">
+                <FiShoppingBag className="h-12 w-12 text-gray-400 dark:text-neutral-500" />
               </div>
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
-            <p className="text-base sm:text-lg text-gray-600 mb-10">Start exploring our collection and add items to your cart.</p>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-neutral-100 mb-4">Your cart is empty</h1>
+            <p className="text-base sm:text-lg text-gray-600 dark:text-neutral-400 mb-10">Start exploring our collection and add items to your cart.</p>
             <Link
               to="/products"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 text-lg font-semibold rounded-xl bg-black text-white hover:bg-gray-900 active:scale-95 transition-all duration-200 group"
@@ -83,14 +84,17 @@ const Cart: React.FC = () => {
             </Link>
           </div>
         </div>
+
+        {/* Cross-sell: recently viewed products to re-engage returning visitors */}
+        <RecentlyViewed limit={4} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-neutral-950">
       {/* Decorative background */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gray-50 rounded-full -mr-48 -mt-48 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gray-50 dark:bg-neutral-900 rounded-full -mr-48 -mt-48 pointer-events-none" />
       
       <div className="container px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 relative">
         {/* Header */}
