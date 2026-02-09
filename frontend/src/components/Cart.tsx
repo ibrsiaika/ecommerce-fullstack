@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
-import { removeFromCart, updateQuantity, clearCart } from '../store/slices/cartSlice';
-import { FiTrash2, FiPlus, FiMinus, FiShoppingBag, FiArrowRight, FiTruck, FiCheckCircle } from 'react-icons/fi';
+import { removeFromCart, updateQuantity, addToCart, clearCart } from '../store/slices/cartSlice';
+import toast from 'react-hot-toast';
+import { FiTrash2, FiPlus, FiMinus, FiShoppingBag, FiArrowRight, FiTruck, FiCheckCircle, FiRotateCcw } from 'react-icons/fi';
 
 const Cart: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -16,8 +17,40 @@ const Cart: React.FC = () => {
     }
   };
 
-  const handleRemoveFromCart = (id: string) => {
-    dispatch(removeFromCart(id));
+  // Remove with an undo toast — captures the item so it can be re-added
+  // within the toast's lifetime, preventing accidental loss.
+  const handleRemoveFromCart = (item: typeof items[number]) => {
+    dispatch(removeFromCart(item.id));
+    toast(
+      (t) => (
+        <div className="flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-white text-sm">Removed from bag</p>
+            <p className="text-xs text-neutral-300 truncate">{item.name}</p>
+          </div>
+          <button
+            onClick={() => {
+              dispatch(
+                addToCart({
+                  id: item.id,
+                  name: item.name,
+                  price: item.price,
+                  image: item.image,
+                  quantity: item.quantity,
+                  countInStock: item.countInStock,
+                })
+              );
+              toast.dismiss(t.id);
+            }}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white text-neutral-900 text-xs font-semibold hover:bg-neutral-100 transition-colors flex-shrink-0"
+          >
+            <FiRotateCcw size={12} />
+            Undo
+          </button>
+        </div>
+      ),
+      { duration: 5000 }
+    );
   };
 
   const handleClearCart = () => {
@@ -153,7 +186,7 @@ const Cart: React.FC = () => {
 
                 {/* Remove Button */}
                 <button
-                  onClick={() => handleRemoveFromCart(item.id)}
+                  onClick={() => handleRemoveFromCart(item)}
                   className="p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all flex-shrink-0 font-semibold"
                 >
                   <FiTrash2 size={24} />
