@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { AxiosError } from 'axios';
 import api from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
+import DashboardSkeleton from '../DashboardSkeleton';
 import {
   FiPackage,
   FiDollarSign,
@@ -178,28 +179,7 @@ const SellerDashboard: React.FC = () => {
   ];
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="h-8 w-56 bg-gray-200 rounded animate-pulse mb-6" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-lg border border-gray-200 p-5"
-              >
-                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mb-3" />
-                <div className="h-8 w-20 bg-gray-200 rounded animate-pulse" />
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-6 h-80 animate-pulse" />
-            <div className="bg-white rounded-lg border border-gray-200 p-6 h-80 animate-pulse" />
-          </div>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton statCount={4} showCharts />;
   }
 
   if (error) {

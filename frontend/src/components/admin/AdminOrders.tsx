@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import type { AxiosError } from 'axios';
 import api from '../../services/api';
+import TableSkeleton from '../TableSkeleton';
 import {
   FiChevronDown,
   FiChevronUp,
@@ -380,21 +381,7 @@ const AdminOrders: React.FC = () => {
 
   // ---- Render: loading ----
   if (loading && orders.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="h-8 w-56 bg-gray-200 rounded animate-pulse mb-6" />
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-16 border-b border-gray-100 animate-pulse bg-gray-50"
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <TableSkeleton rowCount={6} titleWidth="w-56" />;
   }
 
   // ---- Render: error ----
