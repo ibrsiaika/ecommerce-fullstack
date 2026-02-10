@@ -383,9 +383,9 @@ const AdminUsers: React.FC = () => {
   // ---- Render: error ----
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <FiAlertCircle className="mx-auto text-red-600 mb-3" size={32} />
+      <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 rounded-lg p-6 text-center">
+          <FiAlertCircle className="mx-auto text-red-600 dark:text-red-400 mb-3" size={32} />
           <h2 className="text-lg font-semibold text-red-900 mb-1">
             Something went wrong
           </h2>
@@ -405,7 +405,7 @@ const AdminUsers: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-6">
