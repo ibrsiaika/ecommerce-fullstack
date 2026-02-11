@@ -4,6 +4,7 @@ import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import api from '../services/api';
 import RecentlyViewed from '../components/RecentlyViewed';
+import ErrorState from '../components/ErrorState';
 import {
   FiArrowRight,
   FiShoppingBag,
@@ -45,20 +46,24 @@ const Home: React.FC = () => {
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [heroImageLoaded, setHeroImageLoaded] = useState(false);
 
-  useEffect(() => {
-    const fetchFeaturedProducts = async () => {
-      try {
-        const response = await api.getProducts(1, 8);
-        setFeaturedProducts(response.data.data?.slice(0, 8) || []);
-      } catch (error) {
-        console.error('Failed to fetch featured products', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchFeaturedProducts = async () => {
+    setLoading(true);
+    setFetchError(false);
+    try {
+      const response = await api.getProducts(1, 8);
+      setFeaturedProducts(response.data.data?.slice(0, 8) || []);
+    } catch (error) {
+      console.error('Failed to fetch featured products', error);
+      setFetchError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchFeaturedProducts();
   }, []);
 
@@ -217,17 +222,26 @@ const Home: React.FC = () => {
                   onAddToCart={() => handleAddToCart(product)}
                 />
               ))
+            ) : fetchError ? (
+              // Network/server error — show retry, not the misleading "no products"
+              <div className="col-span-full">
+                <ErrorState
+                  title="Couldn’t load products"
+                  message="There was a problem reaching the server. Please try again."
+                  onRetry={fetchFeaturedProducts}
+                />
+              </div>
             ) : (
-              // Empty state
+              // Empty state — server reached, just no products
               <div className="col-span-full text-center py-16">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-6">
-                  <FiShoppingBag className="w-7 h-7 text-gray-400" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-neutral-800 rounded-full mb-6">
+                  <FiShoppingBag className="w-7 h-7 text-gray-400 dark:text-neutral-500" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No products yet</h3>
-                <p className="text-gray-500 mb-6">Check back soon for new arrivals.</p>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 mb-2">No products yet</h3>
+                <p className="text-gray-500 dark:text-neutral-400 mb-6">Check back soon for new arrivals.</p>
                 <Link 
                   to="/products" 
-                  className="inline-flex items-center gap-2 text-black font-semibold hover:underline"
+                  className="inline-flex items-center gap-2 text-black dark:text-neutral-100 font-semibold hover:underline"
                 >
                   Browse all products
                   <FiArrowRight className="w-4 h-4" />
