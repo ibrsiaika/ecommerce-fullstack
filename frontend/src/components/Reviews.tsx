@@ -251,10 +251,11 @@ const Reviews: React.FC<ReviewsProps> = ({ productId, reviews = [], onReviewAdde
             onClick={interactive && onStarClick ? () => onStarClick(star) : undefined}
             onMouseEnter={interactive ? () => setHoverRating(star) : undefined}
             onMouseLeave={interactive ? () => setHoverRating(0) : undefined}
+            aria-label={`${star} star${star > 1 ? 's' : ''}`}
+            disabled={!interactive}
             className={`${size} transition-all duration-200 ${
               star <= displayRating ? 'text-amber-400 drop-shadow-sm' : 'text-gray-200'
             } ${interactive ? 'hover:scale-125 cursor-pointer transform' : ''}`}
-            disabled={!interactive}
           >
             <FiStar
               className={star <= displayRating ? 'fill-current' : ''}
@@ -280,6 +281,7 @@ const Reviews: React.FC<ReviewsProps> = ({ productId, reviews = [], onReviewAdde
           <button
             className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
             onClick={() => setLightbox(null)}
+            aria-label="Close photo"
           >
             <FiX size={24} />
           </button>
@@ -584,6 +586,7 @@ const Reviews: React.FC<ReviewsProps> = ({ productId, reviews = [], onReviewAdde
                           <button
                             key={pIdx}
                             onClick={() => setLightbox(photo)}
+                            aria-label={`View review photo ${pIdx + 1}`}
                             className="block w-16 h-16 rounded-lg overflow-hidden border-2 border-neutral-200 hover:border-neutral-400 transition-colors"
                           >
                             <img

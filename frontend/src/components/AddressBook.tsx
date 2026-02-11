@@ -595,6 +595,7 @@ const AddressBook: React.FC = () => {
                       onClick={() => openEditForm(addr)}
                       className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
                       title="Edit"
+                      aria-label={`Edit ${addr.fullName} address`}
                     >
                       <FiEdit2 size={15} />
                     </button>
@@ -602,6 +603,7 @@ const AddressBook: React.FC = () => {
                       onClick={() => setConfirmDelete(addr._id)}
                       className="p-2 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
                       title="Delete"
+                      aria-label={`Delete ${addr.fullName} address`}
                     >
                       <FiTrash2 size={15} />
                     </button>
