@@ -7,6 +7,7 @@ import CompareButton from './CompareButton';
 import QuickViewModal from './QuickViewModal';
 import { type FilterState } from './FilterSidebar';
 import ProductBadges from './ProductBadges';
+import ErrorState from './ErrorState';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { FiArrowRight, FiCheck, FiPlus, FiSearch, FiRefreshCw, FiLoader, FiEye, FiSliders, FiX, FiLink, FiShoppingCart } from 'react-icons/fi';
@@ -671,14 +672,12 @@ const ProductList: React.FC = () => {
 
             {/* Error State */}
             {status === 'error' && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 animate-fade-in">
-                <p className="text-sm text-red-700">{error}</p>
-                <button
-                  onClick={() => fetchProducts(1, false)}
-                  className="mt-2 text-sm text-red-600 font-medium hover:text-red-800 underline underline-offset-2"
-                >
-                  Try again
-                </button>
+              <div className="mb-6">
+                <ErrorState
+                  title="Couldn’t load products"
+                  message={error || 'There was a problem reaching the server.'}
+                  onRetry={() => fetchProducts(1, false)}
+                />
               </div>
             )}
 
