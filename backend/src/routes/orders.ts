@@ -14,6 +14,7 @@ import {
   verifyPayment
 } from '../controllers/orderController';
 import { protect, authorize } from '../middleware/auth';
+import { idempotencyMiddleware } from '../middleware/idempotency';
 
 const router = express.Router();
 
@@ -23,9 +24,9 @@ const router = express.Router();
 router.post('/webhook', express.raw({ type: 'application/json' }), stripeWebhook);
 
 // @route   POST /api/orders
-// @desc    Create new order
+// @desc    Create new order (supports Idempotency-Key header)
 // @access  Private
-router.post('/', protect, orderValidation, createOrder);
+router.post('/', protect, idempotencyMiddleware, orderValidation, createOrder);
 
 // @route   GET /api/orders/myorders
 // @desc    Get logged in user orders

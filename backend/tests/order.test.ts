@@ -337,4 +337,86 @@ describe('Order Endpoints', () => {
       expect(response.body.error.code).toBe('MISSING_TOKEN');
     });
   });
+
+  describe('POST /api/orders (idempotency)', () => {
+    const orderData = {
+      orderItems: [
+        {
+          product: '',
+          name: 'Test Product',
+          price: 99.99,
+          quantity: 2,
+          image: 'test-image.jpg'
+        }
+      ],
+      shippingAddress: {
+        address: '123 Test St',
+        city: 'Test City',
+        postalCode: '12345',
+        country: 'Test Country'
+      },
+      paymentMethod: 'PayPal',
+      taxPrice: 0,
+      shippingPrice: 0,
+      totalPrice: 199.98
+    };
+
+    it('should return the same order when the same Idempotency-Key is used', async () => {
+      orderData.orderItems[0].product = productId;
+      const key = 'order-key-1';
+
+      const first = await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', key)
+        .send(orderData)
+        .expect(201);
+
+      expect(first.body.success).toBe(true);
+      const firstOrderId = first.body.data._id;
+
+      // second request with same key should return the cached order
+      const second = await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', key)
+        .send(orderData)
+        .expect(201);
+
+      expect(second.body.data._id).toBe(firstOrderId);
+    });
+
+    it('should create different orders with different Idempotency-Keys', async () => {
+      orderData.orderItems[0].product = productId;
+
+      const first = await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', 'key-A')
+        .send(orderData)
+        .expect(201);
+
+      const second = await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', 'key-B')
+        .send(orderData)
+        .expect(201);
+
+      expect(first.body.data._id).not.toBe(second.body.data._id);
+    });
+
+    it('should work normally without an Idempotency-Key header', async () => {
+      orderData.orderItems[0].product = productId;
+
+      const response = await request(app)
+        .post('/api/orders')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(orderData)
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('_id');
+    });
+  });
 });
