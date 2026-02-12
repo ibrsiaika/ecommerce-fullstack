@@ -77,6 +77,35 @@ describe('Product Endpoints', () => {
       expect(response.body.data[0]).toHaveProperty('name', 'Test Product');
     });
 
+    it('should set X-Request-Id response header', async () => {
+      const response = await request(app)
+        .get('/api/products')
+        .expect(200);
+
+      expect(response.headers['x-request-id']).toBeDefined();
+      expect(response.headers['x-request-id']).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+    });
+
+    it('should echo back a provided X-Request-Id header', async () => {
+      const customId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+      const response = await request(app)
+        .get('/api/products')
+        .set('X-Request-Id', customId)
+        .expect(200);
+
+      expect(response.headers['x-request-id']).toBe(customId);
+    });
+
+    it('should set Cache-Control on product list responses', async () => {
+      const response = await request(app)
+        .get('/api/products')
+        .expect(200);
+
+      expect(response.headers['cache-control']).toContain('max-age=60');
+      expect(response.headers['cache-control']).toContain('stale-while-revalidate=300');
+      expect(response.headers['vary']).toContain('Accept-Encoding');
+    });
+
     it('should include computed badges array on each product', async () => {
       const response = await request(app)
         .get('/api/products')

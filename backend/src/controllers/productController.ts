@@ -91,6 +91,13 @@ export const getProducts = asyncHandler(async (req: Request, res: Response) => {
   );
 
   const curated = products.map(mapProductPreview);
+
+  // Cache-Control for the public product list — allows CDN + browser caching
+  // for 60s, then stale-while-revalidate for 300s. Vary on Accept-Encoding so
+  // gzipped + identity responses cache separately.
+  res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+  res.set('Vary', 'Accept-Encoding');
+
   return sendPaginatedSuccess(res, 200, curated, pagination.page, pagination.limit, pagination.total, 'Products loaded');
 });
 

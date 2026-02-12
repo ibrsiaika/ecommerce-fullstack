@@ -12,6 +12,7 @@ import {
   bodyParserMiddleware,
   staticFilesConfig
 } from './config/middleware';
+import { reqIdMiddleware } from './middleware/reqId';
 import { swaggerConfig } from './config/swagger';
 import { registerRoutes } from './config/routes';
 import { connectDatabase, setupGracefulShutdown } from './config/database';
@@ -30,6 +31,9 @@ app.set('trust proxy', 1);
 // ============================================
 // Middleware Setup
 // ============================================
+
+// Request ID — must be first so every log + error can reference it
+app.use(reqIdMiddleware);
 
 // Security & compression
 app.use(...securityMiddleware);
