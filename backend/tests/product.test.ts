@@ -405,6 +405,94 @@ describe('Product Endpoints', () => {
     });
   });
 
+  describe('GET /api/products (cursor pagination)', () => {
+    it('should return nextCursor when there are more results', async () => {
+      // create 4 extra products so we have 5 total with the beforeEach product
+      for (let i = 0; i < 4; i++) {
+        await request(app)
+          .post('/api/products')
+          .set('Authorization', `Bearer ${adminToken}`)
+          .send({
+            name: `Cursor Product ${i}`,
+            description: 'desc',
+            price: 10 + i,
+            category: 'Electronics',
+            countInStock: 5,
+            images: ['img.jpg'],
+            sku: `TEST-SKU-CURSOR-${i}`
+          })
+          .expect(201);
+      }
+
+      const response = await request(app)
+        .get('/api/products?cursor&limit=2&sort=price-asc')
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveLength(2);
+      expect(response.body.pagination.nextCursor).toBeDefined();
+      // should not have page/pages (offset-only fields)
+      expect(response.body.pagination.page).toBeUndefined();
+    });
+
+    it('should return the next page when using nextCursor', async () => {
+      // create 4 extra products
+      const createdIds: string[] = [];
+      for (let i = 0; i < 4; i++) {
+        const res = await request(app)
+          .post('/api/products')
+          .set('Authorization', `Bearer ${adminToken}`)
+          .send({
+            name: `Cursor Page2 ${i}`,
+            description: 'desc',
+            price: 10 + i,
+            category: 'Electronics',
+            countInStock: 5,
+            images: ['img.jpg'],
+            sku: `TEST-SKU-CURSOR2-${i}`
+          })
+          .expect(201);
+        createdIds.push(res.body.data._id);
+      }
+
+      // first page
+      const first = await request(app)
+        .get('/api/products?cursor&limit=2&sort=price-asc')
+        .expect(200);
+
+      const firstIds = first.body.data.map((p: any) => p._id);
+
+      // second page using nextCursor
+      const second = await request(app)
+        .get(`/api/products?cursor=${first.body.pagination.nextCursor}&limit=2&sort=price-asc`)
+        .expect(200);
+
+      const secondIds = second.body.data.map((p: any) => p._id);
+
+      // pages should not overlap
+      const overlap = firstIds.filter((id: string) => secondIds.includes(id));
+      expect(overlap).toHaveLength(0);
+    });
+
+    it('should return undefined nextCursor on the last page', async () => {
+      // only the beforeEach product exists — 1 item, limit=10 → last page
+      const response = await request(app)
+        .get('/api/products?cursor&limit=10')
+        .expect(200);
+
+      expect(response.body.data.length).toBeGreaterThanOrEqual(1);
+      expect(response.body.pagination.nextCursor).toBeUndefined();
+    });
+
+    it('should return 400 for an invalid cursor', async () => {
+      const response = await request(app)
+        .get('/api/products?cursor=invalid-cursor-string&limit=2')
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+    });
+  });
+
   describe('GET /api/products/bulk', () => {
     it('should return products matching the given ids in order', async () => {
       // create a second product

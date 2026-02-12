@@ -15,7 +15,8 @@ export class ProductService {
     brand?: string,
     minRating?: number,
     inStock?: boolean,
-    badges?: string
+    badges?: string,
+    cursor?: string
   ) {
     const skip = (page - 1) * limit;
     const filter: any = { isActive: true };
@@ -93,8 +94,106 @@ export class ProductService {
       'newest': { createdAt: -1 },
       'oldest': { createdAt: 1 }
     };
-    const sortOption = sortMap[sort || 'newest'] || sortMap['newest'];
+    const sortKey = sort || 'newest';
+    const sortOption = sortMap[sortKey] || sortMap['newest'];
 
+    // ---- Cursor pagination (opt-in) ----
+    // When a cursor param is provided AND there's no text search (text search
+    // has its own scoring that overrides sort), use cursor-based pagination
+    // instead of offset. This is O(1) for deep pages vs O(n) for skip.
+    // An empty string ("?cursor" with no value) means "first page" — cursor
+    // mode is active but no cursor filter is applied.
+    const useCursor = cursor !== undefined && !search;
+
+    // baseFilter = filter without cursor condition (used for count)
+    const baseFilter = { ...filter };
+
+    if (useCursor) {
+      // sort field metadata for cursor construction
+      const sortFieldMeta: Record<string, { field: string; dir: 1 | -1; isDate: boolean }> = {
+        'newest': { field: 'createdAt', dir: -1, isDate: true },
+        'oldest': { field: 'createdAt', dir: 1, isDate: true },
+        'price-asc': { field: 'price', dir: 1, isDate: false },
+        'price-desc': { field: 'price', dir: -1, isDate: false },
+        'rating': { field: 'rating', dir: -1, isDate: false },
+      };
+      const meta = sortFieldMeta[sortKey];
+      if (!meta) {
+        throw new AppError('Cursor pagination not supported for this sort option', 400);
+      }
+
+      // Only decode + apply cursor filter on subsequent pages (non-empty cursor).
+      // First page ("?cursor" with no value) has no cursor filter — just fetch
+      // from the beginning.
+      if (cursor) {
+        // decode cursor: base64url JSON { v: sortValue, id: '_id' }
+        let decoded: { v: any; id: string };
+        try {
+          decoded = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+          if (!decoded.v || !decoded.id) throw new Error('missing fields');
+        } catch {
+          throw new AppError('Invalid cursor', 400);
+        }
+
+        // convert date fields back from ISO string
+        const cursorValue = meta.isDate ? new Date(decoded.v) : decoded.v;
+        const operator = meta.dir === 1 ? '$gt' : '$lt';
+        const cursorCondition = {
+          $or: [
+            { [meta.field]: { [operator]: cursorValue } },
+            { [meta.field]: cursorValue, _id: { [operator]: new mongoose.Types.ObjectId(decoded.id) } },
+          ],
+        };
+
+        // merge cursor condition into filter via $and
+        if (filter.$and) {
+          filter.$and.push(cursorCondition);
+        } else {
+          filter.$and = [cursorCondition];
+        }
+      }
+    }
+
+    // compound sort for cursor stability (sortField + _id as tiebreaker)
+    const finalSort = useCursor
+      ? { ...sortOption, _id: Object.values(sortOption)[0] as 1 | -1 }
+      : sortOption;
+
+    if (useCursor) {
+      // fetch limit + 1 to detect if there's a next page
+      const products = await Product.find(filter)
+        .populate('reviews.user', 'firstName lastName email avatar')
+        .sort(finalSort)
+        .limit(limit + 1);
+
+      const hasMore = products.length > limit;
+      const results = hasMore ? products.slice(0, limit) : products;
+
+      // build nextCursor from the last item
+      let nextCursor: string | undefined;
+      if (hasMore && results.length > 0) {
+        const last = results[results.length - 1] as any;
+        const sortField = Object.keys(sortOption)[0];
+        const sortValue = last[sortField];
+        // serialize dates as ISO strings
+        nextCursor = Buffer.from(
+          JSON.stringify({ v: sortValue instanceof Date ? sortValue.toISOString() : sortValue, id: last._id.toString() })
+        ).toString('base64url');
+      }
+
+      const total = await Product.countDocuments(baseFilter);
+
+      return {
+        products: results,
+        pagination: {
+          limit,
+          total,
+          nextCursor,
+        } as any,
+      };
+    }
+
+    // ---- Offset pagination (default, backward-compatible) ----
     const [products, total] = await Promise.all([
       Product.find(filter)
         .populate('reviews.user', 'firstName lastName email avatar')

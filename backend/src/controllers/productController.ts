@@ -75,6 +75,7 @@ const parseNumber = (value?: string | string[], fallback: number = 0) => {
 export const getProducts = asyncHandler(async (req: Request, res: Response) => {
   const page = Math.max(parseInt(req.query.page as string, 10) || 1, 1);
   const limit = Math.min(parseInt(req.query.limit as string, 10) || 12, 50);
+  const cursor = req.query.cursor as string | undefined;
 
   const { products, pagination } = await productService.getAll(
     page,
@@ -87,7 +88,8 @@ export const getProducts = asyncHandler(async (req: Request, res: Response) => {
     req.query.brand as string,
     parseNumber(req.query.minRating as string),
     req.query.inStock === 'true',
-    req.query.badges as string
+    req.query.badges as string,
+    cursor
   );
 
   const curated = products.map(mapProductPreview);
@@ -98,7 +100,19 @@ export const getProducts = asyncHandler(async (req: Request, res: Response) => {
   res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
   res.set('Vary', 'Accept-Encoding');
 
-  return sendPaginatedSuccess(res, 200, curated, pagination.page, pagination.limit, pagination.total, 'Products loaded');
+  // Cursor pagination returns { limit, total, nextCursor } — send a
+  // different envelope than offset pagination's { page, limit, total, pages }.
+  // Distinguish by checking if `page` is absent (cursor mode never sets it).
+  const p = pagination as any;
+  if (p.page === undefined) {
+    return sendSuccess(res, 200, curated, 'Products loaded', {
+      limit: p.limit,
+      total: p.total,
+      nextCursor: p.nextCursor,
+    } as any);
+  }
+
+  return sendPaginatedSuccess(res, 200, curated, p.page, p.limit, p.total, 'Products loaded');
 });
 
 // @desc    Get single product
