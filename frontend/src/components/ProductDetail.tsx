@@ -10,6 +10,7 @@ import ImageZoom from './ImageZoom';
 import ProductDetailSkeleton from './ProductDetailSkeleton';
 import RecentlyViewed from './RecentlyViewed';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { FiShoppingBag, FiCheck, FiTruck, FiArrowRight, FiShoppingCart } from 'react-icons/fi';
@@ -54,6 +55,47 @@ const ProductDetail: React.FC = () => {
   const [product, setProduct] = useState<ProductApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // SEO: per-product meta + Schema.org Product JSON-LD structured data
+  useDocumentMeta({
+    title: product ? product.name : 'Product Details',
+    description: product ? product.description?.substring(0, 160) : 'View product details, reviews, and specifications.',
+    canonicalUrl: product ? `https://eshop.example.com/products/${product._id}` : undefined,
+    ogType: 'product',
+    ogImage: product?.images?.[0],
+  });
+
+  // inject + clean up Schema.org Product JSON-LD when product changes
+  useEffect(() => {
+    if (!product) return;
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = 'product-jsonld';
+    script.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      description: product.description,
+      image: product.images,
+      sku: product.sku,
+      brand: product.badges?.includes('Bestseller') ? { '@type': 'Brand', name: 'E-Shop' } : undefined,
+      offers: {
+        '@type': 'Offer',
+        price: product.price,
+        priceCurrency: 'USD',
+        availability: product.countInStock > 0
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+      },
+      aggregateRating: product.numReviews > 0 ? {
+        '@type': 'AggregateRating',
+        ratingValue: product.rating,
+        reviewCount: product.numReviews,
+      } : undefined,
+    });
+    document.head.appendChild(script);
+    return () => { document.getElementById('product-jsonld')?.remove(); };
+  }, [product]);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
 
