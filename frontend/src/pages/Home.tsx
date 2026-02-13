@@ -5,6 +5,7 @@ import { addToCart } from '../store/slices/cartSlice';
 import api from '../services/api';
 import RecentlyViewed from '../components/RecentlyViewed';
 import ErrorState from '../components/ErrorState';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import {
   FiArrowRight,
   FiShoppingBag,
@@ -44,6 +45,11 @@ interface Product {
 const Home: React.FC = () => {
   const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  useDocumentMeta({
+    title: 'E-Shop — Quality Products, Fast Delivery, Easy Returns',
+    description: 'Shop quality electronics, fashion, and home goods. Compare products, read reviews, and checkout with Stripe, Razorpay, or COD. Free shipping on orders over $100.',
+    canonicalUrl: 'https://eshop.example.com/',
+  });
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);

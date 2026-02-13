@@ -8,6 +8,7 @@ import QuickViewModal from './QuickViewModal';
 import { type FilterState } from './FilterSidebar';
 import ProductBadges from './ProductBadges';
 import ErrorState from './ErrorState';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { FiArrowRight, FiCheck, FiPlus, FiSearch, FiRefreshCw, FiLoader, FiEye, FiSliders, FiX, FiLink, FiShoppingCart } from 'react-icons/fi';
@@ -90,6 +91,11 @@ const LazyImage: React.FC<{
 const ProductList: React.FC = () => {
   const dispatch = useAppDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
+  useDocumentMeta({
+    title: 'Shop All Products',
+    description: 'Browse our full catalog. Filter by price, brand, rating, and more. Compare products side by side.',
+    canonicalUrl: 'https://eshop.example.com/products',
+  });
   const [products, setProducts] = useState<Product[]>([]);
 
   const [status, setStatus] = useState<'idle' | 'loading' | 'loadingMore' | 'error'>('idle');
