@@ -7,6 +7,7 @@ import WishlistButton from './WishlistButton';
 import CompareButton from './CompareButton';
 import ProductBadges from './ProductBadges';
 import ImageZoom from './ImageZoom';
+import Breadcrumbs from './Breadcrumbs';
 import ProductDetailSkeleton from './ProductDetailSkeleton';
 import RecentlyViewed from './RecentlyViewed';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
@@ -188,6 +189,15 @@ const ProductDetail: React.FC = () => {
       <div className="absolute top-0 right-0 w-96 h-96 bg-gray-50 rounded-full -mr-48 -mt-48 pointer-events-none" />
       
       <div className="container px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 relative">
+        {/* Breadcrumbs */}
+        <Breadcrumbs
+          items={[
+            { label: 'Products', href: '/products' },
+            ...(product.category ? [{ label: product.category, href: `/products?category=${encodeURIComponent(product.category)}` }] : []),
+            { label: product.name },
+          ]}
+          className="mb-6"
+        />
         <div className="grid grid-cols-1 gap-8 sm:gap-10 lg:gap-16 lg:grid-cols-2">
           {/* Image Gallery */}
           <div className="space-y-4 sm:space-y-6">
