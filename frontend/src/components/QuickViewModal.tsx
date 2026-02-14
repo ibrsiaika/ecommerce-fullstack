@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { useAppDispatch } from '../store/hooks';
 import { addToCart } from '../store/slices/cartSlice';
 import CompareButton from './CompareButton';
 import ProductBadges from './ProductBadges';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import {
   FiX,
   FiStar,
@@ -46,6 +47,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ productId, onClose }) =
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef, !!productId);
 
   // fetch the product when the modal opens for a new id
   useEffect(() => {
@@ -125,6 +128,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ productId, onClose }) =
 
   return (
     <div
+      ref={modalRef}
       className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
       role="dialog"
