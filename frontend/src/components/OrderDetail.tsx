@@ -444,7 +444,7 @@ const OrderDetail: React.FC = () => {
               <div className="divide-y divide-gray-100">
                 {order.orderItems.map((item, index) => (
                   <div key={index} className="p-4 sm:p-5 flex gap-4">
-                    <img 
+                    <img loading="lazy" decoding="async" 
                       src={item.image || '/placeholder-product.png'} 
                       alt={item.name}
                       className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl bg-gray-100 flex-shrink-0"

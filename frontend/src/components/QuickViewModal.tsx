@@ -192,7 +192,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ productId, onClose }) =
                           : 'border-gray-200 dark:border-neutral-700 opacity-70 hover:opacity-100'
                       }`}
                     >
-                      <img src={img} alt={`${product.name} ${idx + 1}`} className="w-full h-full object-cover" />
+                      <img loading="lazy" decoding="async" src={img} alt={`${product.name} ${idx + 1}`} className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
