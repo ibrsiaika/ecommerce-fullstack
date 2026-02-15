@@ -72,7 +72,13 @@ export const registerRoutes = (app: Express, swaggerSpec: any) => {
       status: 'OK',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      environment: process.env.NODE_ENV || 'development'
+      environment: process.env.NODE_ENV || 'development',
+      version: process.env.npm_package_version || '1.0.0',
+      memory: {
+        rss: Math.round(process.memoryUsage().rss / 1024 / 1024),
+        heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+        heapTotal: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+      },
     });
   });
 
@@ -81,13 +87,25 @@ export const registerRoutes = (app: Express, swaggerSpec: any) => {
     try {
       const db = mongoose.connection.db;
       if (!db) {
-        res.status(503).json({ status: 'not_ready' });
+        res.status(503).json({
+          status: 'not_ready',
+          reason: 'database_not_connected',
+          timestamp: new Date().toISOString(),
+        });
         return;
       }
       await db.admin().ping();
-      res.status(200).json({ status: 'ready' });
-    } catch {
-      res.status(503).json({ status: 'not_ready' });
+      res.status(200).json({
+        status: 'ready',
+        database: 'connected',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      res.status(503).json({
+        status: 'not_ready',
+        reason: 'database_ping_failed',
+        timestamp: new Date().toISOString(),
+      });
     }
   });
 
