@@ -86,6 +86,24 @@ describe('Product Endpoints', () => {
       expect(response.headers['x-request-id']).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
     });
 
+    it('should set X-Response-Time header', async () => {
+      const response = await request(app)
+        .get('/api/products')
+        .expect(200);
+
+      expect(response.headers['x-response-time']).toBeDefined();
+      expect(response.headers['x-response-time']).toMatch(/\d+\.\d+ms/);
+    });
+
+    it('should work under /api/v1/ versioned prefix', async () => {
+      const response = await request(app)
+        .get('/api/v1/products')
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toBeInstanceOf(Array);
+    });
+
     it('should echo back a provided X-Request-Id header', async () => {
       const customId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
       const response = await request(app)
