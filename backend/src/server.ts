@@ -14,6 +14,7 @@ import {
 } from './config/middleware';
 import { reqIdMiddleware } from './middleware/reqId';
 import { requestLogger } from './middleware/requestLogger';
+import { responseTimeMiddleware } from './middleware/responseTime';
 import { swaggerConfig } from './config/swagger';
 import { registerRoutes } from './config/routes';
 import { connectDatabase, setupGracefulShutdown } from './config/database';
@@ -35,6 +36,9 @@ app.set('trust proxy', 1);
 
 // Request ID — must be first so every log + error can reference it
 app.use(reqIdMiddleware);
+
+// Response time header — X-Response-Time for monitoring
+app.use(responseTimeMiddleware);
 
 // Request logging — structured JSON logs with req-id correlation
 app.use(requestLogger);
