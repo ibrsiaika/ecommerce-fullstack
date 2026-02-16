@@ -109,9 +109,11 @@ export const registerRoutes = (app: Express, swaggerSpec: any) => {
     }
   });
 
-  // Register all routes
+  // Register all routes under both /api/ (backward compat) and /api/v1/ (versioned)
   routes.forEach(({ path, router }) => {
-    app.use(path, router);
+    app.use(path, router); // backward-compat: /api/products
+    const versionedPath = path.replace('/api/', '/api/v1/');
+    app.use(versionedPath, router); // versioned: /api/v1/products
   });
 
   // Static files for uploads
