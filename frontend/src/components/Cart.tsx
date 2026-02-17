@@ -279,6 +279,9 @@ const Cart: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Cross-sell: recently viewed products */}
+        <RecentlyViewed limit={4} />
       </div>
     </div>
   );
