@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { FiHeart, FiTrash2, FiLoader } from 'react-icons/fi';
+import { FiHeart, FiTrash2, FiLoader, FiCheck } from 'react-icons/fi';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { addToWishlist, removeFromWishlist } from '../store/slices/wishlistSlice';
+import toast from 'react-hot-toast';
 
 export interface WishlistButtonProps {
   productId: string;
@@ -43,12 +44,33 @@ const WishlistButton: React.FC<WishlistButtonProps> = ({
       if (inWishlist) {
         await dispatch(removeFromWishlist(productId)).unwrap();
         onWishlistChange?.(false);
+        toast.success('Removed from wishlist');
       } else {
         await dispatch(addToWishlist(productId)).unwrap();
         onWishlistChange?.(true);
+        toast(
+          (t) => (
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
+                <FiHeart className="text-white fill-current" size={16} />
+              </div>
+              <p className="font-semibold text-white text-sm">Added to wishlist</p>
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  dispatch(removeFromWishlist(productId));
+                }}
+                className="text-xs font-semibold text-neutral-300 hover:text-white ml-2"
+              >
+                Undo
+              </button>
+            </div>
+          ),
+          { duration: 3000 }
+        );
       }
     } catch {
-      // Error is captured in slice state; nothing extra to surface here.
+      toast.error('Could not update wishlist');
     } finally {
       setPending(false);
     }
