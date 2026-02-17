@@ -351,26 +351,67 @@ const ProductList: React.FC = () => {
 
     // Empty State
     if (products.length === 0) {
+      const hasActiveFilters = !!(filters.category || filters.brand || filters.minPrice !== undefined || filters.maxPrice !== undefined || filters.minRating !== undefined || filters.inStock || filters.badges || filters.search);
       return (
         <div className="text-center py-20 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-neutral-100 rounded-full mb-6">
-            <FiSearch className="w-8 h-8 text-neutral-400" />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-neutral-100 dark:bg-neutral-800 rounded-full mb-6">
+            <FiSearch className="w-8 h-8 text-neutral-400 dark:text-neutral-500" />
           </div>
-          <h3 className="text-2xl font-semibold text-neutral-900 mb-3">No products found</h3>
-          <p className="text-neutral-500 mb-8 max-w-md mx-auto">
-            Try adjusting your search or filters to find what you're looking for.
+          <h3 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 mb-3">
+            {hasActiveFilters ? 'No products match your filters' : 'No products found'}
+          </h3>
+          <p className="text-neutral-500 dark:text-neutral-400 mb-8 max-w-md mx-auto">
+            {hasActiveFilters
+              ? 'Try removing some filters or broadening your search to see more results.'
+              : 'We\'re stocking up! Check back soon for new arrivals.'}
           </p>
-          <button
-            onClick={() => {
-              handleSearchChange('');
-              setFilters(prev => ({ ...prev, category: '' }));
-              setPage(1);
-            }}
-            className="btn btn-secondary inline-flex items-center gap-2"
-          >
-            <FiRefreshCw className="w-4 h-4" />
-            Clear Filters
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            {hasActiveFilters && (
+              <button
+                onClick={() => {
+                  handleSearchChange('');
+                  setFilters({
+                    search: '',
+                    category: '',
+                    brand: '',
+                    minPrice: undefined,
+                    maxPrice: undefined,
+                    minRating: undefined,
+                    inStock: false,
+                    sort: 'newest',
+                    badges: '',
+                    limit: 12,
+                  });
+                  setPage(1);
+                }}
+                className="btn btn-secondary inline-flex items-center gap-2"
+              >
+                <FiRefreshCw className="w-4 h-4" />
+                Clear all filters
+              </button>
+            )}
+            <Link
+              to="/products"
+              onClick={() => {
+                setFilters({
+                  search: '',
+                  category: '',
+                  brand: '',
+                  minPrice: undefined,
+                  maxPrice: undefined,
+                  minRating: undefined,
+                  inStock: false,
+                  sort: 'newest',
+                  badges: '',
+                  limit: 12,
+                });
+              }}
+              className="btn btn-primary inline-flex items-center gap-2"
+            >
+              <FiSearch className="w-4 h-4" />
+              Browse all products
+            </Link>
+          </div>
         </div>
       );
     }
