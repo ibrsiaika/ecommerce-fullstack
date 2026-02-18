@@ -295,5 +295,11 @@ productSchema.index({ createdAt: -1 });
 productSchema.index({ isActive: 1, isFeatured: 1 });
 // seller dashboard query index
 productSchema.index({ createdBy: 1, isActive: 1, createdAt: -1 });
+// compound index for filtered catalog scans (audit recommendation)
+productSchema.index({ isActive: 1, deletedAt: 1, category: 1, price: 1 });
+// brand filtering (multi-brand filter feature)
+productSchema.index({ brand: 1 });
+// in-stock filtering
+productSchema.index({ countInStock: 1 });
 
 export default mongoose.model<IProduct>('Product', productSchema);
