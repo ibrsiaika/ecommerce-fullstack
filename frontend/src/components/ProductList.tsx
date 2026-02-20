@@ -9,6 +9,7 @@ import { type FilterState } from './FilterSidebar';
 import ProductBadges from './ProductBadges';
 import ErrorState from './ErrorState';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
+import { useDebounce } from '../hooks/useDebounce';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { FiArrowRight, FiCheck, FiPlus, FiSearch, FiRefreshCw, FiLoader, FiEye, FiSliders, FiX, FiLink, FiShoppingCart } from 'react-icons/fi';
@@ -126,6 +127,8 @@ const ProductList: React.FC = () => {
   });
 
   const [filters, setFilters] = useState<FilterState & { search: string; limit: number }>(readFiltersFromUrl);
+  // debounce search to avoid firing an API request on every keystroke
+  const debouncedSearch = useDebounce(filters.search, 350);
   const [addedToCart, setAddedToCart] = useState<string | null>(null);
   const [quickViewId, setQuickViewId] = useState<string | null>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -165,7 +168,7 @@ const ProductList: React.FC = () => {
   // write effect below.
   useEffect(() => {
     const urlParams = buildUrlParams(readFiltersFromUrl());
-    const stateParams = buildUrlParams(filters);
+    const stateParams = buildUrlParams({ ...filters, search: debouncedSearch });
     const urlStr = new URLSearchParams(urlParams).toString();
     const stateStr = new URLSearchParams(stateParams).toString();
     if (urlStr !== stateStr) {
@@ -177,14 +180,14 @@ const ProductList: React.FC = () => {
   // Write the filter state to the URL whenever it changes so filter URLs are
   // shareable. Uses replace to avoid polluting browser history on every keystroke.
   useEffect(() => {
-    const params = buildUrlParams(filters);
+    const params = buildUrlParams({ ...filters, search: debouncedSearch });
     const next = new URLSearchParams(params);
     const current = new URLSearchParams(searchParams);
     if (next.toString() !== current.toString()) {
       setSearchParams(params, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.search, filters.category, filters.brand, filters.minPrice, filters.maxPrice, filters.minRating, filters.inStock, filters.sort, filters.badges]);
+  }, [debouncedSearch, filters.category, filters.brand, filters.minPrice, filters.maxPrice, filters.minRating, filters.inStock, filters.sort, filters.badges]);
 
   const handleSearchChange = (newSearch: string) => {
     setFilters(prev => ({ ...prev, search: newSearch }));
@@ -199,7 +202,7 @@ const ProductList: React.FC = () => {
         filters.category || undefined,
         filters.minPrice,
         filters.maxPrice,
-        filters.search || undefined,
+        debouncedSearch || undefined,
         filters.sort,
         filters.brand || undefined,
         filters.minRating,
@@ -231,7 +234,7 @@ const ProductList: React.FC = () => {
       setStatus('error');
       setError(err.response?.data?.error || 'Unable to load products');
     }
-  }, [filters.limit, filters.category, filters.search, filters.sort, filters.brand, filters.minPrice, filters.maxPrice, filters.minRating, filters.inStock, filters.badges]);
+  }, [filters.limit, filters.category, debouncedSearch, filters.sort, filters.brand, filters.minPrice, filters.maxPrice, filters.minRating, filters.inStock, filters.badges]);
 
   useEffect(() => {
     setPage(1);
