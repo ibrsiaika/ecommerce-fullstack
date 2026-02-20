@@ -146,6 +146,19 @@ const ProductList: React.FC = () => {
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // keyboard shortcut: press "/" to focus search (unless already in an input)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   // Build the canonical URL param object from the current filter state.
   // Empty/default values are omitted so URLs stay clean.
@@ -610,8 +623,9 @@ const ProductList: React.FC = () => {
           <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md">
             <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             <input
+              ref={searchInputRef}
               type="text"
-              placeholder="Search products..."
+              placeholder="Search products...  (press / to focus)"
               value={filters.search}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="input pl-10"
