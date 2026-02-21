@@ -85,7 +85,10 @@ export const corsConfig = cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-Request-Id', 'Idempotency-Key'],
+  exposedHeaders: ['X-Request-Id', 'X-Response-Time', 'X-API-Version'],
+  // cache preflight for 24 hours — avoids re-sending OPTIONS on every request
+  maxAge: 86400,
   optionsSuccessStatus: 204
 });
 
