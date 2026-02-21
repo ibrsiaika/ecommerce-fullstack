@@ -21,6 +21,7 @@ import { ConfigProvider } from './context/ConfigContext';
 // Error boundary
 import { ErrorBoundary } from './components/ErrorBoundary';
 import NotFound from './components/NotFound';
+import ScrollToTop from './components/ScrollToTop';
 
 // Route configuration and guards
 import {
@@ -127,6 +128,7 @@ function AppContent() {
     <>
       <PageLoader isLoading={!appReady || authLoading} message="Loading app..." />
       <Router>
+        <ScrollToTop />
         <Routes>
           {/* Admin routes - NOT wrapped in Layout */}
           {adminRoutes.map((route) => (
