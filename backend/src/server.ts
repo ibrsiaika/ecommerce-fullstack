@@ -52,6 +52,12 @@ app.use(corsConfig);
 // Rate limiting (on API routes)
 app.use('/api/', rateLimiter);
 
+// API version header — lets clients know which version they're using
+app.use('/api/', (_req, res, next) => {
+  res.setHeader('X-API-Version', '1.0.0');
+  next();
+});
+
 // Body parsing
 app.use(...bodyParserMiddleware);
 
