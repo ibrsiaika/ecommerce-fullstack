@@ -104,6 +104,14 @@ describe('Product Endpoints', () => {
       expect(response.body.data).toBeInstanceOf(Array);
     });
 
+    it('should set X-API-Version header on API responses', async () => {
+      const response = await request(app)
+        .get('/api/products')
+        .expect(200);
+
+      expect(response.headers['x-api-version']).toBe('1.0.0');
+    });
+
     it('should echo back a provided X-Request-Id header', async () => {
       const customId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
       const response = await request(app)
