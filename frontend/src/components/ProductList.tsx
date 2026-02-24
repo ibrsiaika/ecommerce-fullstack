@@ -592,16 +592,25 @@ const ProductList: React.FC = () => {
           ))}
         </div>
         
-        {/* Infinite Scroll Loading Indicator */}
-        <div ref={loadMoreRef} className="h-20 flex items-center justify-center">
+        {/* Infinite Scroll + Load More Button */}
+        <div ref={loadMoreRef} className="h-20 flex flex-col items-center justify-center gap-3">
           {status === 'loadingMore' && (
             <div className="flex items-center gap-3 text-neutral-500">
               <FiLoader className="w-5 h-5 animate-spin" />
               <span className="text-sm font-medium">Loading more products...</span>
             </div>
           )}
+          {hasMore && status === 'idle' && products.length > 0 && (
+            <button
+              onClick={() => fetchProducts(page + 1, true)}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-gray-200 dark:border-neutral-700 text-sm font-semibold text-gray-700 dark:text-neutral-200 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors"
+            >
+              <FiPlus className="w-4 h-4" />
+              Load more products
+            </button>
+          )}
           {!hasMore && products.length > 0 && (
-            <p className="text-sm text-neutral-400">You've seen all products</p>
+            <p className="text-sm text-neutral-400 dark:text-neutral-500">You've seen all {pagination.total} products</p>
           )}
         </div>
       </>
