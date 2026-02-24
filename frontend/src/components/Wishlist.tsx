@@ -8,6 +8,7 @@ import {
   clearWishlist,
 } from '../store/slices/wishlistSlice';
 import type { WishlistItem } from '../store/slices/wishlistSlice';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import {
   FiHeart,
   FiTrash2,
@@ -52,6 +53,7 @@ const toCardProduct = (item: WishlistItem): WishlistCardProduct => ({
 const Wishlist: React.FC = () => {
   const dispatch = useAppDispatch();
   const { items, error } = useAppSelector((state) => state.wishlist);
+  useDocumentMeta({ title: 'Wishlist', description: 'Your saved products for later.' });
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);

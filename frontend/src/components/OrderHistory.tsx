@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
 import api from '../services/api';
 import OrderHistorySkeleton from './OrderHistorySkeleton';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import toast from 'react-hot-toast';
 import { FiPackage, FiArrowRight, FiCheck, FiClock, FiTruck, FiShoppingBag, FiCreditCard, FiDownload, FiLoader } from 'react-icons/fi';
 
@@ -19,6 +20,7 @@ interface Order {
 
 const OrderHistory: React.FC = () => {
   const { user } = useAppSelector((state: any) => state.auth);
+  useDocumentMeta({ title: 'Order History', description: 'View your past orders and track deliveries.' });
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

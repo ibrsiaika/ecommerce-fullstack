@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { removeFromCart, updateQuantity, addToCart, clearCart } from '../store/slices/cartSlice';
 import RecentlyViewed from './RecentlyViewed';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import toast from 'react-hot-toast';
 import { FiTrash2, FiPlus, FiMinus, FiShoppingBag, FiArrowRight, FiTruck, FiCheckCircle, FiRotateCcw } from 'react-icons/fi';
 
 const Cart: React.FC = () => {
   const dispatch = useAppDispatch();
   const { items, totalItems, totalPrice } = useAppSelector((state) => state.cart);
+  useDocumentMeta({ title: 'Shopping Cart', description: 'Review your cart and checkout.' });
 
   const handleUpdateQuantity = (id: string, quantity: number) => {
     if (quantity <= 0) {

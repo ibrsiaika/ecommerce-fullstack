@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { clearCart } from '../store/slices/cartSlice';
 import { Spinner } from './Loading';
 import api from '../services/api';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import toast from 'react-hot-toast';
 import { FiMapPin, FiCreditCard, FiCheck, FiArrowLeft, FiArrowRight, FiLoader, FiPackage, FiTag, FiX, FiAlertCircle, FiHome, FiBriefcase } from 'react-icons/fi';
 
@@ -65,6 +66,7 @@ const Checkout: React.FC = () => {
   const dispatch = useAppDispatch();
   const { items } = useAppSelector((state: any) => state.cart);
   const { user } = useAppSelector((state: any) => state.auth);
+  useDocumentMeta({ title: 'Checkout', description: 'Complete your purchase securely with Stripe, Razorpay, or COD.' });
 
   const [currentStep, setCurrentStep] = useState(1);
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('delivery');
