@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useDocumentMeta } from '../../hooks/useDocumentMeta';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { FiMail, FiArrowRight, FiCheckCircle } from 'react-icons/fi';
@@ -11,6 +12,7 @@ interface ApiErrorResponse {
 
 const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
+  useDocumentMeta({ title: 'Forgot Password', description: 'Reset your account password.' });
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);

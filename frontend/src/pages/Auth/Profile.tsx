@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useDocumentMeta } from '../../hooks/useDocumentMeta';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { getCurrentUser, updateProfile, clearError } from '../../store/slices/authSlice';
 import AddressBook from '../../components/AddressBook';
@@ -6,6 +7,7 @@ import { FiUser, FiMail, FiCalendar, FiSave, FiLock, FiEdit2, FiAlertCircle, FiC
 
 const Profile: React.FC = () => {
   const dispatch = useAppDispatch();
+  useDocumentMeta({ title: 'Profile', description: 'Manage your account settings and addresses.' });
   const { user, isLoading, error } = useAppSelector((state) => state.auth);
 
   const [isEditing, setIsEditing] = useState(false);

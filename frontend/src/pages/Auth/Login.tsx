@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useDocumentMeta } from '../../hooks/useDocumentMeta';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { login } from '../../store/slices/authSlice';
@@ -6,6 +7,7 @@ import { FiEye, FiEyeOff, FiMail, FiLock, FiArrowRight } from 'react-icons/fi';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  useDocumentMeta({ title: 'Login', description: 'Sign in to your E-Shop account.' });
   const location = useLocation();
   const dispatch = useAppDispatch();
   const { isLoading, error, isAuthenticated } = useAppSelector((state) => state.auth);

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useDocumentMeta } from '../../hooks/useDocumentMeta';
 import { Link, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import { FiLock, FiEye, FiEyeOff, FiArrowRight, FiCheckCircle } from 'react-icons/fi';
@@ -13,6 +14,7 @@ const MIN_PASSWORD_LENGTH = 6;
 
 const ResetPassword: React.FC = () => {
   const { token } = useParams<{ token: string }>();
+  useDocumentMeta({ title: 'Reset Password', description: 'Set a new password for your account.' });
 
   const [formData, setFormData] = useState({
     password: '',

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useDocumentMeta } from '../../hooks/useDocumentMeta';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { register } from '../../store/slices/authSlice';
@@ -6,6 +7,7 @@ import { FiMail, FiLock, FiUser, FiEye, FiEyeOff, FiArrowRight, FiCheck } from '
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
+  useDocumentMeta({ title: 'Create Account', description: 'Register for an E-Shop account.' });
   const dispatch = useAppDispatch();
   const { isLoading, error, isAuthenticated } = useAppSelector((state) => state.auth);
 
