@@ -643,10 +643,18 @@ const ProductList: React.FC = () => {
           {/* mobile filter toggle */}
           <button
             onClick={() => setMobileFiltersOpen(true)}
-            className="lg:hidden inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-neutral-700 text-sm font-semibold text-gray-700 dark:text-neutral-200 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors"
+            className="lg:hidden inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-neutral-700 text-sm font-semibold text-gray-700 dark:text-neutral-200 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors relative"
           >
             <FiSliders size={16} />
             Filters
+            {(() => {
+              const count = [filters.category, filters.brand, filters.minPrice !== undefined, filters.maxPrice !== undefined, filters.minRating !== undefined, filters.inStock, filters.badges, filters.sort !== 'newest'].filter(Boolean).length;
+              return count > 0 ? (
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-black dark:bg-neutral-100 text-white dark:text-neutral-900 text-[10px] font-bold flex items-center justify-center">
+                  {count}
+                </span>
+              ) : null;
+            })()}
           </button>
         </div>
 
