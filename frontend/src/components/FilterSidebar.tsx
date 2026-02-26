@@ -156,6 +156,21 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
   return (
     <div className="space-y-1">
+      {/* Clear all button — only shows when filters are active */}
+      {(() => {
+        const hasActive = !!(filters.category || filters.brand || filters.minPrice !== undefined || filters.maxPrice !== undefined || filters.minRating !== undefined || filters.inStock || filters.badges || (filters.sort && filters.sort !== 'newest'));
+        if (!hasActive) return null;
+        return (
+          <button
+            onClick={() => onChange({ search: filters.search, category: '', brand: '', minPrice: undefined, maxPrice: undefined, minRating: undefined, inStock: false, sort: 'newest', badges: '' })}
+            className="w-full mb-2 px-3 py-2 rounded-lg bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-100 dark:hover:bg-red-950/50 transition-colors flex items-center justify-center gap-1.5"
+          >
+            <FiX size={12} />
+            Clear all filters
+          </button>
+        );
+      })()}
+
       {/* Sort — always visible at the top */}
       <div className="pb-4 border-b border-gray-100 dark:border-neutral-800">
         <label className="block text-sm font-bold text-gray-900 dark:text-neutral-100 mb-2 uppercase tracking-wider">
