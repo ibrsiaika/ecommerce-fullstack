@@ -23,13 +23,19 @@ const helmetConfig = helmet({
     }
   },
   crossOriginEmbedderPolicy: false,
+  // restrict browser features — e-commerce doesn't need camera, mic, etc.
+  permittedCrossDomainPolicies: { permittedPolicies: 'none' },
   hsts: {
     maxAge: 31536000,
     includeSubDomains: true,
     preload: true
   },
-  frameguard: { action: 'deny' }
+  frameguard: { action: 'deny' },
 });
+
+// Permissions-Policy: deny sensitive browser APIs (Helmet 7 removed the
+// built-in option, so we set it manually). Payment is allowed for Stripe.
+const permissionsPolicyValue = 'camera=(), microphone=(), geolocation=(), payment=(*), usb=(), bluetooth=(), nfc=()';
 
 /**
  * Security middleware configuration
@@ -37,6 +43,11 @@ const helmetConfig = helmet({
 export const securityMiddleware = [
   helmetConfig,
   compression(),
+  // Permissions-Policy header (Helmet 7 doesn't support it natively)
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    res.setHeader('Permissions-Policy', permissionsPolicyValue);
+    next();
+  },
 ];
 
 /**
