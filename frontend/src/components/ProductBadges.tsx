@@ -19,7 +19,7 @@ const badgeStyles: Record<Badge, { bg: string; text: string; label: string }> = 
   'Low Stock': { bg: 'bg-orange-500', text: 'text-white', label: 'Low Stock' },
 };
 
-const ProductBadges: React.FC<ProductBadgesProps> = ({
+const ProductBadges: React.FC<ProductBadgesProps> = React.memo(({
   badges = [],
   variant = 'inline',
   className = '',
@@ -62,6 +62,6 @@ const ProductBadges: React.FC<ProductBadgesProps> = ({
       })}
     </div>
   );
-};
+});
 
 export default ProductBadges;
