@@ -10,7 +10,7 @@ interface SkeletonProps {
  * Skeleton — a single shimmering placeholder block.
  * Uses the existing .skeleton keyframe from index.css plus a pulse overlay.
  */
-const Skeleton: React.FC<SkeletonProps> = ({ className = '', variant = 'rect' }) => {
+const Skeleton: React.FC<SkeletonProps> = React.memo(({ className = '', variant = 'rect' }) => {
   const base =
     variant === 'circle'
       ? 'rounded-full'
@@ -23,6 +23,6 @@ const Skeleton: React.FC<SkeletonProps> = ({ className = '', variant = 'rect' })
       aria-hidden="true"
     />
   );
-};
+});
 
 export default Skeleton;
