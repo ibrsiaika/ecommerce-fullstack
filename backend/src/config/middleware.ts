@@ -46,6 +46,10 @@ export const securityMiddleware = [
   // Permissions-Policy header (Helmet 7 doesn't support it natively)
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
     res.setHeader('Permissions-Policy', permissionsPolicyValue);
+    // Referrer-Policy: only send origin (not full URL) to other origins
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    // X-DNS-Prefetch-Control: enable DNS prefetching for performance
+    res.setHeader('X-DNS-Prefetch-Control', 'on');
     next();
   },
 ];
