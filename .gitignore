@@ -59,4 +59,6 @@ temp/
 
 # Uploads (runtime data)
 uploads/
-.github/workflows/
+# CI workflows (token needs workflow scope to push)
+# .github/workflows/
+# .github/workflows/
