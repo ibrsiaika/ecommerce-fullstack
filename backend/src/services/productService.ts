@@ -2,6 +2,7 @@ import Product, { IProduct } from '../models/Product';
 import Order from '../models/Order';
 import { AppError } from '../middleware/errorHandler';
 import mongoose from 'mongoose';
+import { cacheGet, cacheSet, cacheDel } from '../utils/cache';
 
 export class ProductService {
   async getAll(
@@ -215,12 +216,22 @@ export class ProductService {
   }
 
   async getById(id: string) {
+    // cache-aside: check Redis first (no-op if Redis unavailable)
+    const cacheKey = `product:${id}`;
+    const cached = await cacheGet(cacheKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
     const product = await Product.findById(id)
       .populate('reviews.user', 'firstName lastName email avatar');
 
     if (!product) {
       throw new AppError('Product not found', 404);
     }
+
+    // cache for 5 minutes (no-op if Redis unavailable)
+    await cacheSet(cacheKey, JSON.stringify(product), 300);
 
     return product;
   }

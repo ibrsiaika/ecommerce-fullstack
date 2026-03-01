@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { logout } from '../../store/slices/authSlice';
 import { fetchWishlist, resetWishlist } from '../../store/slices/wishlistSlice';
 import ThemeToggle from '../ThemeToggle';
-import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX, FiSearch, FiHeart } from 'react-icons/fi';
+import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX, FiSearch, FiHeart, FiGlobe } from 'react-icons/fi';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -146,6 +147,9 @@ const Header: React.FC = () => {
 
             {/* Theme toggle */}
             <ThemeToggle />
+
+            {/* Language switcher */}
+            <LanguageSwitcher />
 
             {/* Cart */}
             <Link
@@ -348,6 +352,30 @@ const Header: React.FC = () => {
         )}
       </div>
     </header>
+  );
+};
+
+// Language switcher — toggles between English and Hindi
+const LanguageSwitcher: React.FC = () => {
+  const { i18n } = useTranslation();
+  const currentLang = i18n.language || 'en';
+
+  const toggle = () => {
+    const next = currentLang === 'en' ? 'hi' : 'en';
+    i18n.changeLanguage(next);
+    localStorage.setItem('language', next);
+  };
+
+  return (
+    <button
+      onClick={toggle}
+      aria-label={`Switch to ${currentLang === 'en' ? 'Hindi' : 'English'}`}
+      title={currentLang === 'en' ? 'हिन्दी' : 'English'}
+      className="p-2.5 rounded-lg text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors flex items-center gap-1"
+    >
+      <FiGlobe size={18} />
+      <span className="text-xs font-semibold uppercase">{currentLang}</span>
+    </button>
   );
 };
 
