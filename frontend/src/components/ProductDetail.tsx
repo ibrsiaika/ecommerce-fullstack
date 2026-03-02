@@ -10,6 +10,7 @@ import ImageZoom from './ImageZoom';
 import Breadcrumbs from './Breadcrumbs';
 import ProductDetailSkeleton from './ProductDetailSkeleton';
 import RecentlyViewed from './RecentlyViewed';
+import RelatedProducts from './RelatedProducts';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import api from '../services/api';
@@ -382,6 +383,9 @@ const ProductDetail: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* Related products — same category cross-sell */}
+      <RelatedProducts productId={product._id} category={product.category} />
 
       {/* Recently viewed — excludes the current product */}
       <RecentlyViewed excludeId={product._id} limit={6} />

@@ -271,6 +271,11 @@ class ApiClient {
     return this.client.get<ApiResponse<Product>>(`/api/products/${id}`);
   }
 
+  // related products (same category, excluding current)
+  async getRelatedProducts(id: string) {
+    return this.client.get(`/api/products/${id}/related`);
+  }
+
   async searchProducts(query: string, limit: number = 10) {
     return this.client.get('/api/products/search', {
       params: { q: query, limit }
