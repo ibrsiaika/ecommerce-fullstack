@@ -9,7 +9,7 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
 ![Stripe](https://img.shields.io/badge/Stripe-Payments-635BFF?style=for-the-badge&logo=stripe&logoColor=white)
 ![Tests](https://img.shields.io/badge/Tests-140%2B%20passing-success?style=for-the-badge)
-![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+![License](https://img.shields.io/badge/License-All%20Rights%20Reserved-red?style=for-the-badge)
 
 ### A production-ready, three-sided e-commerce marketplace with buyer, seller, and admin flows.
 
@@ -474,7 +474,7 @@ ecommerce-fullstack/
 
 ## 📄 License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+**All Rights Reserved.** This is private property of ibrsiaika. No license is granted. Unauthorized use, copying, modification, distribution, or commercial use is strictly prohibited.
 
 ---
 
