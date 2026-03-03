@@ -5,6 +5,7 @@ import { addToCart } from '../store/slices/cartSlice';
 import Reviews from './Reviews';
 import WishlistButton from './WishlistButton';
 import CompareButton from './CompareButton';
+import BackInStockButton from './BackInStockButton';
 import ProductBadges from './ProductBadges';
 import ImageZoom from './ImageZoom';
 import Breadcrumbs from './Breadcrumbs';
@@ -344,6 +345,15 @@ const ProductDetail: React.FC = () => {
               variant="button"
               className="w-full"
             />
+
+            {/* Back-in-stock notification — only for out-of-stock products */}
+            {product.countInStock === 0 && (
+              <BackInStockButton
+                productId={product._id}
+                productName={product.name}
+                className="w-full"
+              />
+            )}
 
             {/* Compare toggle */}
             <CompareButton

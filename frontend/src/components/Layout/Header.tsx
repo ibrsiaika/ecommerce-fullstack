@@ -5,7 +5,8 @@ import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { logout } from '../../store/slices/authSlice';
 import { fetchWishlist, resetWishlist } from '../../store/slices/wishlistSlice';
 import ThemeToggle from '../ThemeToggle';
-import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX, FiSearch, FiHeart, FiGlobe } from 'react-icons/fi';
+import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX, FiSearch, FiHeart, FiGlobe, FiClock, FiArrowUpRight, FiTrash2 } from 'react-icons/fi';
+import { useSearchHistory } from '../../hooks/useSearchHistory';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const { history, addSearch, removeSearch, clearHistory } = useSearchHistory();
   const [scrolled, setScrolled] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -82,7 +84,9 @@ const Header: React.FC = () => {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      const q = searchQuery.trim();
+      addSearch(q);
+      navigate(`/products?search=${encodeURIComponent(q)}`);
       setSearchOpen(false);
       setSearchQuery('');
     }
@@ -338,6 +342,52 @@ const Header: React.FC = () => {
               </div>
             </div>
           </form>
+
+          {/* Search History dropdown — shows recent searches when input is empty */}
+          {searchOpen && !searchQuery && history.length > 0 && (
+            <div className="container pb-4">
+              <div className="max-w-2xl mx-auto">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">
+                    Recent Searches
+                  </span>
+                  <button
+                    onClick={clearHistory}
+                    className="text-xs text-neutral-400 hover:text-red-500 transition-colors"
+                  >
+                    Clear all
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {history.map((entry) => (
+                    <div
+                      key={entry.query}
+                      className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                    >
+                      <button
+                        onClick={() => {
+                          addSearch(entry.query);
+                          navigate(`/products?search=${encodeURIComponent(entry.query)}`);
+                          setSearchOpen(false);
+                        }}
+                        className="inline-flex items-center gap-1.5"
+                      >
+                        <FiClock size={12} className="text-neutral-400" />
+                        {entry.query}
+                      </button>
+                      <button
+                        onClick={() => removeSearch(entry.query)}
+                        className="text-neutral-400 hover:text-red-500 transition-colors"
+                        aria-label={`Remove ${entry.query} from history`}
+                      >
+                        <FiX size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Search Backdrop */}
